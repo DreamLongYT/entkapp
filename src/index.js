@@ -17,7 +17,18 @@ import { TypeIntegrity } from './refactor/TypeIntegrity.js';
 import { GitSandbox } from './healing/GitSandbox.js';
 import { SelfHealer } from './healing/SelfHealer.js';
 import { IncrementalCacheManager } from './performance/GraphCache.js';
+import { WorkerPool } from './performance/WorkerPool.js';
 
+const pool = new WorkerPool(this.context);
+const threadingSuccess = await pool.parallelAnalyzeCodebase(fileList, this);
+
+if (!threadingSuccess) {
+  // Safe fallback to single thread sequential execution if thread spawning drops
+  for (const filePath of fileList) {
+    const node = this.context.createNode(filePath);
+    await this.analyzer.processFile(filePath, node);
+  }
+}
 /**
  * Orchestrator Class Coordinating the Complete Core Operational Cycle
  */
