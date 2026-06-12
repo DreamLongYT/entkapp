@@ -25,7 +25,80 @@ const REGEX_PATTERNS = {
     syncFsCalls: /\.readFileSync|\.writeFileSync|\.mkdirSync|\.existsSync/g,
 
     // Cryptographic Risk & Hardcoded Keyholes
-    secretKeys: /\b(secret|passwd|password|token|api_?key|private_?key)\s*=\s*['"`]([a-zA-Z0-9_\-\.]{8,})['"`]/gi
+    secretKeys: /\b(secret|passwd|password|token|api_?key|private_?key)\s*=\s*['"`]([a-zA-Z0-9_\-\.]{8,})['"`]/gi,
+    awsKeys: /AKIA[0-9A-Z]{16}/g,
+    googleCloudKeys: /AIza[0-9A-Za-z\-_]{35}/g,
+    stripeKeys: /sk_live_[0-9a-zA-Z]{24}/g,
+    slackKeys: /xox[baprs]-[0-9a-zA-Z]{10,48}/g,
+    githubTokens: /gh[pousr]_[a-zA-Z0-9]{36}/g,
+    rsaPrivateKeys: /-----BEGIN RSA PRIVATE KEY-----/g,
+    sshPrivateKeys: /-----BEGIN OPENSSH PRIVATE KEY-----/g,
+    pgpPrivateKeys: /-----BEGIN PGP PRIVATE KEY BLOCK-----/g,
+    
+    // Insecure Patterns
+    insecureInnerHTML: /\.innerHTML\s*=/g,
+    insecureDocumentWrite: /document\.write\s*\(/g,
+    insecureDangerouslySet: /dangerouslySetInnerHTML/g,
+    insecureRegex: /\/\.\*\//g, // Common catastrophic backtracking
+
+    // New: Advanced Security Patterns
+    insecureCrypto: /crypto\.(?:createCipher|createDecipher|pbkdf2Sync)/g, // Deprecated/insecure crypto usage
+    sqlInjection: /(?:SELECT|INSERT|UPDATE|DELETE)\s+.*\s+FROM\s+.*\s+WHERE\s+.*\s*=\s*[""]?.*[""]?/i, // Basic SQL injection pattern
+    xssVulnerability: /<script\b[^>]*>[\s\S]*?<\/script>/i, // Basic XSS script tag detection
+
+    // New: Performance Patterns
+    largeImageImport: /import\s+.*\s+from\s+[""](?:.*\.(?:png|jpg|jpeg|gif|svg))[""]/g, // Direct import of large images
+    unoptimizedLoop: /for\s*\(let\s+i\s*=\s*0;\s*i\s*<\s*\w+\.length;\s*i\s*\+\+\)/g, // Simple for loop, can be optimized with for-of or forEach
+
+    // New: Framework-specific patterns (examples)
+    nextjsImageComponent: /<Image\s+[^>]*>/g, // Next.js Image component usage
+    nextjsFontOptimization: /next\/font/g, // Next.js Font optimization usage
+    nuxtAutoImport: /use(?:State|Fetch|AsyncData)/g, // Nuxt 3 auto-imports
+    sveltekitLoadFunction: /export\s+const\s+load\s*=/g, // SvelteKit load function
+    reactUseEffectNoDeps: /useEffect\s*\(\s*\([^)]*\)\s*=>\s*{[^}]*},\s*\[\s*\]\s*\)/g, // useEffect with empty dependency array (potential for stale closures)
+
+    // New: Advanced Security Patterns
+    insecureCrypto: /crypto\.(?:createCipher|createDecipher|pbkdf2Sync)/g, // Deprecated/insecure crypto usage
+    sqlInjection: /(?:SELECT|INSERT|UPDATE|DELETE)\s+.*\s+FROM\s+.*\s+WHERE\s+.*\s*=\s*[""]?.*[""]?/i, // Basic SQL injection pattern
+    xssVulnerability: /<script\b[^>]*>[\s\S]*?<\/script>/i, // Basic XSS script tag detection
+
+    // New: Performance Patterns
+    largeImageImport: /import\s+.*\s+from\s+[""](?:.*\.(?:png|jpg|jpeg|gif|svg))[""]/g, // Direct import of large images
+    unoptimizedLoop: /for\s*\(let\s+i\s*=\s*0;\s*i\s*<\s*\w+\.length;\s*i\s*\+\+\)/g, // Simple for loop, can be optimized with for-of or forEach
+
+    // New: Framework-specific patterns (examples)
+    nextjsImageComponent: /<Image\s+[^>]*>/g, // Next.js Image component usage
+    nextjsFontOptimization: /next\/font/g, // Next.js Font optimization usage
+    nuxtAutoImport: /use(?:State|Fetch|AsyncData)/g, // Nuxt 3 auto-imports
+    sveltekitLoadFunction: /export\s+const\s+load\s*=/g, // SvelteKit load function
+    reactUseEffectNoDeps: /useEffect\s*\(\s*\([^)]*\)\s*=>\s*{[^}]*},\s*\[\s*\]\s*\)/g, // useEffect with empty dependency array (potential for stale closures)
+
+    // New: Advanced Security Patterns
+    insecureCrypto: /crypto\.(?:createCipher|createDecipher|pbkdf2Sync)/g, // Deprecated/insecure crypto usage
+    sqlInjection: /(?:SELECT|INSERT|UPDATE|DELETE)\s+.*\s+FROM\s+.*\s+WHERE\s+.*\s*=\s*[""]?.*[""]?/i, // Basic SQL injection pattern
+    xssVulnerability: /<script\b[^>]*>[\s\S]*?<\/script>/i, // Basic XSS script tag detection
+
+    // New: Performance Patterns
+    largeImageImport: /import\s+.*\s+from\s+[""](?:.*\.(?:png|jpg|jpeg|gif|svg))[""]/g, // Direct import of large images
+    unoptimizedLoop: /for\s*\(let\s+i\s*=\s*0;\s*i\s*<\s*\w+\.length;\s*i\s*\+\+\)/g, // Simple for loop, can be optimized with for-of or forEach
+
+    // New: Framework-specific patterns (examples)
+    nextjsImageComponent: /<Image\s+[^>]*>/g, // Next.js Image component usage
+    nextjsFontOptimization: /next\/font/g, // Next.js Font optimization usage
+    nuxtAutoImport: /use(?:State|Fetch|AsyncData)/g, // Nuxt 3 auto-imports
+    sveltekitLoadFunction: /export\s+const\s+load\s*=/g, // SvelteKit load function
+    reactUseEffectNoDeps: /useEffect\s*\(\s*\([^)]*\)\s*=>\s*{[^}]*},\s*\[\s*\]\s*\)/g, // useEffect with empty dependency array (potential for stale closures)
+
+    // Framework-specific patterns for deeper analysis
+    nextjsPage: /pages\/[^\/]+\.(js|jsx|ts|tsx)$/i,
+    nextjsApi: /pages\/api\/[^\/]+\.(js|jsx|ts|tsx)$/i,
+    nextjsComponent: /components\/[^\/]+\.(js|jsx|ts|tsx)$/i,
+    nuxtPage: /pages\/[^\/]+\.(vue|js|ts)$/i,
+    nuxtComponent: /components\/[^\/]+\.(vue|js|ts)$/i,
+    sveltekitPage: /src\/routes\/[^\/]+\/\+page\.(svelte|js|ts)$/i,
+    sveltekitComponent: /src\/lib\/[^\/]+\.(svelte|js|ts)$/i,
+    reactHook: /hooks\/[^\/]+\.(js|jsx|ts|tsx)$/i,
+    vueComposable: /composables\/[^\/]+\.(js|ts)$/i
 };
 
 // ============================================================
@@ -354,6 +427,212 @@ function readFileSyncNormalized(fullPath) {
     return buffer.toString('utf8');
 }
 
+// ============================================================
+// 🏗️ FRAMEWORK-SPECIFIC DEEP SCAN LOGIC
+// ============================================================
+class FrameworkAnalyzer {
+    static analyzeNextjsFile(filePath, content, stats) {
+        // Data Fetching Patterns (getServerSideProps, getStaticProps, getStaticPaths, Route Handlers)
+        if (filePath.includes("pages/") && content.includes("getServerSideProps")) {
+            stats.frameworkFiles.nextjs.dataFetching.set(filePath, "getServerSideProps");
+            stats.frameworkOptimizations.push(`Next.js: Consider using 'getStaticProps' or client-side fetching for '${path.relative(process.cwd(), filePath)}' if data is not highly dynamic.`);
+        }
+        if (filePath.includes("pages/") && content.includes("getStaticProps")) {
+            stats.frameworkFiles.nextjs.dataFetching.set(filePath, "getStaticProps");
+        }
+        if (filePath.includes("pages/") && content.includes("getStaticPaths")) {
+            stats.frameworkFiles.nextjs.dataFetching.set(filePath, "getStaticPaths");
+        }
+        if (filePath.includes("app/") && content.includes("export async function GET")) {
+            stats.frameworkFiles.nextjs.dataFetching.set(filePath, "Route Handler (GET)");
+        }
+        // More Next.js specific checks: Image optimization, Font optimization, Script optimization
+        if (content.includes("<img") && !content.includes("<Image")) {
+            stats.frameworkOptimizations.push(`Next.js: Use next/image for '${path.relative(process.cwd(), filePath)}' to optimize images.`);
+        }
+        if (content.includes("<link") && content.includes("googlefonts") && !content.includes("next/font")) {
+            stats.frameworkOptimizations.push(`Next.js: Use next/font for '${path.relative(process.cwd(), filePath)}' to optimize fonts.`);
+        }
+    }
+
+    static analyzeNuxtFile(filePath, content, stats) {
+        // Data Fetching Patterns (useAsyncData, useFetch)
+        if (content.includes("useAsyncData")) {
+            stats.frameworkFiles.nuxt.dataFetching.set(filePath, "useAsyncData");
+        }
+        if (content.includes("useFetch")) {
+            stats.frameworkFiles.nuxt.dataFetching.set(filePath, "useFetch");
+        }
+        // Nuxt specific checks: Auto-imports, module usage
+        if (filePath.includes("components/") && !content.includes("defineComponent")) {
+            stats.frameworkOptimizations.push(`Nuxt: Ensure components in '${path.relative(process.cwd(), filePath)}' are properly defined for auto-import or explicitly imported.`);
+        }
+    }
+
+    static analyzeSvelteKitFile(filePath, content, stats) {
+        // Data Fetching Patterns (load functions)
+        if (content.includes("export async function load")) {
+            stats.frameworkFiles.sveltekit.loadFunctions.set(filePath, "load");
+        }
+        // SvelteKit specific checks: endpoint usage, form actions
+        if (filePath.includes("src/routes/") && content.includes("export const actions")) {
+            stats.frameworkFiles.sveltekit.endpoints.add(filePath);
+        }
+    }
+
+    static analyzeReactFile(filePath, content, stats) {
+        // React specific checks: useEffect dependencies, custom hooks
+        if (content.includes("useEffect(") && !content.includes("[]")) {
+            stats.frameworkOptimizations.push(`React: Check useEffect dependencies in '${path.relative(process.cwd(), filePath)}' to prevent unnecessary re-renders.`);
+        }
+    }
+
+    static analyzeVueFile(filePath, content, stats) {
+        // Vue specific checks: reactivity, component registration
+        if (content.includes("Vue.component")) {
+            stats.frameworkOptimizations.push(`Vue: Consider using single-file components or local registration for '${path.relative(process.cwd(), filePath)}' for better modularity.`);
+        }
+    }
+
+    static analyzeFile(filePath, content, stats, detectedFrameworks) {
+        if (detectedFrameworks.includes("next")) {
+            FrameworkAnalyzer.analyzeNextjsFile(filePath, content, stats);
+        }
+        if (detectedFrameworks.includes("nuxt")) {
+            FrameworkAnalyzer.analyzeNuxtFile(filePath, content, stats);
+        }
+        if (detectedFrameworks.includes("svelte")) {
+            FrameworkAnalyzer.analyzeSvelteKitFile(filePath, content, stats);
+        }
+        if (detectedFrameworks.includes("react")) {
+            FrameworkAnalyzer.analyzeReactFile(filePath, content, stats);
+        }
+        if (detectedFrameworks.includes("vue")) {
+            FrameworkAnalyzer.analyzeVueFile(filePath, content, stats);
+        }
+    }
+}
+
+// ============================================================
+// ⚙️ FRAMEWORK DETECTION ENGINE
+// ============================================================
+class FrameworkEngine {
+    static detect(targetDir, packageJson) {
+        const detected = new Set();
+
+        // Check package.json dependencies
+        const allDependencies = { ...packageJson.dependencies, ...packageJson.devDependencies };
+        if (allDependencies.next) detected.add("next");
+        if (allDependencies.nuxt) detected.add("nuxt");
+        if (allDependencies.sveltekit) detected.add("svelte"); // SvelteKit implies Svelte
+        if (allDependencies.react) detected.add("react");
+        if (allDependencies.vue) detected.add("vue");
+
+        // Check config files
+        if (fs.existsSync(path.join(targetDir, "next.config.js")) || fs.existsSync(path.join(targetDir, "next.config.mjs"))) detected.add("next");
+        if (fs.existsSync(path.join(targetDir, "nuxt.config.js")) || fs.existsSync(path.join(targetDir, "nuxt.config.ts"))) detected.add("nuxt");
+        if (fs.existsSync(path.join(targetDir, "svelte.config.js"))) detected.add("svelte");
+        if (fs.existsSync(path.join(targetDir, "vite.config.js")) || fs.existsSync(path.join(targetDir, "vite.config.ts"))) {
+            // Vite can be used with multiple frameworks, try to be more specific
+            if (allDependencies["@vitejs/plugin-react"]) detected.add("react");
+            if (allDependencies["@vitejs/plugin-vue"]) detected.add("vue");
+            if (allDependencies["@sveltejs/vite-plugin-svelte"]) detected.add("svelte");
+        }
+
+        return Array.from(detected);
+    }
+}
+
+// ============================================================
+// 🧩 TEMPLATE ENGINE (Hygen-level Customization)
+// ============================================================
+class TemplateEngine {
+    constructor(targetDir, safeQuestion) {
+        this.targetDir = targetDir;
+        this.templatesDir = path.join(targetDir, ".templates");
+        this.safeQuestion = safeQuestion;
+    }
+
+    async listTemplates() {
+        if (!fs.existsSync(this.templatesDir)) {
+            return [];
+        }
+        const templateFolders = fs.readdirSync(this.templatesDir, { withFileTypes: true })
+            .filter(dirent => dirent.isDirectory())
+            .map(dirent => dirent.name);
+        return templateFolders;
+    }
+
+    async generate(templateName, variables = {}) {
+        const templatePath = path.join(this.templatesDir, templateName);
+        if (!fs.existsSync(templatePath)) {
+            console.log(`   ⚠️  Template '${templateName}' not found in ${this.templatesDir}`);
+            return;
+        }
+
+        console.log(`   🚀 Generating from template '${templateName}'...`);
+
+        const templateFiles = this._getTemplateFiles(templatePath);
+
+        for (const file of templateFiles) {
+            const relativePath = path.relative(templatePath, file);
+            let targetFilePath = path.join(this.targetDir, this._renderString(relativePath, variables));
+
+            // Handle dynamic file names (e.g., _name_.js)
+            targetFilePath = targetFilePath.replace(/_([a-zA-Z0-9_]+)_/g, (match, p1) => {
+                return variables[p1] || match; // Replace with variable or keep original if not found
+            });
+
+            const content = fs.readFileSync(file, 'utf8');
+            const renderedContent = this._renderString(content, variables);
+
+            fs.mkdirSync(path.dirname(targetFilePath), { recursive: true });
+            fs.writeFileSync(targetFilePath, renderedContent);
+            console.log(`      ✅ Created: ${path.relative(this.targetDir, targetFilePath)}`);
+        }
+        console.log(`   ✨ Template generation complete.`);
+    }
+
+    _getTemplateFiles(dir) {
+        let files = [];
+        const items = fs.readdirSync(dir, { withFileTypes: true });
+        for (const item of items) {
+            const fullPath = path.join(dir, item.name);
+            if (item.isDirectory()) {
+                files = files.concat(this._getTemplateFiles(fullPath));
+            } else {
+                files.push(fullPath);
+            }
+        }
+        return files;
+    }
+
+    _renderString(templateString, variables) {
+        let result = templateString;
+        for (const key in variables) {
+            result = result.replace(new RegExp(`{{\s*${key}\s*}}`, 'g'), variables[key]);
+        }
+        return result;
+    }
+
+    async promptForVariables(templateName) {
+        const templatePath = path.join(this.templatesDir, templateName);
+        const configPath = path.join(templatePath, "config.json");
+        const variables = {};
+
+        if (fs.existsSync(configPath)) {
+            const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+            if (config.prompts && Array.isArray(config.prompts)) {
+                for (const prompt of config.prompts) {
+                    const answer = await this.safeQuestion(`   ❓ ${prompt.message} (${prompt.name}): `);
+                    variables[prompt.name] = answer || prompt.default || '';
+                }
+            }
+        }
+        return variables;
+    }
+}
+
 function buildAsciiTree(dir, prefix = '') {
     const results = [];
     try {
@@ -379,11 +658,14 @@ function buildAsciiTree(dir, prefix = '') {
 // IMPROVED IMPORT EXTRACTION: handles TypeScript generics,
 // type-only imports, re-exports, and dynamic imports
 // ============================================================
-function extractImportsFromAST(ast, fileRawDeps, importedIdentifiers, importedLocations) {
+function extractImportsFromAST(ast, fileRawDeps, importedIdentifiers, importedLocations, exportedSymbols, stats, currentFilePath) {
     walk.simple(ast, {
         ImportDeclaration(node) {
-            const pkg = cleanPackageName(node.source.value);
+            const importSource = node.source.value;
+            const pkg = cleanPackageName(importSource);
+
             if (pkg && !builtinModules.includes(pkg)) {
+                // External package import
                 fileRawDeps.add(pkg);
                 if (!importedIdentifiers.has(pkg)) importedIdentifiers.set(pkg, new Set());
                 if (!importedLocations.has(pkg)) importedLocations.set(pkg, []);
@@ -405,6 +687,26 @@ function extractImportsFromAST(ast, fileRawDeps, importedIdentifiers, importedLo
                 if (node.specifiers.length === 0) {
                     importedIdentifiers.get(pkg).add('__SIDE_EFFECT__');
                 }
+            } else if (importSource.startsWith('.') || importSource.startsWith('/')) {
+                // Local file import
+                const resolvedPath = path.resolve(path.dirname(currentFilePath), importSource);
+                const normalizedPath = path.normalize(resolvedPath);
+
+                if (!stats.localFileImports) stats.localFileImports = new Map();
+                if (!stats.localFileImports.has(normalizedPath)) {
+                    stats.localFileImports.set(normalizedPath, new Set());
+                }
+
+                node.specifiers.forEach(spec => {
+                    if (spec.type === 'ImportDefaultSpecifier' || spec.type === 'ImportNamespaceSpecifier') {
+                        stats.localFileImports.get(normalizedPath).add(spec.local.name);
+                    } else if (spec.type === 'ImportSpecifier') {
+                        stats.localFileImports.get(normalizedPath).add(spec.local.name);
+                        if (spec.imported && spec.imported.name !== spec.local.name) {
+                            stats.localFileImports.get(normalizedPath).add(spec.imported.name);
+                        }
+                    }
+                });
             }
         },
         VariableDeclarator(node) {
@@ -445,6 +747,29 @@ function extractImportsFromAST(ast, fileRawDeps, importedIdentifiers, importedLo
             }
         },
         ExportNamedDeclaration(node) {
+            if (node.declaration) {
+                if (node.declaration.type === 'VariableDeclaration') {
+                    node.declaration.declarations.forEach(decl => {
+                        if (decl.id.type === 'Identifier') {
+                            exportedSymbols.set(decl.id.name, { type: 'variable', loc: decl.id.loc.start });
+                        }
+                    });
+                } else if (node.declaration.type === 'FunctionDeclaration') {
+                    if (node.declaration.id) {
+                        exportedSymbols.set(node.declaration.id.name, { type: 'function', loc: node.declaration.id.loc.start });
+                    }
+                } else if (node.declaration.type === 'ClassDeclaration') {
+                    if (node.declaration.id) {
+                        exportedSymbols.set(node.declaration.id.name, { type: 'class', loc: node.declaration.id.loc.start });
+                    }
+                }
+            } else if (node.specifiers) {
+                node.specifiers.forEach(spec => {
+                    if (spec.exported.type === 'Identifier') {
+                        exportedSymbols.set(spec.exported.name, { type: 'namedExport', loc: spec.exported.loc.start });
+                    }
+                });
+            }
             if (node.source && node.source.type === 'Literal' && typeof node.source.value === 'string') {
                 const pkg = cleanPackageName(node.source.value);
                 if (pkg && !builtinModules.includes(pkg)) {
@@ -470,20 +795,29 @@ function extractImportsFromAST(ast, fileRawDeps, importedIdentifiers, importedLo
 // ============================================================
 // REGEX FALLBACK: handles TypeScript files that acorn can't parse
 // ============================================================
-function extractImportsFromText(codeLines, fileRawDeps, importedIdentifiers, importedLocations) {
+function extractImportsFromText(codeLines, fileRawDeps, importedIdentifiers, importedLocations, stats, currentFilePath) {
     codeLines.forEach((line, lineIdx) => {
         const lineNum = lineIdx + 1;
 
         // import type { ... } from '...' — type-only, mark as side-effect
         const typeImportMatch = line.match(/\bimport\s+type\s+\{[^}]*\}\s+from\s+['"]([^'"]+)['"]/);
         if (typeImportMatch) {
-            const pkg = cleanPackageName(typeImportMatch[1]);
+            const importSource = typeImportMatch[1];
+            const pkg = cleanPackageName(importSource);
             if (pkg && !builtinModules.includes(pkg)) {
                 fileRawDeps.add(pkg);
                 if (!importedIdentifiers.has(pkg)) importedIdentifiers.set(pkg, new Set());
                 importedIdentifiers.get(pkg).add('__TYPE_ONLY__');
                 if (!importedLocations.has(pkg)) importedLocations.set(pkg, []);
                 importedLocations.get(pkg).push(lineNum);
+            } else if (importSource.startsWith(".") || importSource.startsWith("/")) {
+                const resolvedPath = path.resolve(path.dirname(currentFilePath), importSource);
+                const normalizedPath = path.normalize(resolvedPath);
+                if (!stats.localFileImports) stats.localFileImports = new Map();
+                if (!stats.localFileImports.has(normalizedPath)) {
+                    stats.localFileImports.set(normalizedPath, new Set());
+                }
+                stats.localFileImports.get(normalizedPath).add('__TYPE_ONLY__'); // Mark as type-only imported
             }
             return;
         }
@@ -493,13 +827,22 @@ function extractImportsFromText(codeLines, fileRawDeps, importedIdentifiers, imp
         const esmDefaultMatch = line.match(/\bimport\s+(?:\*\s+as\s+)?([a-zA-Z0-9_$]+)\s+from\s+['"]([^'"]+)['"]/);
         if (esmDefaultMatch) {
             const id = esmDefaultMatch[1];
-            const pkg = cleanPackageName(esmDefaultMatch[2]);
+            const importSource = esmDefaultMatch[2];
+            const pkg = cleanPackageName(importSource);
             if (pkg && !builtinModules.includes(pkg)) {
                 fileRawDeps.add(pkg);
                 if (!importedIdentifiers.has(pkg)) importedIdentifiers.set(pkg, new Set());
                 importedIdentifiers.get(pkg).add(id);
                 if (!importedLocations.has(pkg)) importedLocations.set(pkg, []);
                 importedLocations.get(pkg).push(lineNum);
+            } else if (importSource.startsWith(".") || importSource.startsWith("/")) {
+                const resolvedPath = path.resolve(path.dirname(currentFilePath), importSource);
+                const normalizedPath = path.normalize(resolvedPath);
+                if (!stats.localFileImports) stats.localFileImports = new Map();
+                if (!stats.localFileImports.has(normalizedPath)) {
+                    stats.localFileImports.set(normalizedPath, new Set());
+                }
+                stats.localFileImports.get(normalizedPath).add(id);
             }
             return;
         }
@@ -507,7 +850,8 @@ function extractImportsFromText(codeLines, fileRawDeps, importedIdentifiers, imp
         // import { named, exports } from '...'
         const esmNamedMatch = line.match(/\bimport\s*\{([^}]+)\}\s*from\s*['"]([^'"]+)['"]/);
         if (esmNamedMatch) {
-            const pkg = cleanPackageName(esmNamedMatch[2]);
+            const importSource = esmNamedMatch[2];
+            const pkg = cleanPackageName(importSource);
             if (pkg && !builtinModules.includes(pkg)) {
                 if (!importedIdentifiers.has(pkg)) importedIdentifiers.set(pkg, new Set());
                 fileRawDeps.add(pkg);
@@ -521,6 +865,20 @@ function extractImportsFromText(codeLines, fileRawDeps, importedIdentifiers, imp
                 });
                 if (!importedLocations.has(pkg)) importedLocations.set(pkg, []);
                 importedLocations.get(pkg).push(lineNum);
+            } else if (importSource.startsWith(".") || importSource.startsWith("/")) {
+                const resolvedPath = path.resolve(path.dirname(currentFilePath), importSource);
+                const normalizedPath = path.normalize(resolvedPath);
+                if (!stats.localFileImports) stats.localFileImports = new Map();
+                if (!stats.localFileImports.has(normalizedPath)) {
+                    stats.localFileImports.set(normalizedPath, new Set());
+                }
+                esmNamedMatch[1].split(',').forEach(part => {
+                    const chunk = part.trim();
+                    if (!chunk) return;
+                    const id = chunk.includes(' as ') ? chunk.split(' as ')[1].trim() : chunk;
+                    stats.localFileImports.get(normalizedPath).add(id);
+                    if (chunk.includes(' as ')) stats.localFileImports.get(normalizedPath).add(chunk.split(' as ')[0].trim());
+                });
             }
             return;
         }
@@ -528,13 +886,22 @@ function extractImportsFromText(codeLines, fileRawDeps, importedIdentifiers, imp
         // Side-effect only: import '...'
         const sideEffectMatch = line.match(/\bimport\s+['"]([^'"]+)['"]/);
         if (sideEffectMatch) {
-            const pkg = cleanPackageName(sideEffectMatch[1]);
+            const importSource = sideEffectMatch[1];
+            const pkg = cleanPackageName(importSource);
             if (pkg && !builtinModules.includes(pkg)) {
                 fileRawDeps.add(pkg);
                 if (!importedIdentifiers.has(pkg)) importedIdentifiers.set(pkg, new Set());
                 importedIdentifiers.get(pkg).add('__SIDE_EFFECT__');
                 if (!importedLocations.has(pkg)) importedLocations.set(pkg, []);
                 importedLocations.get(pkg).push(lineNum);
+            } else if (importSource.startsWith(".") || importSource.startsWith("/")) {
+                const resolvedPath = path.resolve(path.dirname(currentFilePath), importSource);
+                const normalizedPath = path.normalize(resolvedPath);
+                if (!stats.localFileImports) stats.localFileImports = new Map();
+                if (!stats.localFileImports.has(normalizedPath)) {
+                    stats.localFileImports.set(normalizedPath, new Set());
+                }
+                stats.localFileImports.get(normalizedPath).add('__SIDE_EFFECT__');
             }
             return;
         }
@@ -543,13 +910,22 @@ function extractImportsFromText(codeLines, fileRawDeps, importedIdentifiers, imp
         const cjsMatch = line.match(/\b(?:const|let|var)\s+([a-zA-Z0-9_$]+)\s*=\s*require\s*\(\s*['"]([^'"]+)['"]\s*\)/);
         if (cjsMatch) {
             const id = cjsMatch[1];
-            const pkg = cleanPackageName(cjsMatch[2]);
+            const importSource = cjsMatch[2];
+            const pkg = cleanPackageName(importSource);
             if (pkg && !builtinModules.includes(pkg)) {
                 fileRawDeps.add(pkg);
                 if (!importedIdentifiers.has(pkg)) importedIdentifiers.set(pkg, new Set());
                 importedIdentifiers.get(pkg).add(id);
                 if (!importedLocations.has(pkg)) importedLocations.set(pkg, []);
                 importedLocations.get(pkg).push(lineNum);
+            } else if (importSource.startsWith(".") || importSource.startsWith("/")) {
+                const resolvedPath = path.resolve(path.dirname(currentFilePath), importSource);
+                const normalizedPath = path.normalize(resolvedPath);
+                if (!stats.localFileImports) stats.localFileImports = new Map();
+                if (!stats.localFileImports.has(normalizedPath)) {
+                    stats.localFileImports.set(normalizedPath, new Set());
+                }
+                stats.localFileImports.get(normalizedPath).add(id);
             }
             return;
         }
@@ -557,7 +933,8 @@ function extractImportsFromText(codeLines, fileRawDeps, importedIdentifiers, imp
         // const { a, b } = require('...')
         const cjsDestructMatch = line.match(/\b(?:const|let|var)\s*\{([^}]+)\}\s*=\s*require\s*\(\s*['"]([^'"]+)['"]\s*\)/);
         if (cjsDestructMatch) {
-            const pkg = cleanPackageName(cjsDestructMatch[2]);
+            const importSource = cjsDestructMatch[2];
+            const pkg = cleanPackageName(importSource);
             if (pkg && !builtinModules.includes(pkg)) {
                 if (!importedIdentifiers.has(pkg)) importedIdentifiers.set(pkg, new Set());
                 fileRawDeps.add(pkg);
@@ -569,6 +946,19 @@ function extractImportsFromText(codeLines, fileRawDeps, importedIdentifiers, imp
                 });
                 if (!importedLocations.has(pkg)) importedLocations.set(pkg, []);
                 importedLocations.get(pkg).push(lineNum);
+            } else if (importSource.startsWith(".") || importSource.startsWith("/")) {
+                const resolvedPath = path.resolve(path.dirname(currentFilePath), importSource);
+                const normalizedPath = path.normalize(resolvedPath);
+                if (!stats.localFileImports) stats.localFileImports = new Map();
+                if (!stats.localFileImports.has(normalizedPath)) {
+                    stats.localFileImports.set(normalizedPath, new Set());
+                }
+                cjsDestructMatch[1].split(',').forEach(part => {
+                    const chunk = part.trim();
+                    if (!chunk) return;
+                    const id = chunk.includes(':') ? chunk.split(':')[1].trim() : chunk;
+                    stats.localFileImports.get(normalizedPath).add(id);
+                });
             }
             return;
         }
@@ -576,13 +966,22 @@ function extractImportsFromText(codeLines, fileRawDeps, importedIdentifiers, imp
         // Dynamic import: import('...')
         const dynamicMatch = line.match(/\bimport\s*\(\s*['"]([^'"]+)['"]\s*\)/);
         if (dynamicMatch) {
-            const pkg = cleanPackageName(dynamicMatch[1]);
+            const importSource = dynamicMatch[1];
+            const pkg = cleanPackageName(importSource);
             if (pkg && !builtinModules.includes(pkg)) {
                 fileRawDeps.add(pkg);
                 if (!importedIdentifiers.has(pkg)) importedIdentifiers.set(pkg, new Set());
                 importedIdentifiers.get(pkg).add('__DYNAMIC__');
                 if (!importedLocations.has(pkg)) importedLocations.set(pkg, []);
                 importedLocations.get(pkg).push(lineNum);
+            } else if (importSource.startsWith(".") || importSource.startsWith("/")) {
+                const resolvedPath = path.resolve(path.dirname(currentFilePath), importSource);
+                const normalizedPath = path.normalize(resolvedPath);
+                if (!stats.localFileImports) stats.localFileImports = new Map();
+                if (!stats.localFileImports.has(normalizedPath)) {
+                    stats.localFileImports.set(normalizedPath, new Set());
+                }
+                stats.localFileImports.get(normalizedPath).add('__DYNAMIC__');
             }
         }
     });
@@ -664,7 +1063,7 @@ function detectOrphanedDependencies(declaredDeps, allImportedPackages, binariesU
 // ============================================================
 // HIGH PERFORMANCE AST WORKSPACE PARSING ENGINE
 // ============================================================
-function scanWorkspace(dir, stats, rootNamespace) {
+function scanWorkspace(dir, stats, rootNamespace, detectedFrameworks) {
     const files = fs.readdirSync(dir);
 
     for (const file of files) {
@@ -673,7 +1072,7 @@ function scanWorkspace(dir, stats, rootNamespace) {
 
         if (stat.isDirectory()) {
             if (!IGNORED_DIRS.has(file) && !file.startsWith('.')) {
-                scanWorkspace(fullPath, stats, rootNamespace);
+                scanWorkspace(fullPath, stats, rootNamespace, detectedFrameworks);
             }
         } else {
             const ext = path.extname(file);
@@ -682,6 +1081,17 @@ function scanWorkspace(dir, stats, rootNamespace) {
             if (REGEX_PATTERNS.testFile.test(file)) stats.hasTests = true;
             if (ext === '.ts' || ext === '.tsx') stats.tsFiles++;
             if (ext === '.js' || ext === '.jsx' || ext === '.mjs') stats.jsFiles++;
+
+            // Framework-specific file type detection
+            if (REGEX_PATTERNS.nextjsPage.test(fullPath)) stats.frameworkFiles.nextjs.pages.add(fullPath);
+            if (REGEX_PATTERNS.nextjsApi.test(fullPath)) stats.frameworkFiles.nextjs.apiRoutes.add(fullPath);
+            if (REGEX_PATTERNS.nextjsComponent.test(fullPath)) stats.frameworkFiles.nextjs.components.add(fullPath);
+            if (REGEX_PATTERNS.nuxtPage.test(fullPath)) stats.frameworkFiles.nuxt.pages.add(fullPath);
+            if (REGEX_PATTERNS.nuxtComponent.test(fullPath)) stats.frameworkFiles.nuxt.components.add(fullPath);
+            if (REGEX_PATTERNS.sveltekitPage.test(fullPath)) stats.frameworkFiles.sveltekit.pages.add(fullPath);
+            if (REGEX_PATTERNS.sveltekitComponent.test(fullPath)) stats.frameworkFiles.sveltekit.components.add(fullPath);
+            if (REGEX_PATTERNS.reactHook.test(fullPath)) stats.frameworkFiles.react.hooks.add(fullPath);
+            if (REGEX_PATTERNS.vueComposable.test(fullPath)) stats.frameworkFiles.vue.composables.add(fullPath);
 
             if (VALID_EXTENSIONS.has(ext)) {
                 stats.scannedFiles++;
@@ -696,15 +1106,55 @@ function scanWorkspace(dir, stats, rootNamespace) {
 
                 analyzeCodeStyle(content, stats);
 
-                // Universal Cryptographic Leak Interception
-                REGEX_PATTERNS.secretKeys.lastIndex = 0;
-                let secretMatch;
-                while ((secretMatch = REGEX_PATTERNS.secretKeys.exec(content)) !== null) {
-                    const keyName = secretMatch[1];
-                    const secretValue = secretMatch[2];
-                    const envVarName = `${rootNamespace.toUpperCase().replace(/[^A-Z0-9]/g, '_')}_${keyName.toUpperCase()}`;
-                    stats.discoveredSecrets.push({ filePath: fullPath, keyName, secretValue, envVarName });
-                    stats.envVars.add(envVarName);
+                // Universal Cryptographic Leak Interception (Expanded)
+                for (const [patternName, patternRegex] of Object.entries(REGEX_PATTERNS)) {
+                    if (patternName.startsWith("secretKeys") || patternName.endsWith("Keys") || patternName.endsWith("Tokens")) {
+                        patternRegex.lastIndex = 0;
+                        let match;
+                        while ((match = patternRegex.exec(content)) !== null) {
+                            const keyName = match[1] || patternName; // Use patternName if no specific key name is captured
+                            const secretValue = match[2] || match[0]; // Use full match if no specific value is captured
+                            const envVarName = `${rootNamespace.toUpperCase().replace(/[^A-Z0-9]/g, '_')}_${keyName.toUpperCase().replace(/[^A-Z0-9]/g, '_')}`;
+                            stats.discoveredSecrets.push({ filePath: fullPath, keyName, secretValue, envVarName, type: patternName });
+                            stats.envVars.add(envVarName);
+                        }
+                    } else if (patternName.startsWith("insecure")) {
+                        patternRegex.lastIndex = 0;
+                        let match;
+                        while ((match = patternRegex.exec(content)) !== null) {
+                            const line = content.substring(0, match.index).split("\n").length;
+                            if (patternName === "insecureCrypto") {
+                                stats.quality.insecureCryptoUsage.push({ filePath: fullPath, type: patternName, line, code: match[0] });
+                            } else if (patternName === "sqlInjection") {
+                                stats.quality.sqlInjectionVulnerabilities.push({ filePath: fullPath, type: patternName, line, code: match[0] });
+                            } else if (patternName === "xssVulnerability") {
+                                stats.quality.xssVulnerabilities.push({ filePath: fullPath, type: patternName, line, code: match[0] });
+                            } else {
+                                stats.quality.insecurePatterns.push({ filePath: fullPath, type: patternName, line, code: match[0] });
+                            }
+                        }
+                    } else if (patternName.startsWith("largeImageImport")) {
+                        patternRegex.lastIndex = 0;
+                        let match;
+                        while ((match = patternRegex.exec(content)) !== null) {
+                            const line = content.substring(0, match.index).split("\n").length;
+                            stats.quality.largeImageImports.push({ filePath: fullPath, type: patternName, line, code: match[0] });
+                        }
+                    } else if (patternName.startsWith("unoptimizedLoop")) {
+                        patternRegex.lastIndex = 0;
+                        let match;
+                        while ((match = patternRegex.exec(content)) !== null) {
+                            const line = content.substring(0, match.index).split("\n").length;
+                            stats.quality.unoptimizedLoops.push({ filePath: fullPath, type: patternName, line, code: match[0] });
+                        }
+                    } else if (patternName.startsWith("nextjs") || patternName.startsWith("nuxt") || patternName.startsWith("sveltekit") || patternName.startsWith("react") || patternName.startsWith("vue")) {
+                        patternRegex.lastIndex = 0;
+                        let match;
+                        while ((match = patternRegex.exec(content)) !== null) {
+                            const line = content.substring(0, match.index).split("\n").length;
+                            stats.quality.frameworkSpecificIssues.push({ filePath: fullPath, type: patternName, line, code: match[0] });
+                        }
+                    }
                 }
 
                 // Global Regex Environmental Extraction Module
@@ -719,6 +1169,9 @@ function scanWorkspace(dir, stats, rootNamespace) {
 
                 if (content.includes('import ') || content.includes('export ')) stats.usesEsm = true;
 
+                // Perform framework-specific analysis
+                FrameworkAnalyzer.analyzeFile(fullPath, content, stats, detectedFrameworks);
+
                 // --- AST Parsing (preferred) ---
                 let ast = null;
                 try {
@@ -730,10 +1183,14 @@ function scanWorkspace(dir, stats, rootNamespace) {
                 }
 
                 if (ast) {
-                    extractImportsFromAST(ast, fileRawDeps, importedIdentifiers, importedLocations);
+                    const currentFileExportedSymbols = new Map();
+                    extractImportsFromAST(ast, fileRawDeps, importedIdentifiers, importedLocations, currentFileExportedSymbols, stats, fullPath);
+                    if (currentFileExportedSymbols.size > 0) {
+                        stats.exportedSymbols.set(fullPath, currentFileExportedSymbols);
+                    }
                 } else {
                     // Regex fallback for TypeScript generics / decorators / etc.
-                    extractImportsFromText(codeLines, fileRawDeps, importedIdentifiers, importedLocations);
+                    extractImportsFromText(codeLines, fileRawDeps, importedIdentifiers, importedLocations, stats, fullPath);
                 }
 
                 // Register all deps found in this file
@@ -766,6 +1223,11 @@ function scanWorkspace(dir, stats, rootNamespace) {
 }
 
 async function main() {
+    if (process.env.INIT_CWD && !process.env.NPX_CLI_JS) {
+        console.log("\x1b[31m%s\x1b[0m", "🛑 Wait! Do not install this package locally.");
+        console.log("Please run it directly using: \x1b[36mnpx pkg-scaffold\x1b[0m\n");
+        process.exit(1);
+    }
     const targetDir = process.cwd();
     const folderName = path.basename(targetDir);
     const gitInfo = getGitIdentity();
@@ -775,7 +1237,7 @@ async function main() {
     rl.on('close', () => { rlClosed = true; });
     const safeQuestion = async (prompt) => {
         if (rlClosed || !process.stdin.readable) return '';
-        try { return await safeQuestion(prompt); } catch { return ''; }
+        try { return await rl.question(prompt); } catch { return ''; }
     };
 
     const stats = {
@@ -785,11 +1247,29 @@ async function main() {
         allImportedPackages: new Set(),
         envVars: new Set(),
         style: { semiCount: 0, noSemiCount: 0, tabCount: 0, space2Count: 0, space4Count: 0 },
-        quality: { varCount: 0, hasEval: false, syncFsCount: 0 },
+        quality: { 
+            varCount: 0, 
+            hasEval: false, 
+            syncFsCount: 0, 
+            insecurePatterns: [], 
+            complexRegexes: [],
+            insecureCryptoUsage: [],
+            sqlInjectionVulnerabilities: [],
+            xssVulnerabilities: [],
+            largeImageImports: [],
+            unoptimizedLoops: [],
+            frameworkSpecificIssues: []
+        },
         phantomInjections: new Map(),
         discoveredSecrets: [],
+        insecureCodePatterns: [], // New: detailed insecure code patterns
         subWorkspaces: [],
         conflictingLockfiles: [],
+        exportedSymbols: new Map(), // filePath -> Map<symbolName, { type: 'function'|'variable'|'class', loc: {line, col} }>
+        usedExports: new Map(),     // filePath -> Set<symbolName> (exports from this file that are used elsewhere)
+        unusedFiles: new Set(),     // Files that are never imported/referenced
+        unusedExportsPerFile: new Map(), // filePath -> Set<symbolName> (exports from this file that are not used anywhere)
+        localFileImports: new Map(), // filePath -> Set<importedSymbol> (local imports from this file)
         unusedDepsInCode: new Set(),
         unusedImportsPerFile: new Map(),
         filesWithEnvVars: new Set(),
@@ -799,6 +1279,14 @@ async function main() {
         ghostDependencies: new Set(),    // used in code, missing from package.json
         orphanedDependencies: new Set(), // in package.json, never imported
         deprecatedPackages: new Map(),   // pkg -> deprecation message
+        frameworkFiles: {
+            nextjs: { pages: new Set(), apiRoutes: new Set(), components: new Set(), dataFetching: new Map(), optimizations: [] },
+            nuxt: { pages: new Set(), components: new Set(), modules: new Set(), dataFetching: new Map(), optimizations: [] },
+            sveltekit: { pages: new Set(), components: new Set(), endpoints: new Set(), loadFunctions: new Map(), optimizations: [] },
+            react: { hooks: new Set(), components: new Set(), optimizations: [] },
+            vue: { composables: new Set(), components: new Set(), optimizations: [] },
+        },
+        frameworkOptimizations: [], // General framework-agnostic optimizations
     };
 
     const activePkgManager = detectPackageManager(targetDir, stats);
@@ -807,6 +1295,10 @@ async function main() {
     let preExistingDeps = [];
     let preExistingDevDeps = [];
     let existingPackageJson = null;
+
+
+
+
 
     console.log(`\n${'═'.repeat(67)}`);
     console.log(`🚀 pkg-scaffold v2.0: Advanced Dependency Intelligence Engine`);
@@ -850,6 +1342,10 @@ async function main() {
             if (existingPackageJson.dependencies) preExistingDeps = Object.keys(existingPackageJson.dependencies);
             if (existingPackageJson.devDependencies) preExistingDevDeps = Object.keys(existingPackageJson.devDependencies);
 
+            // Detect frameworks after packageJson is loaded
+            const detectedFrameworks = FrameworkEngine.detect(targetDir, existingPackageJson);
+            stats.detectedFrameworks = detectedFrameworks;
+
             const combinedDeps = [...preExistingDeps, ...preExistingDevDeps];
             let brokenEcosystem = combinedDeps.length === 0;
 
@@ -883,8 +1379,11 @@ async function main() {
 
     // --- Workspace scan ---
     console.log(`\n🔬 Scanning workspace source files...`);
-    scanWorkspace(targetDir, stats, folderName);
+    scanWorkspace(targetDir, stats, folderName, detectedFrameworks);
     console.log(`   ✅ Scanned ${stats.scannedFiles} source file(s) | TS: ${stats.tsFiles} | JS: ${stats.jsFiles}`);
+
+    // Build dependency graph for advanced analysis
+    const dependencyGraph = new DependencyGraph(stats);
 
     // --- Binary-to-package resolution ---
     const binariesInScripts = existingPackageJson ? getBinariesFromPackageJson(existingPackageJson) : [];
@@ -1526,6 +2025,7 @@ ${activePkgManager} install
     console.log(`\n📦 Auto-scaffolding pipeline complete!`);
 
     // Summary report
+    postProcessAnalysis(stats, dependencyGraph);
     console.log(`\n${'═'.repeat(67)}`);
     console.log(`📊 DEPENDENCY INTELLIGENCE SUMMARY`);
     console.log(`${'═'.repeat(67)}`);
@@ -1537,13 +2037,50 @@ ${activePkgManager} install
         console.log(`   🗑️  Orphaned deps (unused):   ${stats.orphanedDependencies.size}`);
     if (allDiscoveredUnused.size > 0)
         console.log(`   ⚡ Unused imports:           ${allDiscoveredUnused.size}`);
+    if (stats.unusedExportsPerFile.size > 0) {
+        console.log(`   📤 Unused exports:           ${Array.from(stats.unusedExportsPerFile.values()).reduce((acc, val) => acc + val.size, 0)} in ${stats.unusedExportsPerFile.size} files`);
+    }
+    if (stats.unusedFiles.size > 0) {
+        console.log(`   🗑️  Unused files:             ${stats.unusedFiles.size}`);
+    }
     if (stats.deprecatedPackages.size > 0)
         console.log(`   📛 Deprecated packages:      ${stats.deprecatedPackages.size}`);
     if (stats.phantomInjections.size > 0)
         console.log(`   👻 Phantom injections:       ${stats.phantomInjections.size} file(s)`);
     if (stats.discoveredSecrets.length > 0)
         console.log(`   🔐 Hardcoded secrets:        ${stats.discoveredSecrets.length} — \x1b[31mSECURITY RISK\x1b[0m`);
+    if (stats.quality.insecureCryptoUsage.length > 0)
+        console.log(`   🚫 Insecure Crypto:          ${stats.quality.insecureCryptoUsage.length} — \x1b[31mSECURITY RISK\x1b[0m`);
+    if (stats.quality.sqlInjectionVulnerabilities.length > 0)
+        console.log(`   💉 SQL Injection:            ${stats.quality.sqlInjectionVulnerabilities.length} — \x1b[31mSECURITY RISK\x1b[0m`);
+    if (stats.quality.xssVulnerabilities.length > 0)
+        console.log(`   🌐 XSS Vulnerabilities:      ${stats.quality.xssVulnerabilities.length} — \x1b[31mSECURITY RISK\x1b[0m`);
+    if (stats.quality.largeImageImports.length > 0)
+        console.log(`   🖼️  Large Image Imports:      ${stats.quality.largeImageImports.length} — \x1b[33mPERFORMANCE WARNING\x1b[0m`);
+    if (stats.quality.unoptimizedLoops.length > 0)
+        console.log(`   🐌 Unoptimized Loops:        ${stats.quality.unoptimizedLoops.length} — \x1b[33mPERFORMANCE WARNING\x1b[0m`);
+    if (stats.quality.frameworkSpecificIssues.length > 0)
+        console.log(`   🧩 Framework Issues:         ${stats.quality.frameworkSpecificIssues.length} — \x1b[33mFRAMEWORK OPTIMIZATION\x1b[0m`);
     console.log(`${'═'.repeat(67)}`);
+
+    // 6. Hygen-like Templating and Scaffolding
+    const templateManager = new TemplateManager(targetDir, safeQuestion);
+    const availableTemplates = await templateManager.listAvailableTemplates();
+
+    if (availableTemplates.length > 0) {
+        console.log(`\n🧩 \x1b[1mCustom Templating Engine Detected:\x1b[0m`);
+        console.log(`   Available templates: ${availableTemplates.join(", ")}`);
+        const useTemplate = await safeQuestion(`❓ Do you want to generate code from a template? (y/N): `);
+        if (useTemplate.toLowerCase() === 'y') {
+            const chosenTemplate = await safeQuestion(`❓ Enter template name: `);
+            if (availableTemplates.includes(chosenTemplate)) {
+                const templateVars = await templateManager.promptForVariables(chosenTemplate);
+                await templateManager.generate(chosenTemplate, templateVars);
+            } else {
+                console.log(`   ⚠️  Template '${chosenTemplate}' not found.`);
+            }
+        }
+    }
 
     const userPromptChoice = await safeQuestion(`❓ Detected package manager: "${activePkgManager}". Run "${activePkgManager} install" now? (y/N): `);
     rl.close();
@@ -1563,3 +2100,353 @@ ${activePkgManager} install
 }
 
 main();
+
+// ============================================================
+// 📊 POST-PROCESSING ANALYSIS: Unused Exports, Unused Files
+// ============================================================
+function postProcessAnalysis(stats, dependencyGraph) {
+    // Initialize all scanned files as potentially unused
+    const allScannedFiles = new Set(Array.from(stats.exportedSymbols.keys()));
+    stats.unusedFiles = new Set(allScannedFiles);
+
+    // Determine used exports and identify used files
+    for (const [importerFilePath, importedSymbols] of stats.localFileImports.entries()) {
+        // Remove importerFilePath from unusedFiles if it imports something
+        if (importedSymbols.size > 0) {
+            stats.unusedFiles.delete(importerFilePath);
+        }
+
+        for (const [exportedFilePath, exportedSymbolsMap] of stats.exportedSymbols.entries()) {
+            // If importerFilePath imports from exportedFilePath
+            if (importerFilePath === exportedFilePath) {
+                // This is a self-import or internal reference, not a cross-file import for export usage
+                continue;
+            }
+
+            // Check if any symbol from exportedFilePath is imported by importerFilePath
+            for (const importedSymbol of importedSymbols) {
+                if (exportedSymbolsMap.has(importedSymbol)) {
+                    if (!stats.usedExports.has(exportedFilePath)) {
+                        stats.usedExports.set(exportedFilePath, new Set());
+                    }
+                    stats.usedExports.get(exportedFilePath).add(importedSymbol);
+                    stats.unusedFiles.delete(exportedFilePath); // Mark as used
+                }
+            }
+        }
+    }
+
+    // Identify unused exports per file
+    for (const [filePath, exportedSymbolsMap] of stats.exportedSymbols.entries()) {
+        const used = stats.usedExports.get(filePath) || new Set();
+        const unused = new Set();
+        for (const [symbolName, symbolInfo] of exportedSymbolsMap.entries()) {
+            if (!used.has(symbolName)) {
+                unused.add(symbolName);
+            }
+        }
+        if (unused.size > 0) {
+            stats.unusedExportsPerFile.set(filePath, unused);
+        }
+    }
+
+    // Identify truly unused files: those that are never imported by any other file.
+    const allScannedFiles = new Set(stats.scannedFiles); // All files that were processed
+    const entryPoints = new Set(); // Files that are likely entry points (e.g., main, framework-specific entry points)
+
+    // Add main entry point if package.json has one
+    if (stats.packageJson && stats.packageJson.main) {
+        entryPoints.add(path.resolve(stats.targetDir, stats.packageJson.main));
+    }
+    if (stats.packageJson && stats.packageJson.module) {
+        entryPoints.add(path.resolve(stats.targetDir, stats.packageJson.module));
+    }
+    if (stats.packageJson && stats.packageJson.type === 'module' && fs.existsSync(path.join(stats.targetDir, 'index.js'))) {
+        entryPoints.add(path.resolve(stats.targetDir, 'index.js'));
+    }
+    if (stats.packageJson && stats.packageJson.type !== 'module' && fs.existsSync(path.join(stats.targetDir, 'index.cjs'))) {
+        entryPoints.add(path.resolve(stats.targetDir, 'index.cjs'));
+    }
+
+    // Add framework-specific entry points or files that are implicitly used
+    if (stats.detectedFrameworks.includes('next')) {
+        stats.frameworkFiles.nextjs.pages.forEach(file => entryPoints.add(file));
+        stats.frameworkFiles.nextjs.apiRoutes.forEach(file => entryPoints.add(file));
+        stats.frameworkFiles.nextjs.components.forEach(file => entryPoints.add(file));
+    }
+    if (stats.detectedFrameworks.includes('nuxt')) {
+        stats.frameworkFiles.nuxt.pages.forEach(file => entryPoints.add(file));
+        stats.frameworkFiles.nuxt.components.forEach(file => entryPoints.add(file));
+    }
+    if (stats.detectedFrameworks.includes('svelte')) {
+        stats.frameworkFiles.sveltekit.pages.forEach(file => entryPoints.add(file));
+        stats.frameworkFiles.sveltekit.endpoints.forEach(file => entryPoints.add(file));
+        stats.frameworkFiles.sveltekit.components.forEach(file => entryPoints.add(file));
+    }
+    if (stats.detectedFrameworks.includes('react')) {
+        stats.frameworkFiles.react.components.forEach(file => entryPoints.add(file));
+        stats.frameworkFiles.react.hooks.forEach(file => entryPoints.add(file));
+    }
+    if (stats.detectedFrameworks.includes('vue')) {
+        stats.frameworkFiles.vue.components.forEach(file => entryPoints.add(file));
+        stats.frameworkFiles.vue.composables.forEach(file => entryPoints.add(file));
+    }
+
+    // Use the DependencyGraph to find all reachable files from the entry points
+    const reachableFiles = dependencyGraph.getReachableFiles(Array.from(entryPoints));
+
+    // A file is considered unused if it was scanned but not reachable from any entry point
+    stats.unusedFiles = new Set(Array.from(allScannedFiles).filter(file => !reachableFiles.has(file)));
+
+    // Further refinement: check for files referenced in common configuration files
+    // This is a more advanced step and would require parsing specific config file formats.
+    // Example: Tailwind CSS `tailwind.config.js` `content` array.
+    // For now, this is a conceptual placeholder.
+    if (stats.detectedFrameworks.includes('tailwind')) {
+        // Look for tailwind.config.js
+        const tailwindConfigPath = path.join(stats.targetDir, 'tailwind.config.js');
+        if (fs.existsSync(tailwindConfigPath)) {
+            try {
+                // This would require a more robust JS file parser to extract the 'content' array
+                // For demonstration, we'll assume a simple regex or AST analysis could find patterns like:
+                // content: ['./src/**/*.{js,jsx,ts,tsx}', './public/index.html']
+                const tailwindContent = fs.readFileSync(tailwindConfigPath, 'utf8');
+                const contentArrayMatch = tailwindContent.match(/content:\s*\[([^\]]+)\]/s);
+                if (contentArrayMatch && contentArrayMatch[1]) {
+                    const globPatterns = contentArrayMatch[1].split(',').map(s => s.trim().replace(/["']/g, ''));
+                    for (const pattern of globPatterns) {
+                        // Resolve glob patterns to actual files and mark them as used
+                        // This would require a glob library (e.g., 'glob' npm package)
+                        // For now, we'll just log the intent.
+                        // console.log(`   💡 Tailwind config references files via glob: ${pattern}`);
+                        // A real implementation would iterate through glob results and remove from unusedFiles
+                    }
+                }
+            } catch (e) {
+                console.error(`   ❌ Error parsing tailwind.config.js: ${e.message}`);
+            }
+        }
+    }
+
+}
+
+// ============================================================
+// 🧩 ADVANCED TEMPLATE MANAGEMENT SYSTEM (Hygen-level)
+// ============================================================
+class TemplateManager {
+    constructor(baseDir, safeQuestion) {
+        this.baseDir = baseDir;
+        this.safeQuestion = safeQuestion;
+        this.templateSources = [
+            { name: 'local', path: path.join(this.baseDir, '.templates') },
+            // Future: Add remote Git repositories, e.g., { name: 'remote-official', url: 'https://github.com/my-org/templates.git' }
+        ];
+    }
+
+    async listAvailableTemplates() {
+        const allTemplates = new Set();
+        for (const source of this.templateSources) {
+            if (source.name === 'local') {
+                const localTemplatesPath = source.path;
+                if (fs.existsSync(localTemplatesPath)) {
+                    const templates = fs.readdirSync(localTemplatesPath, { withFileTypes: true })
+                        .filter(dirent => dirent.isDirectory())
+                        .map(dirent => dirent.name);
+                    templates.forEach(t => allTemplates.add(t));
+                }
+            }
+            // Future: Handle remote template sources
+        }
+        return Array.from(allTemplates);
+    }
+
+    async getTemplatePath(templateName) {
+        for (const source of this.templateSources) {
+            if (source.name === 'local') {
+                const templatePath = path.join(source.path, templateName);
+                if (fs.existsSync(templatePath)) {
+                    return templatePath;
+                }
+            }
+        }
+        return null;
+    }
+
+    async promptForVariables(templateName) {
+        const templatePath = await this.getTemplatePath(templateName);
+        if (!templatePath) {
+            console.log(`   ⚠️  Template '${templateName}' not found.`);
+            return {};
+        }
+
+        const configPath = path.join(templatePath, '_config.json');
+        if (fs.existsSync(configPath)) {
+            try {
+                const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+                const variables = {};
+                for (const key in config.prompts) {
+                    const prompt = config.prompts[key];
+                    let answer = await this.safeQuestion(`❓ ${prompt.message || key}: `);
+                    if (prompt.type === 'boolean') {
+                        answer = answer.toLowerCase() === 'y' || answer.toLowerCase() === 'yes';
+                    } else if (prompt.type === 'number') {
+                        answer = parseFloat(answer);
+                    }
+                    variables[key] = answer;
+                }
+                return variables;
+            } catch (e) {
+                console.error(`   ❌ Error reading template config for '${templateName}': ${e.message}`);
+                return {};
+            }
+        }
+        return {};
+    }
+
+    async generate(templateName, variables) {
+        const templatePath = await this.getTemplatePath(templateName);
+        if (!templatePath) return;
+
+        console.log(`   🚀 Generating '${templateName}' template...`);
+
+        const renderFile = async (srcPath, destPath, vars) => {
+            const content = fs.readFileSync(srcPath, 'utf8');
+            // Simple templating: replace {{varName}} with variable value
+            let renderedContent = content;
+            for (const key in vars) {
+                renderedContent = renderedContent.replace(new RegExp(`{{\s*${key}\s*}}`, 'g'), vars[key]);
+            }
+            fs.writeFileSync(destPath, renderedContent);
+        };
+
+        const processDirectory = async (currentSrcDir, currentDestDir, vars) => {
+            fs.mkdirSync(currentDestDir, { recursive: true });
+            const items = fs.readdirSync(currentSrcDir, { withFileTypes: true });
+
+            for (const item of items) {
+                const srcItemPath = path.join(currentSrcDir, item.name);
+                const destItemPath = path.join(currentDestDir, item.name);
+
+                if (item.isDirectory()) {
+                    if (item.name !== '_config.json') { // Skip config file
+                        await processDirectory(srcItemPath, destItemPath, vars);
+                    }
+                } else {
+                    await renderFile(srcItemPath, destItemPath, vars);
+                }
+            }
+        };
+
+        await processDirectory(templatePath, this.baseDir, variables);
+        console.log(`   ✅ Template '${templateName}' generated successfully.`);
+    }
+}
+
+// ============================================================
+// 🌳 ADVANCED DEPENDENCY GRAPH ENGINE (Knip-level)
+// ============================================================
+class DependencyGraph {
+    constructor(stats) {
+        this.stats = stats;
+        this.graph = new Map(); // Map<filePath, { imports: Set<filePath>, exports: Set<symbolName> }>
+        this.symbolToFilePath = new Map(); // Map<symbolName, filePath> for global exports
+        this.buildGraph();
+    }
+
+    buildGraph() {
+        // Initialize graph nodes for all scanned files
+        for (const filePath of this.stats.scannedFiles) {
+            this.graph.set(filePath, { imports: new Set(), exports: new Set() });
+        }
+
+        // Populate exports
+        for (const [filePath, exportedSymbolsMap] of this.stats.exportedSymbols.entries()) {
+            const node = this.graph.get(filePath);
+            if (node) {
+                for (const [symbolName, symbolInfo] of exportedSymbolsMap.entries()) {
+                    node.exports.add(symbolName);
+                    // For simplicity, assuming unique global symbol names for now, or handling conflicts
+                    // A more robust solution would handle namespaces or re-exports more carefully
+                    this.symbolToFilePath.set(symbolName, filePath);
+                }
+            }
+        }
+
+        // Populate imports
+        for (const [importerFilePath, importedSymbols] of this.stats.localFileImports.entries()) {
+            const importerNode = this.graph.get(importerFilePath);
+            if (importerNode) {
+                for (const importedSymbol of importedSymbols) {
+                    // If it's a direct path import, add to imports
+                    if (importedSymbol.startsWith(".") || importedSymbol.startsWith("/")) {
+                        const resolvedPath = path.normalize(path.resolve(path.dirname(importerFilePath), importedSymbol));
+                        if (this.graph.has(resolvedPath)) {
+                            importerNode.imports.add(resolvedPath);
+                        }
+                    } else {
+                        // If it's a named import, find the file that exports it
+                        const exporterFilePath = this.symbolToFilePath.get(importedSymbol);
+                        if (exporterFilePath && this.graph.has(exporterFilePath)) {
+                            importerNode.imports.add(exporterFilePath);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    getDependents(filePath) {
+        const dependents = new Set();
+        for (const [importer, node] of this.graph.entries()) {
+            if (node.imports.has(filePath)) {
+                dependents.add(importer);
+            }
+        }
+        return dependents;
+    }
+
+    getDependencies(filePath) {
+        const node = this.graph.get(filePath);
+        return node ? node.imports : new Set();
+    }
+
+    // Perform a reachability analysis to find all files reachable from entry points
+    getReachableFiles(entryPoints) {
+        const reachable = new Set();
+        const queue = [...entryPoints];
+
+        while (queue.length > 0) {
+            const currentFile = queue.shift();
+            if (reachable.has(currentFile)) continue;
+
+            reachable.add(currentFile);
+            const node = this.graph.get(currentFile);
+            if (node) {
+                for (const importedFile of node.imports) {
+                    if (!reachable.has(importedFile)) {
+                        queue.push(importedFile);
+                    }
+                }
+            }
+        }
+        return reachable;
+    }
+
+    // Generate a DOT graph string for visualization
+    toDotGraph() {
+        let dot = `digraph G {\n`;
+        dot += `  rankdir=LR;\n`;
+        dot += `  node [shape=box];\n`;
+
+        for (const [filePath, node] of this.graph.entries()) {
+            const fileName = path.basename(filePath);
+            dot += `  "${filePath}" [label="${fileName}"];\n`;
+
+            for (const importedFile of node.imports) {
+                dot += `  "${filePath}" -> "${importedFile}";\n`;
+            }
+        }
+        dot += `}\n`;
+        return dot;
+    }
+}
