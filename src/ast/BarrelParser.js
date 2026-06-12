@@ -1,145 +1,177 @@
 import ts from 'typescript';
 import fs from 'fs/promises';
-import path from 'path';
 
 /**
- * High-Density Barrel File Resolution Unwrapper
- * Flattens out complex multi-tier indirect export files ("Index of Doom").
+ * Enterprise Wildcard Optimization & Flattening Layer for Barrel Operations
+ * Traces unreferenced paths through redistribution entries.
  */
 export class BarrelParser {
   constructor(context, resolver) {
     this.context = context;
     this.resolver = resolver;
-    // Cache tracking matrices to eliminate recursive loops inside circular configurations
-    this.processedBarrels = new Map();
+    this.cachedSpecifications = new Map();
   }
 
   /**
-   * Evaluates if a target component operates primarily as a symbol redistribution barrel file.
-   * @param {string} filePath - Absolute system file target pointer reference
-   * @returns {Object|null} Map specification records tracking cross-exported identifiers
+   * Compiles the structural export layout for a specific index or barrel target.
+   * @param {string} filePath - Absolute path to on-disk target element
    */
   async parseBarrelSpecification(filePath) {
-    if (this.processedBarrels.has(filePath)) {
-      return this.processedBarrels.get(filePath);
+    if (this.cachedSpecifications.has(filePath)) {
+      return this.cachedSpecifications.get(filePath);
     }
 
+    const specification = {
+      isBarrelInstance: false,
+      wildcardExports: new Set(),         // export * from './module';
+      namespacedWildcardExports: new Map(), // export * as Utils from './module';
+      forwardedNamedExports: new Map(),   // export { token as alias } from './module';
+      declaredLocalExports: new Set()      // export const a = 1;
+    };
+
     try {
-      const sourceText = await fs.readFile(filePath, 'utf8');
-      const sourceFile = ts.createSourceFile(
-        filePath,
-        sourceText,
-        ts.ScriptTarget.Latest,
-        true
-      );
+      const code = await fs.readFile(filePath, 'utf8');
+      const sourceFile = ts.createSourceFile(filePath, code, ts.ScriptTarget.Latest, true);
 
-      const manifest = {
-        isBarrel: false,
-        reExportedWildcards: new Set(), // export * from './module';
-        reExportedNamedMappings: new Map(), // export { token } from './module';
-        localExports: new Set()
-      };
+      this.harvestExportSignatures(sourceFile, specification);
 
-      this.analyzeExports(sourceFile, manifest);
-
-      if (manifest.reExportedWildcards.size > 0 || manifest.reExportedNamedMappings.size > 0) {
-        manifest.isBarrel = true;
+      if (specification.wildcardExports.size > 0 || 
+          specification.namespacedWildcardExports.size > 0 || 
+          specification.forwardedNamedExports.size > 0) {
+        specification.isBarrelInstance = true;
       }
 
-      this.processedBarrels.set(filePath, manifest);
-      return manifest;
+      this.cachedSpecifications.set(filePath, specification);
+      return specification;
     } catch {
-      return null;
+      return specification; // Error state defaults to safe boundaries layout manifest
     }
   }
 
-  analyzeExports(node, manifest) {
+  harvestExportSignatures(node, spec) {
     if (!node) return;
 
     switch (node.kind) {
-      // Analyze global export declaration statement structures
       case ts.SyntaxKind.ExportDeclaration: {
-        const specifier = node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier) 
-          ? node.moduleSpecifier.text 
+        const targetSpecifier = node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier)
+          ? node.moduleSpecifier.text
           : null;
 
-        if (specifier) {
+        if (targetSpecifier) {
           if (!node.exportClause) {
-            // Wildcard structural tracking pattern detected: export * from './module';
-            manifest.reExportedWildcards.add(specifier);
+            // Standard Wildcard Transfer: export * from './module';
+            spec.wildcardExports.add(targetSpecifier);
+          } else if (ts.isNamespaceExport(node.exportClause)) {
+            // Namespaced Wildcard Transfer: export * as Core from './module';
+            const namespaceAlias = node.exportClause.name.text;
+            spec.namespacedWildcardExports.set(namespaceAlias, targetSpecifier);
           } else if (ts.isNamedExports(node.exportClause)) {
-            // Named structural tracking pattern detected: export { symbol as key } from './module';
+            // Selective Re-export Forwarding: export { x, y as z } from './module';
             node.exportClause.elements.forEach(element => {
-              const originName = element.propertyName ? element.propertyName.text : element.name.text;
-              const exposedName = element.name.text;
-              manifest.reExportedNamedMappings.set(exposedName, {
-                moduleSpecifier: specifier,
-                localSymbolName: originName
+              const originalSymbol = element.propertyName ? element.propertyName.text : element.name.text;
+              const exposedAlias = element.name.text;
+              spec.forwardedNamedExports.set(exposedAlias, {
+                targetModule: targetSpecifier,
+                sourceSymbol: originalSymbol
               });
             });
           }
         }
         break;
       }
-      
-      // Secondary capture verification for locally bound structural variables
+
+      // Track items declared directly within the file boundary
       case ts.SyntaxKind.FunctionDeclaration:
       case ts.SyntaxKind.ClassDeclaration:
       case ts.SyntaxKind.InterfaceDeclaration:
-      case ts.SyntaxKind.TypeAliasDeclaration: {
+      case ts.SyntaxKind.TypeAliasDeclaration:
+      case ts.SyntaxKind.EnumDeclaration: {
         if (node.modifiers && node.modifiers.some(m => m.kind === ts.SyntaxKind.ExportKeyword)) {
           if (node.name && ts.isIdentifier(node.name)) {
-            manifest.localExports.add(node.name.text);
+            spec.declaredLocalExports.add(node.name.text);
           }
+        }
+        break;
+      }
+
+      case ts.SyntaxKind.VariableStatement: {
+        if (node.modifiers && node.modifiers.some(m => m.kind === ts.SyntaxKind.ExportKeyword)) {
+          node.declarationList.declarations.forEach(decl => {
+            if (ts.isIdentifier(decl.name)) {
+              spec.declaredLocalExports.add(decl.name.text);
+            }
+          });
         }
         break;
       }
     }
 
-    ts.forEachChild(node, child => this.analyzeExports(child, manifest));
+    ts.forEachChild(node, child => this.harvestExportSignatures(child, spec));
   }
 
   /**
-   * Resolves the true definition origin of an export, stripping away barrel file layer wrappers.
-   * @param {string} barrelPath - Mapped structural index file context point
-   * @param {string} symbolName - Mapped structural token identifier name
-   * @param {Map} projectGraph - Global memory tracking references graph
+   * Challenge #3 Resolution Logic. Unwraps nested redistribution links to find origin source nodes.
+   * @param {string} contextFilePath - Current position filename vector pointer
+   * @param {string} targetSymbolName - Targeted semantic variable signature name
+   * @param {Map} activeProjectGraph - Global active module maps directory registry
+   * @param {Set} [protectionStack] - Avoids cyclic validation traps inside self-referencing links
    */
-  async resolveSymbolOrigin(barrelPath, symbolName, projectGraph) {
-    const manifest = await this.parseBarrelSpecification(barrelPath);
-    if (!manifest || !manifest.isBarrel) {
-      return { absolutePath: barrelPath, exportName: symbolName };
+  async determineSymbolDeclarationOrigin(contextFilePath, targetSymbolName, activeProjectGraph, protectionStack = new Set()) {
+    if (protectionStack.has(contextFilePath)) {
+      return { originFile: contextFilePath, originSymbol: targetSymbolName };
+    }
+    protectionStack.add(contextFilePath);
+
+    const spec = await this.parseBarrelSpecification(contextFilePath);
+    if (!spec.isBarrelInstance) {
+      return { originFile: contextFilePath, originSymbol: targetSymbolName };
     }
 
-    // Attempt alignment first against direct explicit named re-exports mappings
-    if (manifest.reExportedNamedMappings.has(symbolName)) {
-      const rule = manifest.reExportedNamedMappings.get(symbolName);
-      const resolvedModule = this.resolver.resolveModulePath(barrelPath, rule.moduleSpecifier);
-      return this.resolveSymbolOrigin(resolvedModule, rule.localSymbolName, projectGraph);
+    // Rule A: Settle boundary immediately if local declaration matches token signature name
+    if (spec.declaredLocalExports.has(targetSymbolName)) {
+      return { originFile: contextFilePath, originSymbol: targetSymbolName };
     }
 
-    // Sweep across global star re-exports vectors
-    for (const relativeModule of manifest.reExportedWildcards) {
-      const resolvedModule = this.resolver.resolveModulePath(barrelPath, relativeModule);
-      const subManifest = await this.parseBarrelSpecification(resolvedModule);
+    // Rule B: Evaluate explicit named re-export mappings
+    if (spec.forwardedNamedExports.has(targetSymbolName)) {
+      const routingRule = spec.forwardedNamedExports.get(targetSymbolName);
+      const fullyResolvedPath = this.resolver.resolveModulePath(contextFilePath, routingRule.targetModule);
+      return this.determineSymbolDeclarationOrigin(fullyResolvedPath, routingRule.sourceSymbol, activeProjectGraph, protectionStack);
+    }
+
+    // Rule C: Evaluate structural namespace alias groupings
+    if (spec.namespacedWildcardExports.has(targetSymbolName)) {
+      const relativeModule = spec.namespacedWildcardExports.get(targetSymbolName);
+      const fullyResolvedPath = this.resolver.resolveModulePath(contextFilePath, relativeModule);
+      return { originFile: fullyResolvedPath, originSymbol: '*' };
+    }
+
+    // Rule D: Sweep through anonymous star re-exports vectors
+    for (const relativePath of spec.wildcardExports) {
+      const fullyResolvedPath = this.resolver.resolveModulePath(contextFilePath, relativePath);
       
-      // If target file records house the literal definition declaration boundary point directly, settle edge link
-      if (projectGraph.has(resolvedModule)) {
-        const node = projectGraph.get(resolvedModule);
-        if (node.internalExports.has(symbolName) || (subManifest && subManifest.localExports.has(symbolName))) {
-          return this.resolveSymbolOrigin(resolvedModule, symbolName, projectGraph);
-        }
-        
-        // Dynamic recursive validation for barrel instances nested within barrel layers
-        if (subManifest && subManifest.isBarrel) {
-          const deepResolution = await this.resolveSymbolOrigin(resolvedModule, symbolName, projectGraph);
-          if (deepResolution && deepResolution.absolutePath !== resolvedModule) {
-            return deepResolution;
-          }
+      // Look inside the graph metadata map configuration to verify child target availability
+      const targetSubSpec = await this.parseBarrelSpecification(fullyResolvedPath);
+      
+      if (targetSubSpec.declaredLocalExports.has(targetSymbolName) || 
+          targetSubSpec.forwardedNamedExports.has(targetSymbolName)) {
+        return this.determineSymbolDeclarationOrigin(fullyResolvedPath, targetSymbolName, activeProjectGraph, protectionStack);
+      }
+
+      // Dynamic recursive trace for multi-tier nested barrel file layouts
+      if (targetSubSpec.isBarrelInstance) {
+        const continuousResolutionTrace = await this.determineSymbolDeclarationOrigin(
+          fullyResolvedPath,
+          targetSymbolName,
+          activeProjectGraph,
+          protectionStack
+        );
+        if (continuousResolutionTrace && continuousResolutionTrace.originFile !== fullyResolvedPath) {
+          return continuousResolutionTrace;
         }
       }
     }
 
-    return { absolutePath: barrelPath, exportName: symbolName };
+    return { originFile: contextFilePath, originSymbol: targetSymbolName };
   }
 }
