@@ -1,6 +1,6 @@
 {
   "name": "pkg-scaffold",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "description": "An advanced, AST-driven dependency resolution, refactoring, and self-healing engine.",
   "type": "module",
   "main": "index.js",
