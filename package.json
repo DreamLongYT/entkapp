@@ -1,0 +1,25 @@
+{
+  "name": "pkg-scaffold",
+  "version": "1.0.0",
+  "description": "Zero-config workspace initializer that scans your source code, generates modern configuration layers, corrects missing imports, and automatically audits legacy dependencies.",
+  "type": "module",
+  "main": "index.js",
+  "bin": {
+    "pkg-scaffold": "./index.js"
+  },
+  "keywords": [
+    "scaffold",
+    "init",
+    "package.json",
+    "setup",
+    "dx",
+    "cli",
+    "deprecated-check",
+    "automation"
+  ],
+  "author": "DreamLongYT",
+  "license": "MIT",
+  "dependencies": {
+    "npm-deprecated-check": "^1.4.0"
+  }
+}
