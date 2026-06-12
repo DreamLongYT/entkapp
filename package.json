@@ -1,7 +1,7 @@
 {
   "name": "pkg-scaffold",
-  "version": "1.1.1",
-  "description": "Zero-config workspace initializer that scans your source code, generates modern configuration layers, corrects missing imports, and automatically audits legacy dependencies.",
+  "version": "2.0.0",
+  "description": "Zero-config workspace initializer with advanced dependency intelligence: detects ghost dependencies (used but undeclared), orphaned packages (declared but unused), unused imports with file locations, deprecated packages, hardcoded secrets, and more.",
   "type": "module",
   "main": "index.js",
   "bin": {
@@ -18,7 +18,14 @@
     "dx",
     "cli",
     "deprecated-check",
-    "automation"
+    "automation",
+    "unused-packages",
+    "ghost-dependencies",
+    "orphaned-dependencies",
+    "dependency-analysis",
+    "dependency-audit",
+    "missing-imports",
+    "dead-code"
   ],
   "author": "DreamLongYT",
   "license": "MIT",
