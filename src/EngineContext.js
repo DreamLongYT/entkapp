@@ -1,21 +1,31 @@
-import fs from 'fs/promises';
+/**
+ * ============================================================================
+ * 📦 pkg-scaffold v3.0.0: Enterprise In-Memory Codebase State Manifest
+ * ============================================================================
+ * Implements a high-density, centralized graph database context for tracking
+ * software engineering debt, dependencies, types, and vulnerabilities.
+ */
+
 import path from 'path';
+import fs from 'fs/promises';
 
 /**
- * Structural Blueprint for an Isolated Codebase Component Node
+ * High-Fidelity Graph Element Node representing a single file asset boundary.
  */
-class GraphNode {
+export class GraphNode {
   constructor(filePath) {
-    this.filePath = filePath;
+    this.filePath = path.normalize(filePath);
     this.contentHash = '';
     this.isLibraryEntry = false;
-    
+    this.isFrameworkContract = false;
+    this.scriptKind = 0; // Ambient enum mapping
+
     // Explicit and Computed Dynamic Syntax Boundaries
     this.explicitImports = new Set();
     this.dynamicImports = new Set();
     this.importedSymbols = new Set(); // Format: 'specifier:symbol' or 'specifier:*'
     
-    // Internal API Exposed Interfaces (Name -> ExportMetadata)
+    // Internal API Exposed Interfaces (Symbol Name -> ExportMetadata)
     this.internalExports = new Map();
     this.typeOnlyExports = new Set();
     
@@ -26,16 +36,20 @@ class GraphNode {
     
     // Dependency Mesh Connection Maps
     this.incomingEdges = new Set(); // Set of absolute filePaths depending on this component
-    this.resolvedInternalTargets = new Set(); // Set of absolute internal filePaths this component calls
+    this.outgoingEdges = new Set(); // Set of absolute internal filePaths this component calls
     
     // Security & Compliance Anomaly Matrices
     this.securityThreats = [];
     this.calculatedDynamicImports = [];
     this.localSuppressedRules = new Set();
+    
+    // Detailed AST Location Diagnostics (Symbol -> Structural Location Mapping)
+    this.symbolSourceLocations = new Map(); // Symbol -> { line: number, column: number, length: number }
   }
 
   /**
    * Evaluates if a specific exposed symbol token is utilized by any incoming edges.
+   * Leverages precise syntax identity collections.
    */
   isSymbolReferencedExternally(symbolName, projectGraph) {
     if (this.isLibraryEntry) return true;
@@ -44,24 +58,41 @@ class GraphNode {
       const parentNode = projectGraph.get(parentPath);
       if (!parentNode) continue;
 
-      // Direct binding match checks
+      // Direct identity reference check
       if (parentNode.instantiatedIdentifiers.has(symbolName)) return true;
-      if (parentNode.rawStringReferences.has(symbolName)) return true;
-
-      // Access chain matches (e.g., namespace.symbol)
-      for (const chain of parentNode.propertyAccessChains) {
-        if (chain.endsWith(`.${symbolName}`) || chain.includes(`.${symbolName}.`)) {
+      
+      // Property lookup reference checks (e.g., config.databaseUrl)
+      for (const accessChain of parentNode.propertyAccessChains) {
+        if (accessChain.endsWith(`.${symbolName}`) || accessChain.includes(`.${symbolName}.`)) {
           return true;
         }
       }
+
+      // Safe fallback lookup inside string reference caches (e.g., obj['databaseUrl'])
+      if (parentNode.rawStringReferences.has(symbolName)) return true;
     }
+
     return false;
+  }
+
+  /**
+   * Compiles complete localized diagnostic telemetry tracking metrics for this node instance.
+   */
+  compileNodeTelemetry() {
+    return {
+      path: this.filePath,
+      totalExplicitImportsCount: this.explicitImports.size,
+      totalExposedExportsCount: this.internalExports.size,
+      incomingDependenciesCount: this.incomingEdges.size,
+      outgoingDependenciesCount: this.outgoingEdges.size,
+      isDanglingOrphan: this.incomingEdges.size === 0 && !this.isLibraryEntry,
+      trackedThreatsCount: this.securityThreats.length
+    };
   }
 }
 
 /**
- * Enterprise In-Memory Codebase State Manifest Container
- * Handles suppression heuristic compilation and lifecycle log formatting.
+ * Enterprise Engine Run State Registry & Suppression Context Matrix
  */
 export class EngineContext {
   constructor(options = {}) {
@@ -76,12 +107,13 @@ export class EngineContext {
     this.verbose = options.verbose ?? false;
 
     // Core Memory Repositories
-    this.graph = new Map(); // Absolute Path -> GraphNode
-    this.registryHashes = new Map(); // Declared Module Name -> Registry Integrity String
+    this.graph = new Map(); // Absolute File Path -> GraphNode
+    this.registryHashes = new Map(); // Package Name -> Secure Lockfile Signature String
     this.globallyIgnoredSymbols = new Set();
     this.globallyIgnoredPaths = [];
+    this.monorepoPackageRoots = new Set();
     
-    // Performance Analytics Trackers
+    // Structural Heuristic Verification Metrics Tracker
     this.metrics = {
       startTime: 0,
       endTime: 0,
@@ -89,12 +121,14 @@ export class EngineContext {
       cacheHits: 0,
       cacheMisses: 0,
       prunedFilesCount: 0,
-      prunedExportsCount: 0
+      prunedExportsCount: 0,
+      totalSymbolsAnalyzed: 0,
+      securityVulnerabilitiesMitigated: 0
     };
   }
 
   /**
-   * Initializes context variables, directory configurations, and exclusion sheets.
+   * Initializes baseline context options, directory footprints, and suppression maps.
    */
   async initialize() {
     this.metrics.startTime = Date.now();
@@ -103,7 +137,8 @@ export class EngineContext {
   }
 
   /**
-   * Parses .scaffold-ignore sheets and maps global exclusion profiles.
+   * Parses .scaffold-ignore layers using precise token segment matching
+   * instead of high-risk loose regex blocks.
    */
   async compileIgnoreConfigurations() {
     try {
@@ -117,23 +152,21 @@ export class EngineContext {
         if (line.startsWith('export:')) {
           const symbolToken = line.replace('export:', '').trim();
           this.globallyIgnoredSymbols.add(symbolToken);
+        } else if (line.startsWith('path:')) {
+          const pathToken = line.replace('path:', '').trim();
+          this.globallyIgnoredPaths.push(path.normalize(pathToken));
         } else {
-          // Normalize paths for cross-platform glob checking
-          const normalizedPattern = line.replace(/\\/g, '/');
-          this.globallyIgnoredPaths.push(new RegExp(
-            '^' + normalizedPattern
-              .replace(/\./g, '\\.')
-              .replace(/\*/g, '.*') + '$'
-          ));
+          // Standard structural path rule fallback
+          this.globallyIgnoredPaths.push(path.normalize(line));
         }
       }
     } catch {
-      // Ignore file optionally omitted by worker profiles; bypass gracefully
+      // Configuration optionally omitted; proceed with default execution flags
     }
   }
 
   /**
-   * Spawns a new file component node in our graph memory map.
+   * Allocates or resolves a unified GraphNode reference inside our memory map index.
    */
   createNode(absoluteFilePath) {
     const normalizedPath = path.normalize(absoluteFilePath);
@@ -146,15 +179,28 @@ export class EngineContext {
   }
 
   /**
-   * Checks if an absolute system file path matches our project configuration ignore rules.
+   * Checks if an absolute file token path matches configuration ignore directives.
+   * Evaluates sub-path sequences exactly to prevent regular expression parsing drops.
    */
   isPathIgnored(absoluteFilePath) {
-    const relativeText = path.relative(this.cwd, absoluteFilePath).replace(/\\/g, '/');
-    return this.globallyIgnoredPaths.some(pattern => pattern.test(relativeText));
+    const relativeText = path.relative(this.cwd, absoluteFilePath);
+    
+    for (const ignoredTarget of this.globallyIgnoredPaths) {
+      if (relativeText === ignoredTarget || relativeText.startsWith(path.join(ignoredTarget, path.sep))) {
+        return true;
+      }
+      // Handle explicit wildcard terminal indicators
+      if (ignoredTarget.endsWith('*')) {
+        const baseSegment = ignoredTarget.slice(0, -1);
+        if (relativeText.startsWith(baseSegment)) return true;
+      }
+    }
+    return false;
   }
 
   /**
-   * Compiles diagnostic feedback maps tracking architecture alerts and orphan metrics.
+   * Processes the entire active dependency map to compile structural issue indices.
+   * Evaluates orphaned components, dead exports, and supply-chain threats.
    */
   generateSummaryReport() {
     this.metrics.endTime = Date.now();
@@ -182,37 +228,50 @@ export class EngineContext {
     };
 
     for (const [filePath, node] of this.graph.entries()) {
+      // Skip package control files from standard structural dead-code checks
+      if (filePath.endsWith('package.json')) continue;
+      if (this.isPathIgnored(filePath)) continue;
+
       const relativePath = path.relative(this.cwd, filePath);
 
-      // Check for orphan files (no parent dependencies and not an entry point)
-      if (node.incomingEdges.size === 0 && !node.isLibraryEntry && !this.isPathIgnored(filePath)) {
+      // Category A: Completely orphaned components (no references, not library/framework entries)
+      if (node.incomingEdges.size === 0 && !node.isLibraryEntry && !node.isFrameworkContract) {
         summary.structuralIssuesDetected.deadFiles.push(relativePath);
+        continue; // An orphaned file implies all internal sub-exports are dead; skip sub-checks
       }
 
-      // Check for unused named exports inside active files
+      // Category B: Dead Named Exports inside active files
       for (const [exportName, meta] of node.internalExports.entries()) {
-        if (exportName === 'default' || this.globallyIgnoredSymbols.has(exportName) || node.localSuppressedRules.has(exportName)) {
+        this.metrics.totalSymbolsAnalyzed++;
+        
+        // Skip entry configurations, global suppresses, and type-suppressed symbols
+        if (exportName === 'default' || 
+            this.globallyIgnoredSymbols.has(exportName) || 
+            node.localSuppressedRules.has(exportName)) {
           continue;
         }
         
         if (!node.isSymbolReferencedExternally(exportName, this.graph)) {
+          const diagnosticLocation = node.symbolSourceLocations.get(exportName) || { line: 1, column: 1 };
           summary.structuralIssuesDetected.deadExports.push({
             file: relativePath,
             symbol: exportName,
-            type: meta.type,
-            offset: meta.start
+            type: meta.type || 'named',
+            line: diagnosticLocation.line,
+            column: diagnosticLocation.column
           });
         }
       }
 
-      // Collect security credentials leaks
+      // Category C: High-Entropy Password / Key Hardcode Vulnerabilities
       if (node.securityThreats && node.securityThreats.length > 0) {
         node.securityThreats.forEach(threat => {
           summary.structuralIssuesDetected.securityThreats.push({
             file: relativePath,
             identifier: threat.variableKey,
             riskCode: threat.riskCode || 'HIGH_RISK_SECRET_LEAK',
-            entropy: threat.entropyValue
+            entropy: threat.entropyValue,
+            line: threat.line || 1
           });
         });
       }
