@@ -2,103 +2,153 @@ import path from 'path';
 import fs from 'fs/promises';
 
 /**
- * Framework Semantic Archetype Classifier & Route Rule Mapping Engine
- * Automatically maps dynamic configurations where files are processed via framework conventions.
+ * Ecosystem Entry Point Manifest & Dynamic Framework Router Heuristic Validator
+ * Intercepts implicit conventions to handle cases where direct import statements are absent.
  */
 export class MagicDetector {
   constructor(context) {
     this.context = context;
-    // Map known system signatures directly to avoid hitting system disk access operations unnecessarily
-    this.frameworkSignatures = {
-      nextjs: ['next.config.js', 'next.config.mjs', '.next'],
-      nuxt: ['nuxt.config.js', 'nuxt.config.ts', '.nuxt'],
-      remix: ['remix.config.js', 'remix.init']
+    this.manifestSchemaRules = this.compileEcosystemSchemaMatrices();
+  }
+
+  /**
+   * Compiles explicit layout definitions to handle various web development environments.
+   */
+  compileEcosystemSchemaMatrices() {
+    return {
+      nextjs: {
+        configFiles: ['next.config.js', 'next.config.mjs', 'next.config.ts'],
+        routePatterns: [
+          /\/pages\/api\//,
+          /\/pages\/[a-zA-Z0-9_\-\[\]]+/i,
+          /\/app\/([\w\-\[\]]+\/)+(page|route|layout|loading|error|not-found)\.(ts|tsx|js|jsx)$/
+        ],
+        requiredSystemContracts: ['default', 'getServerSideProps', 'getStaticProps', 'getStaticPaths', 'generateMetadata', 'middleware']
+      },
+      nuxt: {
+        configFiles: ['nuxt.config.js', 'nuxt.config.ts'],
+        routePatterns: [
+          /\/pages\//,
+          /\/server\/(api|routes|middleware)\//,
+          /\/components\/[a-zA-Z0-9_\-\/]+\.vue$/
+        ],
+        requiredSystemContracts: ['default']
+      },
+      remix: {
+        configFiles: ['remix.config.js', 'vite.config.js', 'vite.config.ts'],
+        routePatterns: [
+          /\/app\/routes\//,
+          /\/app\/root\.(tsx|jsx)$/
+        ],
+        requiredSystemContracts: ['default', 'loader', 'action', 'meta', 'links']
+      },
+      sveltekit: {
+        configFiles: ['svelte.config.js', 'vite.config.ts'],
+        routePatterns: [
+          /\+page\.(svelte|ts|js)$/,
+          /\+page\.server\.(ts|js)$/,
+          /\+layout\.(svelte|ts|js)$/,
+          /\+server\.(ts|js)$/
+        ],
+        requiredSystemContracts: ['load', 'actions', 'GET', 'POST', 'PUT', 'DELETE', 'PATCH']
+      },
+      astro: {
+        configFiles: ['astro.config.mjs', 'astro.config.cjs', 'astro.config.ts'],
+        routePatterns: [
+          /\/src\/pages\/.*\.astro$/,
+          /\/src\/pages\/.*\.(ts|js)$/
+        ],
+        requiredSystemContracts: ['default', 'getStaticPaths']
+      }
     };
   }
 
   /**
-   * Profiles the project root to map active micro-framework runtime boundaries.
-   * @param {string} rootDir - Workspace target entry directory loop point
+   * Audits the project context to map active micro-framework ecosystems.
+   * @param {string} baseContextDirectory - Root file workspace context execution vector path
    */
-  async contextHeuristicAudit(rootDir) {
-    const detected = new Set();
-    for (const [framework, signatures] of Object.entries(this.frameworkSignatures)) {
-      for (const sig of signatures) {
+  async identifyActiveProjectEcosystems(baseContextDirectory) {
+    const activeFrameworkFlags = [];
+    
+    for (const [frameworkKey, criteria] of Object.entries(this.manifestSchemaRules)) {
+      for (const configFile of criteria.configFiles) {
         try {
-          await fs.access(path.join(rootDir, sig));
-          detected.add(framework);
-          break;
+          await fs.access(path.join(baseContextDirectory, configFile));
+          activeFrameworkFlags.push(frameworkKey);
+          break; // Stop scanning once config criteria is found
         } catch {
-          // Rule boundary signature absent; proceed to fallback matrix sweeps
+          // File path criteria absent; proceed to standard verification loops
         }
       }
     }
-    return Array.from(detected);
+    
+    // Universal infrastructure overrides (testing platforms and common bundlers)
+    activeFrameworkFlags.push('universal-tooling-vectors');
+    return activeFrameworkFlags;
   }
 
   /**
-   * Challenge #4 Framework Magic. Evaluates if a file path acts as an implicit route entry point.
-   * @param {string} absolutePath - Absolute on-disk element reference location
-   * @param {Array<string>} activeFrameworks - Context frameworks active within memory space
+   * Assesses if a file path acts as an implicit route entry point.
    */
-  isImplicitlyAlive(absolutePath, activeFrameworks) {
-    const normalized = absolutePath.replace(/\\/g, '/');
+  isImplicitlyRequiredByEcosystem(absolutePath, activeFrameworks) {
+    const normalizedSystemPath = absolutePath.replace(/\\/g, '/');
 
-    for (const fx of activeFrameworks) {
-      if (fx === 'nextjs') {
-        // Next.js Pages API Router layout: pages/api/v1/status.ts
-        if (/\/pages\/api\//.test(normalized)) return true;
-        // Next.js Pages Page layout: pages/dashboard/index.tsx
-        if (/\/pages\/[a-zA-Z0-9_\-\[\]]+/i.test(normalized)) return true;
-        // Next.js Modern App Router architecture vectors: app/ui/analytics/page.tsx or route.ts
-        if (/\/app\/([\w\-\[\]]+\/)*(page|route|layout|loading|error|not-found)\.(ts|tsx|js|jsx)$/.test(normalized)) {
-          return true;
-        }
-        // Metadata validation indicators configurations points
-        if (/(next\.config|middleware)\.(js|ts|mjs)$/.test(normalized)) return true;
-      }
+    for (const framework of activeFrameworks) {
+      const frameworkRules = this.manifestSchemaRules[framework];
+      if (!frameworkRules) continue;
 
-      if (fx === 'nuxt') {
-        // Nuxt explicit dynamic pages routing matrices patterns
-        if (/\/pages\//.test(normalized) && normalized.endsWith('.vue')) return true;
-        // Nuxt API Server route engines implementations definitions
-        if (/\/server\/(api|routes|middleware)\//.test(normalized)) return true;
-        if (/nuxt\.config\.(js|ts)$/.test(normalized)) return true;
-      }
-
-      if (fx === 'remix') {
-        // Remix nested route allocation configurations formats
-        if (/\/app\/routes\//.test(normalized)) return true;
-      }
+      const matchesPattern = frameworkRules.routePatterns.some(regex => regex.test(normalizedSystemPath));
+      if (matchesPattern) return true;
     }
 
-    // Common fallback overrides (Universal testing suites specs and entry configs)
-    if (/\.(spec|test)\.(js|ts|tsx|jsx)$/.test(normalized)) return true;
-    if (/(jest\.config|vitest\.config|webpack\.config|vite\.config)\.(js|ts|mjs|cjs)$/.test(normalized)) return true;
+    // Apply baseline platform rules (Test suites, lint parameters, continuous integration files)
+    if (this.isCoreToolingSuiteElement(normalizedSystemPath)) {
+      return true;
+    }
 
     return false;
   }
 
-  /**
-   * Applies custom validation rule marks directly to extracted file nodes.
-   * Ensures internal method boundaries called by external managers are preserved.
-   */
-  applyFrameworkOverrides(filePath, fileNode, activeFrameworks) {
-    if (!this.isImplicitlyAlive(filePath, activeFrameworks)) return;
+  isCoreToolingSuiteElement(normalizedPath) {
+    // Testing and execution matrices rules configuration keys
+    if (/\.(test|spec|e2e|cy)\.(js|ts|tsx|jsx|stories\.tsx|stories\.ts)$/i.test(normalizedPath)) return true;
+    
+    // Testing tools and structural environment frameworks configuration keys
+    const testEnvironments = [
+      'jest.config.', 'vitest.config.', 'playwright.config.', 'cypress.config.',
+      'webpack.config.', 'vite.config.', 'rollup.config.', 'tailwind.config.',
+      '.eslintrc.', 'prettier.config.', '.postcssrc.', 'postcss.config.'
+    ];
+    
+    return testEnvironments.some(matchPattern => normalizedPath.includes(matchPattern));
+  }
 
-    // Force activation flag to protect the file from deletion cascades
+  /**
+   * Challenge #4 Framework Overrides. Protects interface boundaries from false positive report flags.
+   */
+  injectVirtualConsumerEdges(filePath, fileNode, activeFrameworks) {
+    if (!this.isImplicitlyRequiredByEcosystem(filePath, activeFrameworks)) return;
+
+    // Retain entry point elements within memory to keep verification safe
     fileNode.isLibraryEntry = true;
 
-    // Next.js standard entry points depend on specific named method exports
-    const normalized = filePath.replace(/\\/g, '/');
-    if (/\/pages\//.test(normalized)) {
-      // Mark server hooks as used to prevent them from being reported as dead code
-      const serverHooks = ['getServerSideProps', 'getStaticProps', 'getStaticPaths'];
-      serverHooks.forEach(hook => {
-        if (fileNode.internalExports.has(hook)) {
-          fileNode.instantiatedIdentifiers.add(hook); 
-        }
-      });
+    // Apply dynamic exports coverage metrics based on active platform contracts
+    const normalizedPath = filePath.replace(/\\/g, '/');
+
+    for (const framework of activeFrameworks) {
+      const frameworkRules = this.manifestSchemaRules[framework];
+      if (!frameworkRules) continue;
+
+      // If the file path matches the active framework schema, protect its interface keywords
+      const appliesToFramework = frameworkRules.routePatterns.some(regex => regex.test(normalizedPath));
+      if (appliesToFramework) {
+        frameworkRules.requiredSystemContracts.forEach(contractMethodToken => {
+          if (fileNode.internalExports.has(contractMethodToken)) {
+            // Emulate active local reference linkages to protect the export
+            fileNode.instantiatedIdentifiers.add(contractMethodToken);
+          }
+        });
+      }
     }
   }
 }
