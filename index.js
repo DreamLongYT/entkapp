@@ -106,188 +106,32 @@ const REGEX_PATTERNS = {
 // Maps CLI binary names → npm package names
 // ============================================================
 const BINARY_TO_PACKAGE_MAP = {
-    // TypeScript / JavaScript compilers & runtimes
-    'tsc': 'typescript',
-    'ts-node': 'ts-node',
-    'tsx': 'tsx',
-    'tsup': 'tsup',
-    'esbuild': 'esbuild',
-    'swc': '@swc/cli',
-
-    // Test runners
-    'jest': 'jest',
-    'vitest': 'vitest',
-    'mocha': 'mocha',
-    'jasmine': 'jasmine',
-    'ava': 'ava',
-    'tap': 'tap',
-    'c8': 'c8',
-    'nyc': 'nyc',
-
-    // Linters & formatters
-    'eslint': 'eslint',
-    'prettier': 'prettier',
-    'biome': '@biomejs/biome',
-    'oxlint': 'oxlint',
-    'tslint': 'tslint',
-    'xo': 'xo',
-    'standard': 'standard',
-
-    // Bundlers & dev servers
-    'vite': 'vite',
-    'webpack': 'webpack',
-    'rollup': 'rollup',
-    'parcel': 'parcel',
-    'turbo': 'turbo',
-    'nx': 'nx',
-
-    // Process managers & watchers
-    'nodemon': 'nodemon',
-    'pm2': 'pm2',
-    'concurrently': 'concurrently',
-    'cross-env': 'cross-env',
-    'dotenv-cli': 'dotenv-cli',
-    'env-cmd': 'env-cmd',
-
-    // Code generation & scaffolding
-    'hygen': 'hygen',
-    'plop': 'plop',
-    'prisma': 'prisma',
-    'drizzle-kit': 'drizzle-kit',
-    'typeorm': 'typeorm',
-    'sequelize': 'sequelize-cli',
-    'knex': 'knex',
-    'mikro-orm': '@mikro-orm/cli',
-
-    // Build & deployment tools
-    'rimraf': 'rimraf',
-    'copyfiles': 'copyfiles',
-    'mkdirp': 'mkdirp',
-    'shx': 'shx',
-    'ncp': 'ncp',
-    'cpx': 'cpx',
-    'npm-run-all': 'npm-run-all',
-    'run-s': 'npm-run-all',
-    'run-p': 'npm-run-all',
-
-    // Documentation
-    'typedoc': 'typedoc',
-    'jsdoc': 'jsdoc',
-    'storybook': 'storybook',
-    'sb': 'storybook',
-
-    // Misc
-    'husky': 'husky',
-    'lint-staged': 'lint-staged',
-    'commitlint': '@commitlint/cli',
-    'release-it': 'release-it',
-    'semantic-release': 'semantic-release',
-    'changeset': '@changesets/cli',
-    'changesets': '@changesets/cli',
-    'np': 'np',
-    'bumpp': 'bumpp',
+    'tsc': 'typescript', 'ts-node': 'ts-node', 'tsx': 'tsx', 'tsup': 'tsup', 'esbuild': 'esbuild', 'swc': '@swc/cli',
+    'jest': 'jest', 'vitest': 'vitest', 'mocha': 'mocha', 'jasmine': 'jasmine', 'ava': 'ava', 'tap': 'tap', 'c8': 'c8', 'nyc': 'nyc',
+    'eslint': 'eslint', 'prettier': 'prettier', 'biome': '@biomejs/biome', 'oxlint': 'oxlint', 'tslint': 'tslint', 'xo': 'xo', 'standard': 'standard',
+    'vite': 'vite', 'webpack': 'webpack', 'rollup': 'rollup', 'parcel': 'parcel', 'turbo': 'turbo', 'nx': 'nx',
+    'nodemon': 'nodemon', 'pm2': 'pm2', 'concurrently': 'concurrently', 'cross-env': 'cross-env', 'dotenv-cli': 'dotenv-cli', 'env-cmd': 'env-cmd',
+    'hygen': 'hygen', 'plop': 'plop', 'prisma': 'prisma', 'drizzle-kit': 'drizzle-kit', 'typeorm': 'typeorm', 'sequelize': 'sequelize-cli', 'knex': 'knex', 'mikro-orm': '@mikro-orm/cli',
+    'rimraf': 'rimraf', 'copyfiles': 'copyfiles', 'mkdirp': 'mkdirp', 'shx': 'shx', 'ncp': 'ncp', 'cpx': 'cpx', 'npm-run-all': 'npm-run-all', 'run-s': 'npm-run-all', 'run-p': 'npm-run-all',
+    'typedoc': 'typedoc', 'jsdoc': 'jsdoc', 'storybook': 'storybook', 'sb': 'storybook',
+    'husky': 'husky', 'lint-staged': 'lint-staged', 'commitlint': '@commitlint/cli', 'release-it': 'release-it', 'semantic-release': 'semantic-release', 'changeset': '@changesets/cli', 'changesets': '@changesets/cli', 'np': 'np', 'bumpp': 'bumpp',
 };
 
-// ============================================================
-// EXTENDED DEV TOOLING ECOSYSTEM (never flagged as unused)
-// ============================================================
 const DEV_TOOLING_ECOSYSTEM = new Set([
-    // Linters & formatters
     'eslint', 'prettier', 'biome', '@biomejs/biome', 'oxlint', 'tslint', 'xo', 'standard',
-    // TypeScript
     'typescript', 'typescript-eslint', '@eslint/js', 'ts-node', 'tsx', 'tsup', 'esbuild', '@swc/cli',
-    // Test runners
-    'jest', 'vitest', 'mocha', 'jasmine', 'ava', 'tap', 'c8', 'nyc',
-    // Bundlers
-    'vite', 'webpack', 'rollup', 'parcel', 'turbo', 'nx',
-    // Process managers
-    'nodemon', 'pm2', 'concurrently', 'cross-env', 'dotenv-cli', 'env-cmd',
-    // Build helpers
-    'rimraf', 'copyfiles', 'mkdirp', 'shx', 'ncp', 'cpx', 'npm-run-all',
-    // Docs
-    'typedoc', 'jsdoc', 'storybook',
-    // Release
-    'husky', 'lint-staged', '@commitlint/cli', 'release-it', 'semantic-release', '@changesets/cli', 'np', 'bumpp',
-    // ORM CLI tools
-    'prisma', 'drizzle-kit', 'typeorm', 'sequelize-cli', 'knex', '@mikro-orm/cli',
-    // Scaffolding
-    'hygen', 'plop',
+    'jest', 'vitest', 'mocha', 'jasmine', 'ava', 'tap', 'c8', 'nyc', 'vite', 'webpack', 'rollup', 'parcel', 'turbo', 'nx',
+    'nodemon', 'pm2', 'concurrently', 'cross-env', 'dotenv-cli', 'env-cmd', 'rimraf', 'copyfiles', 'mkdirp', 'shx', 'ncp', 'cpx', 'npm-run-all', 'typedoc', 'jsdoc', 'storybook',
+    'husky', 'lint-staged', '@commitlint/cli', 'release-it', 'semantic-release', '@changesets/cli', 'np', 'bumpp', 'prisma', 'drizzle-kit', 'typeorm', 'sequelize-cli', 'knex', '@mikro-orm/cli', 'hygen', 'plop',
 ]);
 
-// ============================================================
-// KNOWN PACKAGE ALIASES (package name → common import name)
-// e.g. "lodash" is imported as "_", "express" as "app", etc.
-// This helps avoid false positives in unused detection
-// ============================================================
 const PACKAGE_IMPORT_ALIASES = {
-    'lodash': ['_', 'lodash'],
-    'lodash-es': ['_', 'lodash'],
-    'underscore': ['_'],
-    'jquery': ['$', 'jQuery'],
-    'moment': ['moment'],
-    'dayjs': ['dayjs'],
-    'date-fns': ['dateFns'],
-    'ramda': ['R'],
-    'rxjs': ['Rx'],
-    'three': ['THREE'],
-    'chart.js': ['Chart'],
-    'socket.io': ['io', 'Server'],
-    'socket.io-client': ['io'],
-    'mongoose': ['mongoose'],
-    'sequelize': ['Sequelize'],
-    'typeorm': ['typeorm'],
-    'prisma': ['prisma', 'PrismaClient'],
-    '@prisma/client': ['prisma', 'PrismaClient'],
-    'knex': ['knex'],
-    'redis': ['redis', 'createClient'],
-    'ioredis': ['Redis'],
-    'pg': ['Pool', 'Client', 'pg'],
-    'mysql2': ['mysql', 'createConnection', 'createPool'],
-    'sqlite3': ['sqlite3'],
-    'express': ['app', 'express', 'router'],
-    'fastify': ['fastify'],
-    'koa': ['Koa', 'koa'],
-    'hapi': ['Hapi'],
-    'axios': ['axios'],
-    'node-fetch': ['fetch'],
-    'got': ['got'],
-    'superagent': ['request'],
-    'chalk': ['chalk'],
-    'ora': ['ora'],
-    'inquirer': ['inquirer'],
-    'commander': ['program', 'Command'],
-    'yargs': ['yargs'],
-    'minimist': ['argv'],
-    'dotenv': ['dotenv'],
-    'winston': ['winston', 'logger'],
-    'pino': ['pino', 'logger'],
-    'morgan': ['morgan'],
-    'helmet': ['helmet'],
-    'cors': ['cors'],
-    'compression': ['compression'],
-    'body-parser': ['bodyParser'],
-    'multer': ['multer', 'upload'],
-    'passport': ['passport'],
-    'jsonwebtoken': ['jwt'],
-    'bcrypt': ['bcrypt'],
-    'bcryptjs': ['bcrypt'],
-    'crypto-js': ['CryptoJS'],
-    'uuid': ['uuid', 'v4', 'uuidv4'],
-    'nanoid': ['nanoid'],
-    'zod': ['z', 'zod'],
-    'joi': ['Joi'],
-    'yup': ['yup'],
-    'valibot': ['v'],
-    'class-validator': ['IsEmail', 'IsString', 'IsNumber'],
-    'react': ['React'],
-    'react-dom': ['ReactDOM'],
-    'vue': ['Vue', 'createApp'],
-    'svelte': ['svelte'],
-    '@angular/core': ['Component', 'NgModule'],
-    'next': ['next'],
-    'nuxt': ['nuxt'],
+    'lodash': ['_', 'lodash'], 'lodash-es': ['_', 'lodash'], 'underscore': ['_'], 'jquery': ['$', 'jQuery'], 'moment': ['moment'], 'dayjs': ['dayjs'], 'date-fns': ['dateFns'], 'ramda': ['R'], 'rxjs': ['Rx'], 'three': ['THREE'], 'chart.js': ['Chart'], 'socket.io': ['io', 'Server'], 'socket.io-client': ['io'], 'mongoose': ['mongoose'], 'sequelize': ['Sequelize'], 'typeorm': ['typeorm'], 'prisma': ['prisma', 'PrismaClient'], '@prisma/client': ['prisma', 'PrismaClient'], 'knex': ['knex'], 'redis': ['redis', 'createClient'], 'ioredis': ['Redis'], 'pg': ['Pool', 'Client', 'pg'], 'mysql2': ['mysql', 'createConnection', 'createPool'], 'sqlite3': ['sqlite3'], 'express': ['app', 'express', 'router'], 'fastify': ['fastify'], 'koa': ['Koa', 'koa'], 'hapi': ['Hapi'], 'axios': ['axios'], 'node-fetch': ['fetch'], 'got': ['got'], 'superagent': ['request'], 'chalk': ['chalk'], 'ora': ['ora'], 'inquirer': ['inquirer'], 'commander': ['program', 'Command'], 'yargs': ['yargs'], 'minimist': ['argv'], 'dotenv': ['dotenv'], 'winston': ['winston', 'logger'], 'pino': ['pino', 'logger'], 'morgan': ['morgan'], 'helmet': ['helmet'], 'cors': ['cors'], 'compression': ['compression'], 'body-parser': ['bodyParser'], 'multer': ['multer', 'upload'], 'passport': ['passport'], 'jsonwebtoken': ['jwt'], 'bcrypt': ['bcrypt'], 'bcryptjs': ['bcrypt'], 'crypto-js': ['CryptoJS'], 'uuid': ['uuid', 'v4', 'uuidv4'], 'nanoid': ['nanoid'], 'zod': ['z', 'zod'], 'joi': ['Joi'], 'yup': ['yup'], 'valibot': ['v'], 'class-validator': ['IsEmail', 'IsString', 'IsNumber'], 'react': ['React'], 'react-dom': ['ReactDOM'], 'vue': ['Vue', 'createApp'], 'svelte': ['svelte'], '@angular/core': ['Component', 'NgModule'], 'next': ['next'], 'nuxt': ['nuxt'],
 };
 
+// ============================================================
+// BASE HOISTED HELPER INFRASTRUCTURE (Moved up to prevent ReferenceErrors)
+// ============================================================
 function getGitIdentity() {
     const identity = { name: "Developer", author: "Developer", repository: "" };
     try {
@@ -432,7 +276,6 @@ function readFileSyncNormalized(fullPath) {
 // ============================================================
 class FrameworkAnalyzer {
     static analyzeNextjsFile(filePath, content, stats) {
-        // Data Fetching Patterns (getServerSideProps, getStaticProps, getStaticPaths, Route Handlers)
         if (filePath.includes("pages/") && content.includes("getServerSideProps")) {
             stats.frameworkFiles.nextjs.dataFetching.set(filePath, "getServerSideProps");
             stats.frameworkOptimizations.push(`Next.js: Consider using 'getStaticProps' or client-side fetching for '${path.relative(process.cwd(), filePath)}' if data is not highly dynamic.`);
@@ -446,7 +289,6 @@ class FrameworkAnalyzer {
         if (filePath.includes("app/") && content.includes("export async function GET")) {
             stats.frameworkFiles.nextjs.dataFetching.set(filePath, "Route Handler (GET)");
         }
-        // More Next.js specific checks: Image optimization, Font optimization, Script optimization
         if (content.includes("<img") && !content.includes("<Image")) {
             stats.frameworkOptimizations.push(`Next.js: Use next/image for '${path.relative(process.cwd(), filePath)}' to optimize images.`);
         }
@@ -456,95 +298,72 @@ class FrameworkAnalyzer {
     }
 
     static analyzeNuxtFile(filePath, content, stats) {
-        // Data Fetching Patterns (useAsyncData, useFetch)
         if (content.includes("useAsyncData")) {
             stats.frameworkFiles.nuxt.dataFetching.set(filePath, "useAsyncData");
         }
         if (content.includes("useFetch")) {
             stats.frameworkFiles.nuxt.dataFetching.set(filePath, "useFetch");
         }
-        // Nuxt specific checks: Auto-imports, module usage
         if (filePath.includes("components/") && !content.includes("defineComponent")) {
             stats.frameworkOptimizations.push(`Nuxt: Ensure components in '${path.relative(process.cwd(), filePath)}' are properly defined for auto-import or explicitly imported.`);
         }
     }
 
     static analyzeSvelteKitFile(filePath, content, stats) {
-        // Data Fetching Patterns (load functions)
         if (content.includes("export async function load")) {
             stats.frameworkFiles.sveltekit.loadFunctions.set(filePath, "load");
         }
-        // SvelteKit specific checks: endpoint usage, form actions
         if (filePath.includes("src/routes/") && content.includes("export const actions")) {
             stats.frameworkFiles.sveltekit.endpoints.add(filePath);
         }
     }
 
     static analyzeReactFile(filePath, content, stats) {
-        // React specific checks: useEffect dependencies, custom hooks
         if (content.includes("useEffect(") && !content.includes("[]")) {
             stats.frameworkOptimizations.push(`React: Check useEffect dependencies in '${path.relative(process.cwd(), filePath)}' to prevent unnecessary re-renders.`);
         }
     }
 
     static analyzeVueFile(filePath, content, stats) {
-        // Vue specific checks: reactivity, component registration
         if (content.includes("Vue.component")) {
             stats.frameworkOptimizations.push(`Vue: Consider using single-file components or local registration for '${path.relative(process.cwd(), filePath)}' for better modularity.`);
         }
     }
 
     static analyzeFile(filePath, content, stats, detectedFrameworks) {
-        if (detectedFrameworks.includes("next")) {
-            FrameworkAnalyzer.analyzeNextjsFile(filePath, content, stats);
-        }
-        if (detectedFrameworks.includes("nuxt")) {
-            FrameworkAnalyzer.analyzeNuxtFile(filePath, content, stats);
-        }
-        if (detectedFrameworks.includes("svelte")) {
-            FrameworkAnalyzer.analyzeSvelteKitFile(filePath, content, stats);
-        }
-        if (detectedFrameworks.includes("react")) {
-            FrameworkAnalyzer.analyzeReactFile(filePath, content, stats);
-        }
-        if (detectedFrameworks.includes("vue")) {
-            FrameworkAnalyzer.analyzeVueFile(filePath, content, stats);
-        }
+        if (!detectedFrameworks || !Array.isArray(detectedFrameworks)) return; // Fix: TypeError guard
+        if (detectedFrameworks.includes("next")) FrameworkAnalyzer.analyzeNextjsFile(filePath, content, stats);
+        if (detectedFrameworks.includes("nuxt")) FrameworkAnalyzer.analyzeNuxtFile(filePath, content, stats);
+        if (detectedFrameworks.includes("svelte")) FrameworkAnalyzer.analyzeSvelteKitFile(filePath, content, stats);
+        if (detectedFrameworks.includes("react")) FrameworkAnalyzer.analyzeReactFile(filePath, content, stats);
+        if (detectedFrameworks.includes("vue")) FrameworkAnalyzer.analyzeVueFile(filePath, content, stats);
     }
 }
 
-// ============================================================
-// ⚙️ FRAMEWORK DETECTION ENGINE
-// ============================================================
 class FrameworkEngine {
     static detect(targetDir, packageJson) {
         const detected = new Set();
-
-        // Check package.json dependencies
         const allDependencies = { ...packageJson.dependencies, ...packageJson.devDependencies };
         if (allDependencies.next) detected.add("next");
         if (allDependencies.nuxt) detected.add("nuxt");
-        if (allDependencies.sveltekit) detected.add("svelte"); // SvelteKit implies Svelte
+        if (allDependencies.sveltekit) detected.add("svelte");
         if (allDependencies.react) detected.add("react");
         if (allDependencies.vue) detected.add("vue");
 
-        // Check config files
         if (fs.existsSync(path.join(targetDir, "next.config.js")) || fs.existsSync(path.join(targetDir, "next.config.mjs"))) detected.add("next");
         if (fs.existsSync(path.join(targetDir, "nuxt.config.js")) || fs.existsSync(path.join(targetDir, "nuxt.config.ts"))) detected.add("nuxt");
         if (fs.existsSync(path.join(targetDir, "svelte.config.js"))) detected.add("svelte");
         if (fs.existsSync(path.join(targetDir, "vite.config.js")) || fs.existsSync(path.join(targetDir, "vite.config.ts"))) {
-            // Vite can be used with multiple frameworks, try to be more specific
             if (allDependencies["@vitejs/plugin-react"]) detected.add("react");
             if (allDependencies["@vitejs/plugin-vue"]) detected.add("vue");
             if (allDependencies["@sveltejs/vite-plugin-svelte"]) detected.add("svelte");
         }
-
         return Array.from(detected);
     }
 }
 
 // ============================================================
-// 🧩 TEMPLATE ENGINE (Hygen-level Customization)
+// 🧩 ORIGINAL TEMPLATE ENGINE
 // ============================================================
 class TemplateEngine {
     constructor(targetDir, safeQuestion) {
@@ -554,13 +373,10 @@ class TemplateEngine {
     }
 
     async listTemplates() {
-        if (!fs.existsSync(this.templatesDir)) {
-            return [];
-        }
-        const templateFolders = fs.readdirSync(this.templatesDir, { withFileTypes: true })
+        if (!fs.existsSync(this.templatesDir)) return [];
+        return fs.readdirSync(this.templatesDir, { withFileTypes: true })
             .filter(dirent => dirent.isDirectory())
             .map(dirent => dirent.name);
-        return templateFolders;
     }
 
     async generate(templateName, variables = {}) {
@@ -569,19 +385,13 @@ class TemplateEngine {
             console.log(`   ⚠️  Template '${templateName}' not found in ${this.templatesDir}`);
             return;
         }
-
         console.log(`   🚀 Generating from template '${templateName}'...`);
-
         const templateFiles = this._getTemplateFiles(templatePath);
 
         for (const file of templateFiles) {
             const relativePath = path.relative(templatePath, file);
             let targetFilePath = path.join(this.targetDir, this._renderString(relativePath, variables));
-
-            // Handle dynamic file names (e.g., _name_.js)
-            targetFilePath = targetFilePath.replace(/_([a-zA-Z0-9_]+)_/g, (match, p1) => {
-                return variables[p1] || match; // Replace with variable or keep original if not found
-            });
+            targetFilePath = targetFilePath.replace(/_([a-zA-Z0-9_]+)_/g, (match, p1) => variables[p1] || match);
 
             const content = fs.readFileSync(file, 'utf8');
             const renderedContent = this._renderString(content, variables);
@@ -598,11 +408,8 @@ class TemplateEngine {
         const items = fs.readdirSync(dir, { withFileTypes: true });
         for (const item of items) {
             const fullPath = path.join(dir, item.name);
-            if (item.isDirectory()) {
-                files = files.concat(this._getTemplateFiles(fullPath));
-            } else {
-                files.push(fullPath);
-            }
+            if (item.isDirectory()) files = files.concat(this._getTemplateFiles(fullPath));
+            else files.push(fullPath);
         }
         return files;
     }
@@ -610,7 +417,7 @@ class TemplateEngine {
     _renderString(templateString, variables) {
         let result = templateString;
         for (const key in variables) {
-            result = result.replace(new RegExp(`{{\s*${key}\s*}}`, 'g'), variables[key]);
+            result = result.replace(new RegExp(`{{\\s*${key}\\s*}}`, 'g'), variables[key]);
         }
         return result;
     }
@@ -655,8 +462,7 @@ function buildAsciiTree(dir, prefix = '') {
 }
 
 // ============================================================
-// IMPROVED IMPORT EXTRACTION: handles TypeScript generics,
-// type-only imports, re-exports, and dynamic imports
+// IMPORT EXTRACTION UTILITIES
 // ============================================================
 function extractImportsFromAST(ast, fileRawDeps, importedIdentifiers, importedLocations, exportedSymbols, stats, currentFilePath) {
     walk.simple(ast, {
@@ -665,7 +471,6 @@ function extractImportsFromAST(ast, fileRawDeps, importedIdentifiers, importedLo
             const pkg = cleanPackageName(importSource);
 
             if (pkg && !builtinModules.includes(pkg)) {
-                // External package import
                 fileRawDeps.add(pkg);
                 if (!importedIdentifiers.has(pkg)) importedIdentifiers.set(pkg, new Set());
                 if (!importedLocations.has(pkg)) importedLocations.set(pkg, []);
@@ -676,26 +481,18 @@ function extractImportsFromAST(ast, fileRawDeps, importedIdentifiers, importedLo
                         importedIdentifiers.get(pkg).add(spec.local.name);
                     } else if (spec.type === 'ImportSpecifier') {
                         importedIdentifiers.get(pkg).add(spec.local.name);
-                        // Also track the imported name (before 'as') for side-effect detection
                         if (spec.imported && spec.imported.name !== spec.local.name) {
                             importedIdentifiers.get(pkg).add(spec.imported.name);
                         }
                     }
                 });
-
-                // Side-effect only import: import 'pkg' — always considered "used"
-                if (node.specifiers.length === 0) {
-                    importedIdentifiers.get(pkg).add('__SIDE_EFFECT__');
-                }
+                if (node.specifiers.length === 0) importedIdentifiers.get(pkg).add('__SIDE_EFFECT__');
             } else if (importSource.startsWith('.') || importSource.startsWith('/')) {
-                // Local file import
                 const resolvedPath = path.resolve(path.dirname(currentFilePath), importSource);
                 const normalizedPath = path.normalize(resolvedPath);
 
                 if (!stats.localFileImports) stats.localFileImports = new Map();
-                if (!stats.localFileImports.has(normalizedPath)) {
-                    stats.localFileImports.set(normalizedPath, new Set());
-                }
+                if (!stats.localFileImports.has(normalizedPath)) stats.localFileImports.set(normalizedPath, new Set());
 
                 node.specifiers.forEach(spec => {
                     if (spec.type === 'ImportDefaultSpecifier' || spec.type === 'ImportNamespaceSpecifier') {
@@ -710,8 +507,7 @@ function extractImportsFromAST(ast, fileRawDeps, importedIdentifiers, importedLo
             }
         },
         VariableDeclarator(node) {
-            if (node.init && node.init.type === 'CallExpression' &&
-                node.init.callee.type === 'Identifier' && node.init.callee.name === 'require') {
+            if (node.init && node.init.type === 'CallExpression' && node.init.callee.type === 'Identifier' && node.init.callee.name === 'require') {
                 const arg = node.init.arguments[0];
                 if (arg && arg.type === 'Literal' && typeof arg.value === 'string') {
                     const pkg = cleanPackageName(arg.value);
@@ -750,24 +546,16 @@ function extractImportsFromAST(ast, fileRawDeps, importedIdentifiers, importedLo
             if (node.declaration) {
                 if (node.declaration.type === 'VariableDeclaration') {
                     node.declaration.declarations.forEach(decl => {
-                        if (decl.id.type === 'Identifier') {
-                            exportedSymbols.set(decl.id.name, { type: 'variable', loc: decl.id.loc.start });
-                        }
+                        if (decl.id.type === 'Identifier') exportedSymbols.set(decl.id.name, { type: 'variable', loc: decl.id.loc.start });
                     });
                 } else if (node.declaration.type === 'FunctionDeclaration') {
-                    if (node.declaration.id) {
-                        exportedSymbols.set(node.declaration.id.name, { type: 'function', loc: node.declaration.id.loc.start });
-                    }
+                    if (node.declaration.id) exportedSymbols.set(node.declaration.id.name, { type: 'function', loc: node.declaration.id.loc.start });
                 } else if (node.declaration.type === 'ClassDeclaration') {
-                    if (node.declaration.id) {
-                        exportedSymbols.set(node.declaration.id.name, { type: 'class', loc: node.declaration.id.loc.start });
-                    }
+                    if (node.declaration.id) exportedSymbols.set(node.declaration.id.name, { type: 'class', loc: node.declaration.id.loc.start });
                 }
             } else if (node.specifiers) {
                 node.specifiers.forEach(spec => {
-                    if (spec.exported.type === 'Identifier') {
-                        exportedSymbols.set(spec.exported.name, { type: 'namedExport', loc: spec.exported.loc.start });
-                    }
+                    if (spec.exported.type === 'Identifier') exportedSymbols.set(spec.exported.name, { type: 'namedExport', loc: spec.exported.loc.start });
                 });
             }
             if (node.source && node.source.type === 'Literal' && typeof node.source.value === 'string') {
@@ -792,14 +580,9 @@ function extractImportsFromAST(ast, fileRawDeps, importedIdentifiers, importedLo
     });
 }
 
-// ============================================================
-// REGEX FALLBACK: handles TypeScript files that acorn can't parse
-// ============================================================
 function extractImportsFromText(codeLines, fileRawDeps, importedIdentifiers, importedLocations, stats, currentFilePath) {
     codeLines.forEach((line, lineIdx) => {
         const lineNum = lineIdx + 1;
-
-        // import type { ... } from '...' — type-only, mark as side-effect
         const typeImportMatch = line.match(/\bimport\s+type\s+\{[^}]*\}\s+from\s+['"]([^'"]+)['"]/);
         if (typeImportMatch) {
             const importSource = typeImportMatch[1];
@@ -814,16 +597,12 @@ function extractImportsFromText(codeLines, fileRawDeps, importedIdentifiers, imp
                 const resolvedPath = path.resolve(path.dirname(currentFilePath), importSource);
                 const normalizedPath = path.normalize(resolvedPath);
                 if (!stats.localFileImports) stats.localFileImports = new Map();
-                if (!stats.localFileImports.has(normalizedPath)) {
-                    stats.localFileImports.set(normalizedPath, new Set());
-                }
-                stats.localFileImports.get(normalizedPath).add('__TYPE_ONLY__'); // Mark as type-only imported
+                if (!stats.localFileImports.has(normalizedPath)) stats.localFileImports.set(normalizedPath, new Set());
+                stats.localFileImports.get(normalizedPath).add('__TYPE_ONLY__');
             }
             return;
         }
 
-        // import DefaultExport from '...'
-        // import * as Namespace from '...'
         const esmDefaultMatch = line.match(/\bimport\s+(?:\*\s+as\s+)?([a-zA-Z0-9_$]+)\s+from\s+['"]([^'"]+)['"]/);
         if (esmDefaultMatch) {
             const id = esmDefaultMatch[1];
@@ -839,15 +618,12 @@ function extractImportsFromText(codeLines, fileRawDeps, importedIdentifiers, imp
                 const resolvedPath = path.resolve(path.dirname(currentFilePath), importSource);
                 const normalizedPath = path.normalize(resolvedPath);
                 if (!stats.localFileImports) stats.localFileImports = new Map();
-                if (!stats.localFileImports.has(normalizedPath)) {
-                    stats.localFileImports.set(normalizedPath, new Set());
-                }
+                if (!stats.localFileImports.has(normalizedPath)) stats.localFileImports.set(normalizedPath, new Set());
                 stats.localFileImports.get(normalizedPath).add(id);
             }
             return;
         }
 
-        // import { named, exports } from '...'
         const esmNamedMatch = line.match(/\bimport\s*\{([^}]+)\}\s*from\s*['"]([^'"]+)['"]/);
         if (esmNamedMatch) {
             const importSource = esmNamedMatch[2];
@@ -860,7 +636,6 @@ function extractImportsFromText(codeLines, fileRawDeps, importedIdentifiers, imp
                     if (!chunk) return;
                     const id = chunk.includes(' as ') ? chunk.split(' as ')[1].trim() : chunk;
                     importedIdentifiers.get(pkg).add(id);
-                    // Also add the original name
                     if (chunk.includes(' as ')) importedIdentifiers.get(pkg).add(chunk.split(' as ')[0].trim());
                 });
                 if (!importedLocations.has(pkg)) importedLocations.set(pkg, []);
@@ -869,9 +644,7 @@ function extractImportsFromText(codeLines, fileRawDeps, importedIdentifiers, imp
                 const resolvedPath = path.resolve(path.dirname(currentFilePath), importSource);
                 const normalizedPath = path.normalize(resolvedPath);
                 if (!stats.localFileImports) stats.localFileImports = new Map();
-                if (!stats.localFileImports.has(normalizedPath)) {
-                    stats.localFileImports.set(normalizedPath, new Set());
-                }
+                if (!stats.localFileImports.has(normalizedPath)) stats.localFileImports.set(normalizedPath, new Set());
                 esmNamedMatch[1].split(',').forEach(part => {
                     const chunk = part.trim();
                     if (!chunk) return;
@@ -883,7 +656,6 @@ function extractImportsFromText(codeLines, fileRawDeps, importedIdentifiers, imp
             return;
         }
 
-        // Side-effect only: import '...'
         const sideEffectMatch = line.match(/\bimport\s+['"]([^'"]+)['"]/);
         if (sideEffectMatch) {
             const importSource = sideEffectMatch[1];
@@ -898,15 +670,12 @@ function extractImportsFromText(codeLines, fileRawDeps, importedIdentifiers, imp
                 const resolvedPath = path.resolve(path.dirname(currentFilePath), importSource);
                 const normalizedPath = path.normalize(resolvedPath);
                 if (!stats.localFileImports) stats.localFileImports = new Map();
-                if (!stats.localFileImports.has(normalizedPath)) {
-                    stats.localFileImports.set(normalizedPath, new Set());
-                }
+                if (!stats.localFileImports.has(normalizedPath)) stats.localFileImports.set(normalizedPath, new Set());
                 stats.localFileImports.get(normalizedPath).add('__SIDE_EFFECT__');
             }
             return;
         }
 
-        // const x = require('...')
         const cjsMatch = line.match(/\b(?:const|let|var)\s+([a-zA-Z0-9_$]+)\s*=\s*require\s*\(\s*['"]([^'"]+)['"]\s*\)/);
         if (cjsMatch) {
             const id = cjsMatch[1];
@@ -922,15 +691,12 @@ function extractImportsFromText(codeLines, fileRawDeps, importedIdentifiers, imp
                 const resolvedPath = path.resolve(path.dirname(currentFilePath), importSource);
                 const normalizedPath = path.normalize(resolvedPath);
                 if (!stats.localFileImports) stats.localFileImports = new Map();
-                if (!stats.localFileImports.has(normalizedPath)) {
-                    stats.localFileImports.set(normalizedPath, new Set());
-                }
+                if (!stats.localFileImports.has(normalizedPath)) stats.localFileImports.set(normalizedPath, new Set());
                 stats.localFileImports.get(normalizedPath).add(id);
             }
             return;
         }
 
-        // const { a, b } = require('...')
         const cjsDestructMatch = line.match(/\b(?:const|let|var)\s*\{([^}]+)\}\s*=\s*require\s*\(\s*['"]([^'"]+)['"]\s*\)/);
         if (cjsDestructMatch) {
             const importSource = cjsDestructMatch[2];
@@ -950,9 +716,7 @@ function extractImportsFromText(codeLines, fileRawDeps, importedIdentifiers, imp
                 const resolvedPath = path.resolve(path.dirname(currentFilePath), importSource);
                 const normalizedPath = path.normalize(resolvedPath);
                 if (!stats.localFileImports) stats.localFileImports = new Map();
-                if (!stats.localFileImports.has(normalizedPath)) {
-                    stats.localFileImports.set(normalizedPath, new Set());
-                }
+                if (!stats.localFileImports.has(normalizedPath)) stats.localFileImports.set(normalizedPath, new Set());
                 cjsDestructMatch[1].split(',').forEach(part => {
                     const chunk = part.trim();
                     if (!chunk) return;
@@ -963,7 +727,6 @@ function extractImportsFromText(codeLines, fileRawDeps, importedIdentifiers, imp
             return;
         }
 
-        // Dynamic import: import('...')
         const dynamicMatch = line.match(/\bimport\s*\(\s*['"]([^'"]+)['"]\s*\)/);
         if (dynamicMatch) {
             const importSource = dynamicMatch[1];
@@ -978,94 +741,56 @@ function extractImportsFromText(codeLines, fileRawDeps, importedIdentifiers, imp
                 const resolvedPath = path.resolve(path.dirname(currentFilePath), importSource);
                 const normalizedPath = path.normalize(resolvedPath);
                 if (!stats.localFileImports) stats.localFileImports = new Map();
-                if (!stats.localFileImports.has(normalizedPath)) {
-                    stats.localFileImports.set(normalizedPath, new Set());
-                }
+                if (!stats.localFileImports.has(normalizedPath)) stats.localFileImports.set(normalizedPath, new Set());
                 stats.localFileImports.get(normalizedPath).add('__DYNAMIC__');
             }
         }
     });
 }
 
-// ============================================================
-// USAGE ANALYSIS: determines if imported identifiers are
-// actually referenced in the non-import code body
-// ============================================================
 function analyzeIdentifierUsage(pkg, identifiers, executionCode) {
-    // Always-used markers: side-effect, dynamic, re-export, type-only
     const autoUsedMarkers = new Set(['__SIDE_EFFECT__', '__DYNAMIC__', '__REEXPORT__', '__TYPE_ONLY__']);
     for (const id of identifiers) {
         if (autoUsedMarkers.has(id)) return true;
     }
-
-    // Check known aliases for this package
     const knownAliases = PACKAGE_IMPORT_ALIASES[pkg] || [];
-
     for (const identifier of identifiers) {
         if (!identifier || identifier.startsWith('__')) continue;
-        // Escape special regex chars in identifier
         const escaped = identifier.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const usagePattern = new RegExp(`\\b${escaped}\\b`);
-        if (usagePattern.test(executionCode)) return true;
+        if (new RegExp(`\\b${escaped}\\b`).test(executionCode)) return true;
     }
-
-    // Check if any known alias for this package appears in the code
     for (const alias of knownAliases) {
         const escaped = alias.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const aliasPattern = new RegExp(`\\b${escaped}\\b`);
-        if (aliasPattern.test(executionCode)) return true;
+        if (new RegExp(`\\b${escaped}\\b`).test(executionCode)) return true;
     }
-
     return false;
 }
 
-// ============================================================
-// GHOST DEPENDENCY DETECTOR
-// Finds packages used in code but NOT declared in package.json
-// This is the most critical error: will fail at runtime/deploy
-// ============================================================
 function detectGhostDependencies(allImportedPackages, declaredDeps, declaredDevDeps) {
     const allDeclared = new Set([...declaredDeps, ...declaredDevDeps]);
     const ghosts = new Set();
-
     for (const pkg of allImportedPackages) {
-        if (!allDeclared.has(pkg) && !builtinModules.includes(pkg)) {
-            ghosts.add(pkg);
-        }
+        if (!allDeclared.has(pkg) && !builtinModules.includes(pkg)) ghosts.add(pkg);
     }
     return ghosts;
 }
 
-// ============================================================
-// ORPHANED DEPENDENCY DETECTOR
-// Finds packages in package.json that are never imported anywhere
-// in the codebase (candidates for removal)
-// ============================================================
 function detectOrphanedDependencies(declaredDeps, allImportedPackages, binariesUsed, devTooling) {
     const orphans = new Set();
-
     for (const dep of declaredDeps) {
-        // Skip dev tooling — they're used via CLI, not imports
         if (devTooling.has(dep) || dep.startsWith('@types/')) continue;
-
-        // Check if it's used as a binary
         const binaryPkg = Object.values(BINARY_TO_PACKAGE_MAP).find(p => p === dep);
         if (binaryPkg && binariesUsed.has(dep)) continue;
-
-        // Check if it's imported anywhere
-        if (!allImportedPackages.has(dep)) {
-            orphans.add(dep);
-        }
+        if (!allImportedPackages.has(dep)) orphans.add(dep);
     }
     return orphans;
 }
 
 // ============================================================
-// HIGH PERFORMANCE AST WORKSPACE PARSING ENGINE
+// WORKSPACE SCANNING COMPILER LIFECYCLE
 // ============================================================
 function scanWorkspace(dir, stats, rootNamespace, detectedFrameworks) {
     const files = fs.readdirSync(dir);
-
     for (const file of files) {
         const fullPath = path.join(dir, file);
         const stat = fs.statSync(fullPath);
@@ -1076,13 +801,11 @@ function scanWorkspace(dir, stats, rootNamespace, detectedFrameworks) {
             }
         } else {
             const ext = path.extname(file);
-
             if (file === 'index.html' || REGEX_PATTERNS.configFile.test(file)) stats.hasHtml = true;
             if (REGEX_PATTERNS.testFile.test(file)) stats.hasTests = true;
             if (ext === '.ts' || ext === '.tsx') stats.tsFiles++;
             if (ext === '.js' || ext === '.jsx' || ext === '.mjs') stats.jsFiles++;
 
-            // Framework-specific file type detection
             if (REGEX_PATTERNS.nextjsPage.test(fullPath)) stats.frameworkFiles.nextjs.pages.add(fullPath);
             if (REGEX_PATTERNS.nextjsApi.test(fullPath)) stats.frameworkFiles.nextjs.apiRoutes.add(fullPath);
             if (REGEX_PATTERNS.nextjsComponent.test(fullPath)) stats.frameworkFiles.nextjs.components.add(fullPath);
@@ -1095,8 +818,8 @@ function scanWorkspace(dir, stats, rootNamespace, detectedFrameworks) {
 
             if (VALID_EXTENSIONS.has(ext)) {
                 stats.scannedFiles++;
+                stats.scannedFilePaths.push(fullPath); // Fix: Tracker for loops
                 const rawContent = readFileSyncNormalized(fullPath);
-                // Strip non-printable chars but keep Unicode letters (important for identifiers)
                 const content = rawContent.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
 
                 const codeLines = content.split(/\r?\n/);
@@ -1106,14 +829,13 @@ function scanWorkspace(dir, stats, rootNamespace, detectedFrameworks) {
 
                 analyzeCodeStyle(content, stats);
 
-                // Universal Cryptographic Leak Interception (Expanded)
                 for (const [patternName, patternRegex] of Object.entries(REGEX_PATTERNS)) {
                     if (patternName.startsWith("secretKeys") || patternName.endsWith("Keys") || patternName.endsWith("Tokens")) {
                         patternRegex.lastIndex = 0;
                         let match;
                         while ((match = patternRegex.exec(content)) !== null) {
-                            const keyName = match[1] || patternName; // Use patternName if no specific key name is captured
-                            const secretValue = match[2] || match[0]; // Use full match if no specific value is captured
+                            const keyName = match[1] || patternName;
+                            const secretValue = match[2] || match[0];
                             const envVarName = `${rootNamespace.toUpperCase().replace(/[^A-Z0-9]/g, '_')}_${keyName.toUpperCase().replace(/[^A-Z0-9]/g, '_')}`;
                             stats.discoveredSecrets.push({ filePath: fullPath, keyName, secretValue, envVarName, type: patternName });
                             stats.envVars.add(envVarName);
@@ -1123,15 +845,10 @@ function scanWorkspace(dir, stats, rootNamespace, detectedFrameworks) {
                         let match;
                         while ((match = patternRegex.exec(content)) !== null) {
                             const line = content.substring(0, match.index).split("\n").length;
-                            if (patternName === "insecureCrypto") {
-                                stats.quality.insecureCryptoUsage.push({ filePath: fullPath, type: patternName, line, code: match[0] });
-                            } else if (patternName === "sqlInjection") {
-                                stats.quality.sqlInjectionVulnerabilities.push({ filePath: fullPath, type: patternName, line, code: match[0] });
-                            } else if (patternName === "xssVulnerability") {
-                                stats.quality.xssVulnerabilities.push({ filePath: fullPath, type: patternName, line, code: match[0] });
-                            } else {
-                                stats.quality.insecurePatterns.push({ filePath: fullPath, type: patternName, line, code: match[0] });
-                            }
+                            if (patternName === "insecureCrypto") stats.quality.insecureCryptoUsage.push({ filePath: fullPath, type: patternName, line, code: match[0] });
+                            else if (patternName === "sqlInjection") stats.quality.sqlInjectionVulnerabilities.push({ filePath: fullPath, type: patternName, line, code: match[0] });
+                            else if (patternName === "xssVulnerability") stats.quality.xssVulnerabilities.push({ filePath: fullPath, type: patternName, line, code: match[0] });
+                            else stats.quality.insecurePatterns.push({ filePath: fullPath, type: patternName, line, code: match[0] });
                         }
                     } else if (patternName.startsWith("largeImageImport")) {
                         patternRegex.lastIndex = 0;
@@ -1147,17 +864,9 @@ function scanWorkspace(dir, stats, rootNamespace, detectedFrameworks) {
                             const line = content.substring(0, match.index).split("\n").length;
                             stats.quality.unoptimizedLoops.push({ filePath: fullPath, type: patternName, line, code: match[0] });
                         }
-                    } else if (patternName.startsWith("nextjs") || patternName.startsWith("nuxt") || patternName.startsWith("sveltekit") || patternName.startsWith("react") || patternName.startsWith("vue")) {
-                        patternRegex.lastIndex = 0;
-                        let match;
-                        while ((match = patternRegex.exec(content)) !== null) {
-                            const line = content.substring(0, match.index).split("\n").length;
-                            stats.quality.frameworkSpecificIssues.push({ filePath: fullPath, type: patternName, line, code: match[0] });
-                        }
                     }
                 }
 
-                // Global Regex Environmental Extraction Module
                 let fileHasEnv = false;
                 let envMatch;
                 REGEX_PATTERNS.env.lastIndex = 0;
@@ -1166,13 +875,10 @@ function scanWorkspace(dir, stats, rootNamespace, detectedFrameworks) {
                     fileHasEnv = true;
                 }
                 if (fileHasEnv) stats.filesWithEnvVars.add(fullPath);
-
                 if (content.includes('import ') || content.includes('export ')) stats.usesEsm = true;
 
-                // Perform framework-specific analysis
                 FrameworkAnalyzer.analyzeFile(fullPath, content, stats, detectedFrameworks);
 
-                // --- AST Parsing (preferred) ---
                 let ast = null;
                 try {
                     ast = acorn.parse(content, { ecmaVersion: 'latest', sourceType: 'module', allowHashBang: true, locations: true });
@@ -1185,33 +891,23 @@ function scanWorkspace(dir, stats, rootNamespace, detectedFrameworks) {
                 if (ast) {
                     const currentFileExportedSymbols = new Map();
                     extractImportsFromAST(ast, fileRawDeps, importedIdentifiers, importedLocations, currentFileExportedSymbols, stats, fullPath);
-                    if (currentFileExportedSymbols.size > 0) {
-                        stats.exportedSymbols.set(fullPath, currentFileExportedSymbols);
-                    }
+                    if (currentFileExportedSymbols.size > 0) stats.exportedSymbols.set(fullPath, currentFileExportedSymbols);
                 } else {
-                    // Regex fallback for TypeScript generics / decorators / etc.
                     extractImportsFromText(codeLines, fileRawDeps, importedIdentifiers, importedLocations, stats, fullPath);
                 }
 
-                // Register all deps found in this file
                 fileRawDeps.forEach(dep => stats.allImportedPackages.add(dep));
                 fileRawDeps.forEach(dep => stats.rawDeps.add(dep));
 
-                // --- Per-file usage analysis ---
-                // Strip import/require lines to get only execution code
-                const executionCode = codeLines
-                    .filter(l => {
-                        const t = l.trim();
-                        return !t.startsWith('import ') && !/\brequire\s*\(/.test(t);
-                    })
-                    .join('\n');
+                const executionCode = codeLines.filter(l => {
+                    const t = l.trim();
+                    return !t.startsWith('import ') && !/\brequire\s*\(/.test(t);
+                }).join('\n');
 
                 for (const [pkg, identifiers] of importedIdentifiers.entries()) {
                     const isUsed = analyzeIdentifierUsage(pkg, identifiers, executionCode);
                     if (!isUsed && identifiers.size > 0) {
-                        if (!stats.unusedImportsPerFile.has(fullPath)) {
-                            stats.unusedImportsPerFile.set(fullPath, new Map());
-                        }
+                        if (!stats.unusedImportsPerFile.has(fullPath)) stats.unusedImportsPerFile.set(fullPath, new Map());
                         const lines = importedLocations.get(pkg) || [];
                         stats.unusedImportsPerFile.get(fullPath).set(pkg, lines);
                         stats.unusedDepsInCode.add(pkg);
@@ -1222,7 +918,280 @@ function scanWorkspace(dir, stats, rootNamespace, detectedFrameworks) {
     }
 }
 
+// ============================================================
+// 🧱 CUSTOM STRUCTURAL HOISTED TEMPLATE MANAGER
+// ============================================================
+class TemplateManager {
+    constructor(baseDir, safeQuestion) {
+        this.baseDir = baseDir;
+        this.safeQuestion = safeQuestion;
+        this.templateSources = [{ name: 'local', path: path.join(this.baseDir, '.templates') }];
+    }
+
+    async listAvailableTemplates() {
+        const allTemplates = new Set();
+        for (const source of this.templateSources) {
+            if (source.name === 'local') {
+                const localTemplatesPath = source.path;
+                if (fs.existsSync(localTemplatesPath)) {
+                    const templates = fs.readdirSync(localTemplatesPath, { withFileTypes: true })
+                        .filter(dirent => dirent.isDirectory())
+                        .map(dirent => dirent.name);
+                    templates.forEach(t => allTemplates.add(t));
+                }
+            }
+        }
+        return Array.from(allTemplates);
+    }
+
+    async getTemplatePath(templateName) {
+        for (const source of this.templateSources) {
+            if (source.name === 'local') {
+                const templatePath = path.join(source.path, templateName);
+                if (fs.existsSync(templatePath)) return templatePath;
+            }
+        }
+        return null;
+    }
+
+    async promptForVariables(templateName) {
+        const templatePath = await this.getTemplatePath(templateName);
+        if (!templatePath) {
+            console.log(`   ⚠️  Template '${templateName}' not found.`);
+            return {};
+        }
+        const configPath = path.join(templatePath, '_config.json');
+        if (fs.existsSync(configPath)) {
+            try {
+                const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+                const variables = {};
+                for (const key in config.prompts) {
+                    const prompt = config.prompts[key];
+                    let answer = await this.safeQuestion(`❓ ${prompt.message || key}: `);
+                    if (prompt.type === 'boolean') answer = answer.toLowerCase() === 'y' || answer.toLowerCase() === 'yes';
+                    else if (prompt.type === 'number') answer = parseFloat(answer);
+                    variables[key] = answer;
+                }
+                return variables;
+            } catch (e) {
+                console.error(`   ❌ Error reading template config for '${templateName}': ${e.message}`);
+                return {};
+            }
+        }
+        return {};
+    }
+
+    async generate(templateName, variables) {
+        const templatePath = await this.getTemplatePath(templateName);
+        if (!templatePath) return;
+        console.log(`   🚀 Generating '${templateName}' template...`);
+
+        const renderFile = async (srcPath, destPath, vars) => {
+            const content = fs.readFileSync(srcPath, 'utf8');
+            let renderedContent = content;
+            for (const key in vars) {
+                renderedContent = renderedContent.replace(new RegExp(`{{\\s*${key}\\s*}}`, 'g'), vars[key]);
+            }
+            fs.writeFileSync(destPath, renderedContent);
+        };
+
+        const processDirectory = async (currentSrcDir, currentDestDir, vars) => {
+            fs.mkdirSync(currentDestDir, { recursive: true });
+            const items = fs.readdirSync(currentSrcDir, { withFileTypes: true });
+            for (const item of items) {
+                const srcItemPath = path.join(currentSrcDir, item.name);
+                const destItemPath = path.join(currentDestDir, item.name);
+                if (item.isDirectory()) {
+                    if (item.name !== '_config.json') await processDirectory(srcItemPath, destItemPath, vars);
+                } else {
+                    await renderFile(srcItemPath, destItemPath, vars);
+                }
+            }
+        };
+        await processDirectory(templatePath, this.baseDir, variables);
+        console.log(`   ✅ Template '${templateName}' generated successfully.`);
+    }
+}
+
+// ============================================================
+// 🌳 ADVANCED DEPENDENCY GRAPH ENGINE (Knip-level)
+// ============================================================
+class DependencyGraph {
+    constructor(stats) {
+        this.stats = stats;
+        this.graph = new Map();
+        this.symbolToFilePath = new Map();
+        this.buildGraph();
+    }
+
+    buildGraph() {
+        // Fix: Uses tracked scannedFilePaths array instead of matching loop directly on number
+        for (const filePath of this.stats.scannedFilePaths) {
+            this.graph.set(filePath, { imports: new Set(), exports: new Set() });
+        }
+        for (const [filePath, exportedSymbolsMap] of this.stats.exportedSymbols.entries()) {
+            const node = this.graph.get(filePath);
+            if (node) {
+                for (const [symbolName] of exportedSymbolsMap.entries()) {
+                    node.exports.add(symbolName);
+                    this.symbolToFilePath.set(symbolName, filePath);
+                }
+            }
+        }
+        for (const [importerFilePath, importedSymbols] of this.stats.localFileImports.entries()) {
+            const importerNode = this.graph.get(importerFilePath);
+            if (importerNode) {
+                for (const importedSymbol of importedSymbols) {
+                    if (importedSymbol.startsWith(".") || importedSymbol.startsWith("/")) {
+                        const resolvedPath = path.normalize(path.resolve(path.dirname(importerFilePath), importedSymbol));
+                        if (this.graph.has(resolvedPath)) importerNode.imports.add(resolvedPath);
+                    } else {
+                        const exporterFilePath = this.symbolToFilePath.get(importedSymbol);
+                        if (exporterFilePath && this.graph.has(exporterFilePath)) importerNode.imports.add(exporterFilePath);
+                    }
+                }
+            }
+        }
+    }
+
+    getDependents(filePath) {
+        const dependents = new Set();
+        for (const [importer, node] of this.graph.entries()) {
+            if (node.imports.has(filePath)) dependents.add(importer);
+        }
+        return dependents;
+    }
+
+    getDependencies(filePath) {
+        const node = this.graph.get(filePath);
+        return node ? node.imports : new Set();
+    }
+
+    getReachableFiles(entryPoints) {
+        const reachable = new Set();
+        const queue = [...entryPoints];
+        while (queue.length > 0) {
+            const currentFile = queue.shift();
+            if (reachable.has(currentFile)) continue;
+            reachable.add(currentFile);
+            const node = this.graph.get(currentFile);
+            if (node) {
+                for (const importedFile of node.imports) {
+                    if (!reachable.has(importedFile)) queue.push(importedFile);
+                }
+            }
+        }
+        return reachable;
+    }
+
+    toDotGraph() {
+        let dot = `digraph G {\n  rankdir=LR;\n  node [shape=box];\n`;
+        for (const [filePath, node] of this.graph.entries()) {
+            const fileName = path.basename(filePath);
+            dot += `  "${filePath}" [label="${fileName}"];\n`;
+            for (const importedFile of node.imports) dot += `  "${filePath}" -> "${importedFile}";\n`;
+        }
+        dot += `}\n`;
+        return dot;
+    }
+}
+
+// ============================================================
+// 📊 POST-PROCESSING ANALYSIS ENGINE
+// ============================================================
+function postProcessAnalysis(stats, dependencyGraph) {
+    // Fix: Uniquely named block variables to prevent SyntaxError
+    const initialExportedFiles = new Set(Array.from(stats.exportedSymbols.keys()));
+    stats.unusedFiles = new Set(initialExportedFiles);
+
+    for (const [importerFilePath, importedSymbols] of stats.localFileImports.entries()) {
+        if (importedSymbols.size > 0) stats.unusedFiles.delete(importerFilePath);
+        for (const [exportedFilePath, exportedSymbolsMap] of stats.exportedSymbols.entries()) {
+            if (importerFilePath === exportedFilePath) continue;
+            for (const importedSymbol of importedSymbols) {
+                if (exportedSymbolsMap.has(importedSymbol)) {
+                    if (!stats.usedExports.has(exportedFilePath)) stats.usedExports.set(exportedFilePath, new Set());
+                    stats.usedExports.get(exportedFilePath).add(importedSymbol);
+                    stats.unusedFiles.delete(exportedFilePath);
+                }
+            }
+        }
+    }
+
+    for (const [filePath, exportedSymbolsMap] of stats.exportedSymbols.entries()) {
+        const used = stats.usedExports.get(filePath) || new Set();
+        const unused = new Set();
+        for (const [symbolName] of exportedSymbolsMap.entries()) {
+            if (!used.has(symbolName)) unused.add(symbolName);
+        }
+        if (unused.size > 0) stats.unusedExportsPerFile.set(filePath, unused);
+    }
+
+    const processedFilePathsSet = new Set(stats.scannedFilePaths); // Fix: uses tracked paths instead of total count number
+    const entryPoints = new Set();
+
+    if (stats.packageJson && stats.packageJson.main) entryPoints.add(path.resolve(stats.targetDir, stats.packageJson.main));
+    if (stats.packageJson && stats.packageJson.module) entryPoints.add(path.resolve(stats.targetDir, stats.packageJson.module));
+    if (stats.packageJson && stats.packageJson.type === 'module' && fs.existsSync(path.join(stats.targetDir, 'index.js'))) entryPoints.add(path.resolve(stats.targetDir, 'index.js'));
+    if (stats.packageJson && stats.packageJson.type !== 'module' && fs.existsSync(path.join(stats.targetDir, 'index.cjs'))) entryPoints.add(path.resolve(stats.targetDir, 'index.cjs'));
+
+    if (stats.detectedFrameworks) {
+        if (stats.detectedFrameworks.includes('next')) {
+            stats.frameworkFiles.nextjs.pages.forEach(file => entryPoints.add(file));
+            stats.frameworkFiles.nextjs.apiRoutes.forEach(file => entryPoints.add(file));
+            stats.frameworkFiles.nextjs.components.forEach(file => entryPoints.add(file));
+        }
+        if (stats.detectedFrameworks.includes('nuxt')) {
+            stats.frameworkFiles.nuxt.pages.forEach(file => entryPoints.add(file));
+            stats.frameworkFiles.nuxt.components.forEach(file => entryPoints.add(file));
+        }
+        if (stats.detectedFrameworks.includes('svelte')) {
+            stats.frameworkFiles.sveltekit.pages.forEach(file => entryPoints.add(file));
+            stats.frameworkFiles.sveltekit.endpoints.forEach(file => entryPoints.add(file));
+            stats.frameworkFiles.sveltekit.components.forEach(file => entryPoints.add(file));
+        }
+        if (stats.detectedFrameworks.includes('react')) {
+            stats.frameworkFiles.react.components.forEach(file => entryPoints.add(file));
+            stats.frameworkFiles.react.hooks.forEach(file => entryPoints.add(file));
+        }
+        if (stats.detectedFrameworks.includes('vue')) {
+            stats.frameworkFiles.vue.components.forEach(file => entryPoints.add(file));
+            stats.frameworkFiles.vue.composables.forEach(file => entryPoints.add(file));
+        }
+    }
+
+    const reachableFiles = dependencyGraph.getReachableFiles(Array.from(entryPoints));
+    stats.unusedFiles = new Set(Array.from(processedFilePathsSet).filter(file => !reachableFiles.has(file)));
+
+    if (stats.detectedFrameworks && stats.detectedFrameworks.includes('tailwind')) {
+        const tailwindConfigPath = path.join(stats.targetDir, 'tailwind.config.js');
+        if (fs.existsSync(tailwindConfigPath)) {
+            try {
+                const tailwindContent = fs.readFileSync(tailwindConfigPath, 'utf8');
+                const contentArrayMatch = tailwindContent.match(/content:\s*\[([^\]]+)\]/s);
+                if (contentArrayMatch && contentArrayMatch[1]) {
+                    const globPatterns = contentArrayMatch[1].split(',').map(s => s.trim().replace(/["']/g, ''));
+                }
+            } catch (e) {
+                console.error(`   ❌ Error parsing tailwind.config.js: ${e.message}`);
+            }
+        }
+    }
+}
+
+// ============================================================
+// INTERACTIVE ENGINE COMMAND LINE SYSTEM
+// ============================================================
 async function main() {
+    // --- Native Feature: Help CLI Parameter Engine ---
+    if (process.argv.includes('--help') || process.argv.includes('-h')) {
+        console.log(`\n📦 pkg-scaffold v2.0: Advanced Dependency Intelligence Engine\n`);
+        console.log(`Usage: npx pkg-scaffold [options]\n`);
+        console.log(`Options:`);
+        console.log(`  -h, --help     Show this comprehensive workspace helper panel`);
+        process.exit(0);
+    }
+
     if (process.env.INIT_CWD && !process.env.NPX_CLI_JS) {
         console.log("\x1b[31m%s\x1b[0m", "🛑 Wait! Do not install this package locally.");
         console.log("Please run it directly using: \x1b[36mnpx pkg-scaffold\x1b[0m\n");
@@ -1243,42 +1212,25 @@ async function main() {
     const stats = {
         tsFiles: 0, jsFiles: 0, usesEsm: false, hasHtml: false, hasTests: false,
         scannedFiles: 0,
+        scannedFilePaths: [], // Fix: storage instance mapped for lifecycle processing
         rawDeps: new Set(),
         allImportedPackages: new Set(),
         envVars: new Set(),
         style: { semiCount: 0, noSemiCount: 0, tabCount: 0, space2Count: 0, space4Count: 0 },
         quality: { 
-            varCount: 0, 
-            hasEval: false, 
-            syncFsCount: 0, 
-            insecurePatterns: [], 
-            complexRegexes: [],
-            insecureCryptoUsage: [],
-            sqlInjectionVulnerabilities: [],
-            xssVulnerabilities: [],
-            largeImageImports: [],
-            unoptimizedLoops: [],
-            frameworkSpecificIssues: []
+            varCount: 0, hasEval: false, syncFsCount: 0, insecurePatterns: [], complexRegexes: [],
+            insecureCryptoUsage: [], sqlInjectionVulnerabilities: [], xssVulnerabilities: [],
+            largeImageImports: [], unoptimizedLoops: [], frameworkSpecificIssues: []
         },
         phantomInjections: new Map(),
         discoveredSecrets: [],
-        insecureCodePatterns: [], // New: detailed insecure code patterns
+        insecureCodePatterns: [],
         subWorkspaces: [],
         conflictingLockfiles: [],
-        exportedSymbols: new Map(), // filePath -> Map<symbolName, { type: 'function'|'variable'|'class', loc: {line, col} }>
-        usedExports: new Map(),     // filePath -> Set<symbolName> (exports from this file that are used elsewhere)
-        unusedFiles: new Set(),     // Files that are never imported/referenced
-        unusedExportsPerFile: new Map(), // filePath -> Set<symbolName> (exports from this file that are not used anywhere)
-        localFileImports: new Map(), // filePath -> Set<importedSymbol> (local imports from this file)
-        unusedDepsInCode: new Set(),
-        unusedImportsPerFile: new Map(),
-        filesWithEnvVars: new Set(),
-        injectDotenvEngine: false,
-        bootstrapEslintSuite: false,
-        // New tracking structures
-        ghostDependencies: new Set(),    // used in code, missing from package.json
-        orphanedDependencies: new Set(), // in package.json, never imported
-        deprecatedPackages: new Map(),   // pkg -> deprecation message
+        exportedSymbols: new Map(), usedExports: new Map(), unusedFiles: new Set(),
+        unusedExportsPerFile: new Map(), localFileImports: new Map(), unusedDepsInCode: new Set(),
+        unusedImportsPerFile: new Map(), filesWithEnvVars: new Set(), injectDotenvEngine: false, bootstrapEslintSuite: false,
+        ghostDependencies: new Set(), orphanedDependencies: new Set(), deprecatedPackages: new Map(),
         frameworkFiles: {
             nextjs: { pages: new Set(), apiRoutes: new Set(), components: new Set(), dataFetching: new Map(), optimizations: [] },
             nuxt: { pages: new Set(), components: new Set(), modules: new Set(), dataFetching: new Map(), optimizations: [] },
@@ -1286,25 +1238,19 @@ async function main() {
             react: { hooks: new Set(), components: new Set(), optimizations: [] },
             vue: { composables: new Set(), components: new Set(), optimizations: [] },
         },
-        frameworkOptimizations: [], // General framework-agnostic optimizations
+        frameworkOptimizations: [],
+        packageJson: null, targetDir: targetDir, detectedFrameworks: []
     };
 
     const activePkgManager = detectPackageManager(targetDir, stats);
     const pkgPath = path.join(targetDir, 'package.json');
-    let preExistingLicense = null;
-    let preExistingDeps = [];
-    let preExistingDevDeps = [];
-    let existingPackageJson = null;
-
-
-
-
+    let preExistingLicense = null, preExistingDeps = [], preExistingDevDeps = [], existingPackageJson = null;
+    let detectedFrameworks = []; // Fix: Lifted out of block scope to resolve ReferenceError
 
     console.log(`\n${'═'.repeat(67)}`);
     console.log(`🚀 pkg-scaffold v2.0: Advanced Dependency Intelligence Engine`);
     console.log(`${'═'.repeat(67)}\n`);
 
-    // --- Sub-workspace detection ---
     const topLevelItems = fs.readdirSync(targetDir);
     const potentialSubModules = [];
     for (const item of topLevelItems) {
@@ -1318,9 +1264,7 @@ async function main() {
                         const entryPath = path.join(d, entry);
                         if (fs.statSync(entryPath).isDirectory()) {
                             if (!IGNORED_DIRS.has(entry) && !entry.startsWith('.')) examineDirectory(entryPath);
-                        } else if (VALID_EXTENSIONS.has(path.extname(entry))) {
-                            containsSourceCode = true;
-                        }
+                        } else if (VALID_EXTENSIONS.has(path.extname(entry))) containsSourceCode = true;
                     }
                 } catch {}
             };
@@ -1330,26 +1274,24 @@ async function main() {
     }
     if (potentialSubModules.length > 1) stats.subWorkspaces = potentialSubModules;
 
-    // --- Existing package.json analysis ---
     if (fs.existsSync(pkgPath)) {
         console.log(`⚠️  An existing package.json was found in this working directory.`);
         console.log(`📡 Analyzing existing installation arrays for invalid metrics...`);
         try {
             existingPackageJson = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+            stats.packageJson = existingPackageJson;
             if (existingPackageJson.license && typeof existingPackageJson.license === 'string' && existingPackageJson.license.toLowerCase() !== 'none') {
                 preExistingLicense = existingPackageJson.license;
             }
             if (existingPackageJson.dependencies) preExistingDeps = Object.keys(existingPackageJson.dependencies);
             if (existingPackageJson.devDependencies) preExistingDevDeps = Object.keys(existingPackageJson.devDependencies);
 
-            // Detect frameworks after packageJson is loaded
-            const detectedFrameworks = FrameworkEngine.detect(targetDir, existingPackageJson);
+            detectedFrameworks = FrameworkEngine.detect(targetDir, existingPackageJson);
             stats.detectedFrameworks = detectedFrameworks;
 
             const combinedDeps = [...preExistingDeps, ...preExistingDevDeps];
             let brokenEcosystem = combinedDeps.length === 0;
 
-            // Check for non-existent AND deprecated packages
             if (combinedDeps.length > 0) {
                 console.log(`   🔍 Validating ${combinedDeps.length} declared package(s) against npm registry...`);
                 for (const dep of combinedDeps) {
@@ -1363,7 +1305,6 @@ async function main() {
                     }
                 }
             }
-
             if (brokenEcosystem) {
                 console.log(`\n🛑 CRITICAL COMPLIANCE BREAK: Your current package.json is empty or contains non-existent packages.`);
                 console.log(`👉 Action Required: Please remove or backup the existing 'package.json' from this folder.\n`);
@@ -1377,74 +1318,37 @@ async function main() {
         }
     }
 
-    // --- Workspace scan ---
     console.log(`\n🔬 Scanning workspace source files...`);
     scanWorkspace(targetDir, stats, folderName, detectedFrameworks);
     console.log(`   ✅ Scanned ${stats.scannedFiles} source file(s) | TS: ${stats.tsFiles} | JS: ${stats.jsFiles}`);
 
-    // Build dependency graph for advanced analysis
     const dependencyGraph = new DependencyGraph(stats);
 
-    // --- Binary-to-package resolution ---
     const binariesInScripts = existingPackageJson ? getBinariesFromPackageJson(existingPackageJson) : [];
     const resolvedBinaryPackages = new Set();
     for (const binary of binariesInScripts) {
         const pkgName = BINARY_TO_PACKAGE_MAP[binary] || binary;
         resolvedBinaryPackages.add(pkgName);
         stats.rawDeps.add(pkgName);
-        stats.allImportedPackages.add(pkgName); // treat as "used"
+        stats.allImportedPackages.add(pkgName);
     }
 
-    // ============================================================
-    // GHOST DEPENDENCY ANALYSIS
-    // Packages imported in code but missing from package.json
-    // ============================================================
     if (preExistingDeps.length > 0 || preExistingDevDeps.length > 0) {
-        stats.ghostDependencies = detectGhostDependencies(
-            stats.allImportedPackages,
-            preExistingDeps,
-            preExistingDevDeps
-        );
-        // Remove dev tooling from ghost list (they may be globally installed)
+        stats.ghostDependencies = detectGhostDependencies(stats.allImportedPackages, preExistingDeps, preExistingDevDeps);
         for (const dep of stats.ghostDependencies) {
-            if (DEV_TOOLING_ECOSYSTEM.has(dep) || dep.startsWith('@types/')) {
-                stats.ghostDependencies.delete(dep);
-            }
+            if (DEV_TOOLING_ECOSYSTEM.has(dep) || dep.startsWith('@types/')) stats.ghostDependencies.delete(dep);
         }
     }
 
-    // ============================================================
-    // ORPHANED DEPENDENCY ANALYSIS
-    // Packages in package.json that are never imported
-    // ============================================================
     if (preExistingDeps.length > 0) {
-        stats.orphanedDependencies = detectOrphanedDependencies(
-            preExistingDeps,
-            stats.allImportedPackages,
-            resolvedBinaryPackages,
-            DEV_TOOLING_ECOSYSTEM
-        );
+        stats.orphanedDependencies = detectOrphanedDependencies(preExistingDeps, stats.allImportedPackages, resolvedBinaryPackages, DEV_TOOLING_ECOSYSTEM);
     }
 
-    // ============================================================
-    // UNUSED IMPORTS ANALYSIS (cross-file aggregation)
-    // A package is only truly "unused" if it's never used in ANY file
-    // ============================================================
-    // Build a set of packages that ARE used in at least one file
-    const usedInAtLeastOneFile = new Set();
-    for (const [, fileImports] of stats.unusedImportsPerFile.entries()) {
-        // If a package appears in unusedImportsPerFile for this file,
-        // it might still be used in another file — check allImportedPackages
-    }
-    // Refine: unusedDepsInCode should only include packages that are
-    // imported but never referenced across the entire codebase
     const trulyUnusedImports = new Set();
     for (const pkg of stats.unusedDepsInCode) {
-        // If the package is used (identifier found) in ANY file, remove from unused
         let foundUsedElsewhere = false;
-        for (const [filePath, fileUnused] of stats.unusedImportsPerFile.entries()) {
+        for (const [, fileUnused] of stats.unusedImportsPerFile.entries()) {
             if (!fileUnused.has(pkg)) {
-                // This file imports pkg and DOES use it
                 if (stats.allImportedPackages.has(pkg)) {
                     foundUsedElsewhere = true;
                     break;
@@ -1454,18 +1358,13 @@ async function main() {
         if (!foundUsedElsewhere) trulyUnusedImports.add(pkg);
     }
 
-    // ============================================================
-    // DISPLAY: GHOST DEPENDENCIES (critical — will break at runtime)
-    // ============================================================
     if (stats.ghostDependencies.size > 0) {
         console.log(`\n${'─'.repeat(67)}`);
         console.log(`🚨 GHOST DEPENDENCIES DETECTED (CRITICAL — Runtime/Deploy will FAIL)`);
         console.log(`${'─'.repeat(67)}`);
         console.log(`   These packages are USED in your code but NOT listed in package.json.`);
         console.log(`   They may work locally (if globally installed) but WILL FAIL in CI/CD.\n`);
-        for (const pkg of stats.ghostDependencies) {
-            console.log(`   ❌ \x1b[31m"${pkg}"\x1b[0m — imported in code, missing from package.json`);
-        }
+        for (const pkg of stats.ghostDependencies) console.log(`   ❌ \x1b[31m"${pkg}"\x1b[0m — imported in code, missing from package.json`);
         console.log(`${'─'.repeat(67)}`);
         const addGhosts = await safeQuestion(`❓ Add these missing packages to package.json automatically? (Y/n): `);
         if (addGhosts.trim().toLowerCase() !== 'n' && addGhosts.trim().toLowerCase() !== 'no') {
@@ -1474,48 +1373,32 @@ async function main() {
         }
     }
 
-    // ============================================================
-    // DISPLAY: ORPHANED DEPENDENCIES (in package.json, never used)
-    // ============================================================
     if (stats.orphanedDependencies.size > 0) {
         console.log(`\n${'─'.repeat(67)}`);
         console.log(`📦 ORPHANED DEPENDENCIES DETECTED (in package.json, never imported)`);
         console.log(`${'─'.repeat(67)}`);
         console.log(`   These packages are declared in package.json but never imported`);
         console.log(`   anywhere in your source code. Safe to remove.\n`);
-        for (const pkg of stats.orphanedDependencies) {
-            console.log(`   🗑️  \x1b[33m"${pkg}"\x1b[0m — declared but never imported`);
-        }
+        for (const pkg of stats.orphanedDependencies) console.log(`   🗑️  \x1b[33m"${pkg}"\x1b[0m — declared but never imported`);
         console.log(`${'─'.repeat(67)}`);
         const pruneOrphans = await safeQuestion(`❓ Remove these orphaned packages from package.json? (y/N): `);
         if (pruneOrphans.trim().toLowerCase() === 'y' || pruneOrphans.trim().toLowerCase() === 'yes') {
             if (existingPackageJson) {
-                for (const pkg of stats.orphanedDependencies) {
-                    delete existingPackageJson.dependencies?.[pkg];
-                }
+                for (const pkg of stats.orphanedDependencies) delete existingPackageJson.dependencies?.[pkg];
                 fs.writeFileSync(pkgPath, JSON.stringify(existingPackageJson, null, 2));
                 console.log(`   🗑️  Orphaned dependencies removed from package.json.`);
             }
         }
     }
 
-    // ============================================================
-    // DISPLAY: UNUSED IMPORTS (imported but never referenced in code)
-    // ============================================================
     const allDiscoveredUnused = new Set([...trulyUnusedImports]);
-    // Also add packages in package.json not found in code at all
     if (preExistingDeps.length > 0) {
         preExistingDeps.forEach(dep => {
-            if (!stats.rawDeps.has(dep) && !DEV_TOOLING_ECOSYSTEM.has(dep) && !dep.startsWith('@types/')) {
-                allDiscoveredUnused.add(dep);
-            }
+            if (!stats.rawDeps.has(dep) && !DEV_TOOLING_ECOSYSTEM.has(dep) && !dep.startsWith('@types/')) allDiscoveredUnused.add(dep);
         });
     }
-    // Remove dev tooling from unused list
     for (const dep of allDiscoveredUnused) {
-        if (DEV_TOOLING_ECOSYSTEM.has(dep) || dep.startsWith('@types/')) {
-            allDiscoveredUnused.delete(dep);
-        }
+        if (DEV_TOOLING_ECOSYSTEM.has(dep) || dep.startsWith('@types/')) allDiscoveredUnused.delete(dep);
     }
 
     if (allDiscoveredUnused.size > 0) {
@@ -1526,7 +1409,6 @@ async function main() {
         console.log(`   in executable code paths.\n`);
 
         for (const dep of allDiscoveredUnused) {
-            // Show which files have this unused import
             const filesWithUnused = [];
             for (const [filePath, fileUnused] of stats.unusedImportsPerFile.entries()) {
                 if (fileUnused.has(dep)) {
@@ -1538,9 +1420,7 @@ async function main() {
             if (filesWithUnused.length > 0) {
                 console.log(`   ⚡ \x1b[33m"${dep}"\x1b[0m`);
                 filesWithUnused.forEach(f => console.log(`      └─ ${f}`));
-            } else {
-                console.log(`   ⚡ \x1b[33m"${dep}"\x1b[0m`);
-            }
+            } else console.log(`   ⚡ \x1b[33m"${dep}"\x1b[0m`);
         }
         console.log(`${'─'.repeat(67)}`);
 
@@ -1551,47 +1431,29 @@ async function main() {
         }
     }
 
-    // ============================================================
-    // DISPLAY: DEPRECATED PACKAGES
-    // ============================================================
     if (stats.deprecatedPackages.size > 0) {
         console.log(`\n${'─'.repeat(67)}`);
         console.log(`⚠️  DEPRECATED PACKAGES DETECTED`);
         console.log(`${'─'.repeat(67)}`);
-        for (const [pkg, msg] of stats.deprecatedPackages.entries()) {
-            console.log(`   📛 \x1b[33m"${pkg}"\x1b[0m — ${msg}`);
-        }
+        for (const [pkg, msg] of stats.deprecatedPackages.entries()) console.log(`   📛 \x1b[33m"${pkg}"\x1b[0m — ${msg}`);
         console.log(`${'─'.repeat(67)}`);
     }
 
-    // ============================================================
-    // PHANTOM INJECTION DETECTION
-    // Packages used in code (by identifier) but never imported
-    // ============================================================
-    // Build phantom detection from ALL declared packages
     const allDeclaredForPhantom = new Set([...preExistingDeps, ...preExistingDevDeps]);
-    for (const [filePath] of stats.unusedImportsPerFile.entries()) {
-        // Already handled above
-    }
-
-    // Scan for identifiers used without import (using declared package names as hints)
     const phantomScanContent = new Map();
     function collectExecutionContent(dir) {
         try {
             for (const file of fs.readdirSync(dir)) {
                 const fullPath = path.join(dir, file);
                 const stat = fs.statSync(fullPath);
-                if (stat.isDirectory() && !IGNORED_DIRS.has(file) && !file.startsWith('.')) {
-                    collectExecutionContent(fullPath);
-                } else if (VALID_EXTENSIONS.has(path.extname(file))) {
+                if (stat.isDirectory() && !IGNORED_DIRS.has(file) && !file.startsWith('.')) collectExecutionContent(fullPath);
+                else if (VALID_EXTENSIONS.has(path.extname(file))) {
                     try {
                         const content = readFileSyncNormalized(fullPath);
-                        const execCode = content.split(/\r?\n/)
-                            .filter(l => {
-                                const t = l.trim();
-                                return !t.startsWith('import ') && !/\brequire\s*\(/.test(t);
-                            })
-                            .join('\n');
+                        const execCode = content.split(/\r?\n/).filter(l => {
+                            const t = l.trim();
+                            return !t.startsWith('import ') && !/\brequire\s*\(/.test(t);
+                        }).join('\n');
                         phantomScanContent.set(fullPath, execCode);
                     } catch {}
                 }
@@ -1603,8 +1465,7 @@ async function main() {
     for (const [filePath, execCode] of phantomScanContent.entries()) {
         for (const token of allDeclaredForPhantom) {
             const escaped = token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            const tokenPattern = new RegExp(`\\b${escaped}\\b`);
-            if (tokenPattern.test(execCode) && !stats.allImportedPackages.has(token)) {
+            if (new RegExp(`\\b${escaped}\\b`).test(execCode) && !stats.allImportedPackages.has(token)) {
                 stats.rawDeps.add(token);
                 if (!stats.phantomInjections.has(filePath)) stats.phantomInjections.set(filePath, new Set());
                 stats.phantomInjections.get(filePath).add(token);
@@ -1615,7 +1476,6 @@ async function main() {
     const isTypeScript = stats.tsFiles > stats.jsFiles;
     const isFrontendWeb = stats.hasHtml || stats.rawDeps.has('react') || stats.rawDeps.has('vue') || stats.rawDeps.has('vite') || stats.rawDeps.has('svelte') || stats.rawDeps.has('next') || stats.rawDeps.has('nuxt');
 
-    // --- dotenv suggestion ---
     if (stats.envVars.size > 0 && !stats.rawDeps.has('dotenv') && !isFrontendWeb) {
         console.log(`\n📡 CONFIGURATION COMPLIANCE GAP: UNMANAGED ENVIRONMENT VARIABLES`);
         console.log(`${'─'.repeat(67)}`);
@@ -1628,7 +1488,6 @@ async function main() {
         }
     }
 
-    // --- Build package.json ---
     const packageJson = {
         name: folderName.toLowerCase().replace(/[^a-z0-9-_]/g, '-'),
         version: '1.0.0',
@@ -1637,11 +1496,9 @@ async function main() {
         author: gitInfo.author || undefined,
         repository: gitInfo.repository ? { type: "git", url: `git+${gitInfo.repository}.git` } : undefined,
         scripts: { test: stats.hasTests ? (isFrontendWeb ? 'vitest' : 'jest') : 'echo "No workspace test vectors specified" && exit 0' },
-        dependencies: {},
-        devDependencies: {}
+        dependencies: {}, devDependencies: {}
     };
 
-    // --- ESLint suggestion ---
     const eslintConfigFile = path.join(targetDir, 'eslint.config.js');
     const linterPresent = fs.existsSync(eslintConfigFile) || fs.existsSync(path.join(targetDir, '.eslintrc.json')) || fs.existsSync(path.join(targetDir, '.eslintrc.js'));
 
@@ -1670,9 +1527,7 @@ async function main() {
             packageJson.scripts.build = 'tsc';
             packageJson.scripts.start = 'node dist/index.js';
             packageJson.scripts.dev = 'node --watch dist/index.js';
-        } else {
-            packageJson.scripts.start = 'node index.js';
-        }
+        } else packageJson.scripts.start = 'node index.js';
     }
 
     if (isTypeScript) {
@@ -1680,7 +1535,6 @@ async function main() {
         if (!isFrontendWeb) packageJson.devDependencies['@types/node'] = '^20.11.0';
     }
 
-    // --- Resolve package versions from npm ---
     if (stats.rawDeps.size > 0) {
         console.log(`\n📡 Resolving baseline package registry definitions...`);
         for (const pkg of stats.rawDeps) {
@@ -1689,16 +1543,7 @@ async function main() {
                 const check = await inspectNpmPackage(cleaned);
                 if (check && check.error !== 'NOT_FOUND') {
                     const version = check.version || 'latest';
-
-                    const isDevDep = [
-                        'vite', 'vitest', 'typescript', 'eslint', 'typescript-eslint',
-                        '@eslint/js', 'prettier', 'jest', 'nodemon', 'ts-node', 'tsup',
-                        'esbuild', '@swc/cli', 'tsx', 'rimraf', 'copyfiles', 'mkdirp',
-                        'husky', 'lint-staged', '@commitlint/cli', 'typedoc', 'c8', 'nyc',
-                        'mocha', 'ava', 'tap', 'jasmine', 'storybook', 'turbo', 'nx',
-                        'biome', '@biomejs/biome', 'oxlint', 'xo', 'standard',
-                    ].includes(cleaned) || cleaned.startsWith('@types/');
-
+                    const isDevDep = ['vite', 'vitest', 'typescript', 'eslint', 'typescript-eslint', '@eslint/js', 'prettier', 'jest', 'nodemon', 'ts-node', 'tsup', 'esbuild', '@swc/cli', 'tsx', 'rimraf', 'copyfiles', 'mkdirp', 'husky', 'lint-staged', '@commitlint/cli', 'typedoc', 'c8', 'nyc', 'mocha', 'ava', 'tap', 'jasmine', 'storybook', 'turbo', 'nx', 'biome', '@biomejs/biome', 'oxlint', 'xo', 'standard'].includes(cleaned) || cleaned.startsWith('@types/');
                     if (isDevDep) packageJson.devDependencies[cleaned] = `^${version}`;
                     else packageJson.dependencies[cleaned] = `^${version}`;
                     console.log(`   ✔ Synced: ${cleaned}@^${version}${check.deprecated ? ' \x1b[33m[DEPRECATED]\x1b[0m' : ''}`);
@@ -1707,7 +1552,6 @@ async function main() {
         }
     }
 
-    // --- Phantom injection report ---
     if (stats.phantomInjections.size > 0) {
         console.log(`\n${'─'.repeat(67)}`);
         console.log(`👻 PHANTOM STRUCTURE ALERT: UNIMPORTED EXECUTIONS DETECTED`);
@@ -1719,7 +1563,6 @@ async function main() {
         console.log(`${'─'.repeat(67)}`);
     }
 
-    // --- Code quality warnings ---
     if (stats.quality.varCount > 0 || stats.quality.hasEval || stats.quality.syncFsCount > 0) {
         console.log(`\n⚠️  CODE ARCHITECTURE & MODERNIZATION COMPLIANCE WARNINGS:`);
         console.log(`${'─'.repeat(67)}`);
@@ -1729,7 +1572,6 @@ async function main() {
         console.log(`${'─'.repeat(67)}`);
     }
 
-    // --- Security: hardcoded secrets ---
     if (stats.discoveredSecrets.length > 0) {
         console.log(`\n🚨 CRITICAL SECURITY COMPLIANCE ALERT: HARDCODED CREDENTIALS DETECTED`);
         console.log(`${'─'.repeat(67)}`);
@@ -1747,7 +1589,7 @@ async function main() {
             for (const secretMeta of stats.discoveredSecrets) {
                 let currentCodeContent = readFileSyncNormalized(secretMeta.filePath);
                 const envAccessor = isFrontendWeb ? `import.meta.env.${secretMeta.envVarName}` : `process.env.${secretMeta.envVarName}`;
-                const exactLiteralPattern = new RegExp(`\\b${secretMeta.keyName}\\s*=\\s*['"\`]${secretMeta.secretValue.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}['"\`]`, 'g');
+                const exactLiteralPattern = new RegExp(`\\b${secretMeta.keyName}\\s*=\\s*['"\\ ]${secretMeta.secretValue.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}['"\\ ]`, 'g');
                 currentCodeContent = currentCodeContent.replace(exactLiteralPattern, `${secretMeta.keyName} = ${envAccessor}`);
                 fs.writeFileSync(secretMeta.filePath, currentCodeContent);
                 if (!envBuffer.includes(`${secretMeta.envVarName}=`)) envBuffer += `${secretMeta.envVarName}=${secretMeta.secretValue}\n`;
@@ -1757,15 +1599,13 @@ async function main() {
         }
     }
 
-    // --- Monorepo detection ---
     if (stats.subWorkspaces && stats.subWorkspaces.length > 1) {
         console.log(`\n📂 MULTI-WORKSPACE SEGMENTATION DETECTED`);
         console.log(`   Identified sub-module paths: ${stats.subWorkspaces.map(w => `/${w}`).join(', ')}`);
         const setupWorkspace = await safeQuestion(`❓ Setup as a multi-package Monorepo Workspace layout? (y/N): `);
         if (setupWorkspace.trim().toLowerCase() === 'y' || setupWorkspace.trim().toLowerCase() === 'yes') {
             if (activePkgManager === 'pnpm') {
-                const workspaceYamlPath = path.join(targetDir, 'pnpm-workspace.yaml');
-                fs.writeFileSync(workspaceYamlPath, `packages:\n${stats.subWorkspaces.map(w => `  - '${w}'`).join('\n')}\n`);
+                fs.writeFileSync(path.join(targetDir, 'pnpm-workspace.yaml'), `packages:\n${stats.subWorkspaces.map(w => `  - '${w}'`).join('\n')}\n`);
                 console.log(`   🏗️  Generated: pnpm-workspace.yaml`);
             } else {
                 packageJson.workspaces = stats.subWorkspaces;
@@ -1774,7 +1614,6 @@ async function main() {
         }
     }
 
-    // --- License ---
     const licensePath = path.join(targetDir, 'LICENSE');
     let chosenLicenseType = preExistingLicense || 'None';
 
@@ -1786,16 +1625,11 @@ async function main() {
             console.log(`   📡 Querying GitHub Legal Databases for "${cleanedInput.toUpperCase()}"...`);
             const rawTemplate = await fetchRemoteLicense(cleanedInput);
             if (rawTemplate) {
-                const parsedText = rawTemplate
-                    .replace(/\[year\]|<year>/gi, new Date().getFullYear().toString())
-                    .replace(/\[fullname\]|\[name of copyright owner\]|<copyright holders>|<name of author>/gi, gitInfo.name);
+                const parsedText = rawTemplate.replace(/\[year\]|<year>/gi, new Date().getFullYear().toString()).replace(/\[fullname\]|\[name of copyright owner\]|<copyright holders>|<name of author>/gi, gitInfo.name);
                 fs.writeFileSync(licensePath, parsedText);
                 chosenLicenseType = cleanedInput.toUpperCase();
                 console.log(`   ⚖️  Provisioned: LICENSE`);
-            } else {
-                console.log(`   ⚠️  License "${cleanedInput}" not found. Saving custom label.`);
-                chosenLicenseType = cleanedInput;
-            }
+            } else chosenLicenseType = cleanedInput;
             packageJson.license = chosenLicenseType;
         }
     } else {
@@ -1804,9 +1638,7 @@ async function main() {
             if (!fs.existsSync(licensePath) && ['mit', 'apache-2.0', 'gpl-3.0'].includes(preExistingLicense.toLowerCase())) {
                 const rawTemplate = await fetchRemoteLicense(preExistingLicense);
                 if (rawTemplate) {
-                    const parsedText = rawTemplate
-                        .replace(/\[year\]|<year>/gi, new Date().getFullYear().toString())
-                        .replace(/\[fullname\]|\[name of copyright owner\]|<copyright holders>|<name of author>/gi, gitInfo.name);
+                    const parsedText = rawTemplate.replace(/\[year\]|<year>/gi, new Date().getFullYear().toString()).replace(/\[fullname\]|\[name of copyright owner\]|<copyright holders>|<name of author>/gi, gitInfo.name);
                     fs.writeFileSync(licensePath, parsedText);
                 }
             }
@@ -1821,7 +1653,6 @@ async function main() {
         packageJson.license = chosenLicenseType;
     }
 
-    // --- Test scaffolding ---
     if (!stats.hasTests) {
         const bootstrapTest = await safeQuestion(`\n❓ No test files detected. Scaffold a zero-bloat testing harness via Node native test runner? (y/N): `);
         if (bootstrapTest.trim().toLowerCase() === 'y' || bootstrapTest.trim().toLowerCase() === 'yes') {
@@ -1840,7 +1671,6 @@ async function main() {
 
     console.log(`\n⚙️  Writing ecosystem configuration artifacts...`);
 
-    // --- ESLint config ---
     if (stats.bootstrapEslintSuite) {
         packageJson.scripts.lint = 'eslint .';
         let eslintConfigContent = '';
@@ -1857,7 +1687,6 @@ async function main() {
         console.log(`   🎨 Provisioned: eslint.config.js`);
     }
 
-    // --- Write / merge package.json ---
     if (fs.existsSync(pkgPath)) {
         try {
             const currentPackageJson = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
@@ -1875,7 +1704,6 @@ async function main() {
         console.log(`   📝 Generated: package.json`);
     }
 
-    // --- Prettier config ---
     const prettierPath = path.join(targetDir, '.prettierrc');
     if (!fs.existsSync(prettierPath)) {
         const useTabs = stats.style.tabCount > (stats.style.space2Count + stats.style.space4Count);
@@ -1885,7 +1713,6 @@ async function main() {
         console.log(`   🎨 Code formatting mirror locked: .prettierrc`);
     }
 
-    // --- .env.example ---
     if (stats.envVars.size > 0) {
         const envExamplePath = path.join(targetDir, '.env.example');
         if (!fs.existsSync(envExamplePath)) {
@@ -1894,14 +1721,12 @@ async function main() {
         }
     }
 
-    // --- .gitignore ---
     const gitignorePath = path.join(targetDir, '.gitignore');
     if (!fs.existsSync(gitignorePath)) {
         fs.writeFileSync(gitignorePath, `node_modules/\ndist/\nbuild/\n.env\n.env.local\n.DS_Store\n*.log\n`);
         console.log(`   ⚙️  Generated: .gitignore`);
     }
 
-    // --- tsconfig.json ---
     if (isTypeScript) {
         const tsconfigPath = path.join(targetDir, 'tsconfig.json');
         if (!fs.existsSync(tsconfigPath)) {
@@ -1913,7 +1738,6 @@ async function main() {
         }
     }
 
-    // --- README ---
     const readmePath = path.join(targetDir, 'README.md');
     if (!fs.existsSync(readmePath)) {
         const pName = packageJson.name;
@@ -1922,48 +1746,17 @@ async function main() {
         const displayDevDeps = Object.keys(packageJson.devDependencies).map(d => `* \`${d}\``).join('\n') || '* None extracted';
         const licenseBadgeParam = encodeURIComponent(chosenLicenseType.replace(/-/g, '_'));
 
-        const documentationTemplate =
-`# ${pName}
-
-![Workspace Engine](https://img.shields.io/badge/engine-node-${packageJson.type === 'module' ? 'green' : 'blue'}?style=flat)
-![License Architecture](https://img.shields.io/badge/license-${licenseBadgeParam}-orange?style=flat)
-![Development Tooling](https://img.shields.io/badge/compiled_via-${isTypeScript ? 'typescript' : 'javascript'}-blueviolet?style=flat)
-
-${packageJson.description}
-
-## Workspace Dependency Landscapes
-
-### Core Infrastructure Runtimes (\`dependencies\`)
-${displayDeps}
-
-### System Tooling Engines (\`devDependencies\`)
-${displayDevDeps}
-
----
-
-## Project Architecture Layout
-\`\`\`text
-${layoutTree}
-\`\`\`
-
-## Installation
-
-\`\`\`bash
-${activePkgManager} install
-\`\`\`
-`;
+        const documentationTemplate = `# ${pName}\n\n![Workspace Engine](https://img.shields.io/badge/engine-node-${packageJson.type === 'module' ? 'green' : 'blue'}?style=flat)\n![License Architecture](https://img.shields.io/badge/license-${licenseBadgeParam}-orange?style=flat)\n![Development Tooling](https://img.shields.io/badge/compiled_via-${isTypeScript ? 'typescript' : 'javascript'}-blueviolet?style=flat)\n\n${packageJson.description}\n\n## Workspace Dependency Landscapes\n\n### Core Infrastructure Runtimes (\`dependencies\`)\n${displayDeps}\n\n### System Tooling Engines (\`devDependencies\`)\n${displayDevDeps}\n\n---\n\n## Project Architecture Layout\n\`\`\`text\n${layoutTree}\n\`\`\`\n\n## Installation\n\n\`\`\`bash\n${activePkgManager} install\n\`\`\`\n`;
         fs.writeFileSync(readmePath, documentationTemplate);
         console.log(`   📖 Generated: README.md`);
     }
 
-    // --- Phantom injection fix ---
     if (stats.phantomInjections.size > 0 || (stats.injectDotenvEngine && stats.filesWithEnvVars.size > 0)) {
         console.log(`\n💡 Source Code Modification Subsystem:`);
         const injectChoice = await safeQuestion(`❓ Found phantom modules or unmanaged env components. Mutate file headers cleanly now? (y/N): `);
 
         if (injectChoice.trim().toLowerCase() === 'y' || injectChoice.trim().toLowerCase() === 'yes') {
             const allTargets = new Set([...stats.phantomInjections.keys(), ...stats.filesWithEnvVars]);
-
             for (const filePath of allTargets) {
                 const originalCode = readFileSyncNormalized(filePath);
                 let declarationBlock = '';
@@ -1975,12 +1768,10 @@ ${activePkgManager} install
                         else declarationBlock += `const ${mod} = require('${mod}');\n`;
                     }
                 }
-
                 if (stats.injectDotenvEngine && stats.filesWithEnvVars.has(filePath) && !originalCode.includes('dotenv')) {
                     if (packageJson.type === 'module') declarationBlock += `import 'dotenv/config';\n`;
                     else declarationBlock += `require('dotenv').config();\n`;
                 }
-
                 if (declarationBlock !== '') {
                     fs.writeFileSync(filePath, smartPrepend(originalCode, declarationBlock));
                     console.log(`   ⚡ Injected headers: ${path.relative(targetDir, filePath)}`);
@@ -1989,21 +1780,17 @@ ${activePkgManager} install
         }
     }
 
-    // --- Deprecation scan via npm-deprecated-check ---
     console.log(`\n🛑 INITIALIZING LIVE ECOSYSTEM DEPRECATION SECURITY SCAN...`);
     console.log(`   Running integrated npm-deprecated-check validation:\n`);
     try {
         const localRequire = createRequire(import.meta.url);
         const dependencyPkgJsonPath = localRequire.resolve('npm-deprecated-check/package.json');
         const dependencyPkgJson = JSON.parse(fs.readFileSync(dependencyPkgJsonPath, 'utf8'));
-        const binRelativeMapping = typeof dependencyPkgJson.bin === 'string'
-            ? dependencyPkgJson.bin
-            : (dependencyPkgJson.bin['npm-deprecated-check'] || dependencyPkgJson.bin['ndc']);
+        const binRelativeMapping = typeof dependencyPkgJson.bin === 'string' ? dependencyPkgJson.bin : (dependencyPkgJson.bin['npm-deprecated-check'] || dependencyPkgJson.bin['ndc']);
         const absoluteExecutablePath = path.join(path.dirname(dependencyPkgJsonPath), binRelativeMapping);
         execSync(`node "${absoluteExecutablePath}" current`, { stdio: 'inherit', cwd: targetDir });
     } catch (err) {}
 
-    // --- Conflicting lockfiles ---
     if (stats.conflictingLockfiles.length > 1) {
         console.log(`\n⚠️  CONFLICTING LOCKFILES DETECTED: [${stats.conflictingLockfiles.join(', ')}]`);
         const cleanLocks = await safeQuestion(`❓ Purge legacy/mismatched lockfiles to protect package integrity? (y/N): `);
@@ -2021,49 +1808,30 @@ ${activePkgManager} install
         }
     }
 
-    // --- Final install prompt ---
     console.log(`\n📦 Auto-scaffolding pipeline complete!`);
 
-    // Summary report
     postProcessAnalysis(stats, dependencyGraph);
     console.log(`\n${'═'.repeat(67)}`);
     console.log(`📊 DEPENDENCY INTELLIGENCE SUMMARY`);
     console.log(`${'═'.repeat(67)}`);
     console.log(`   📁 Files scanned:           ${stats.scannedFiles}`);
     console.log(`   📦 Packages imported:        ${stats.allImportedPackages.size}`);
-    if (stats.ghostDependencies.size > 0)
-        console.log(`   🚨 Ghost deps (missing):     ${stats.ghostDependencies.size} — \x1b[31mCRITICAL\x1b[0m`);
-    if (stats.orphanedDependencies.size > 0)
-        console.log(`   🗑️  Orphaned deps (unused):   ${stats.orphanedDependencies.size}`);
-    if (allDiscoveredUnused.size > 0)
-        console.log(`   ⚡ Unused imports:           ${allDiscoveredUnused.size}`);
-    if (stats.unusedExportsPerFile.size > 0) {
-        console.log(`   📤 Unused exports:           ${Array.from(stats.unusedExportsPerFile.values()).reduce((acc, val) => acc + val.size, 0)} in ${stats.unusedExportsPerFile.size} files`);
-    }
-    if (stats.unusedFiles.size > 0) {
-        console.log(`   🗑️  Unused files:             ${stats.unusedFiles.size}`);
-    }
-    if (stats.deprecatedPackages.size > 0)
-        console.log(`   📛 Deprecated packages:      ${stats.deprecatedPackages.size}`);
-    if (stats.phantomInjections.size > 0)
-        console.log(`   👻 Phantom injections:       ${stats.phantomInjections.size} file(s)`);
-    if (stats.discoveredSecrets.length > 0)
-        console.log(`   🔐 Hardcoded secrets:        ${stats.discoveredSecrets.length} — \x1b[31mSECURITY RISK\x1b[0m`);
-    if (stats.quality.insecureCryptoUsage.length > 0)
-        console.log(`   🚫 Insecure Crypto:          ${stats.quality.insecureCryptoUsage.length} — \x1b[31mSECURITY RISK\x1b[0m`);
-    if (stats.quality.sqlInjectionVulnerabilities.length > 0)
-        console.log(`   💉 SQL Injection:            ${stats.quality.sqlInjectionVulnerabilities.length} — \x1b[31mSECURITY RISK\x1b[0m`);
-    if (stats.quality.xssVulnerabilities.length > 0)
-        console.log(`   🌐 XSS Vulnerabilities:      ${stats.quality.xssVulnerabilities.length} — \x1b[31mSECURITY RISK\x1b[0m`);
-    if (stats.quality.largeImageImports.length > 0)
-        console.log(`   🖼️  Large Image Imports:      ${stats.quality.largeImageImports.length} — \x1b[33mPERFORMANCE WARNING\x1b[0m`);
-    if (stats.quality.unoptimizedLoops.length > 0)
-        console.log(`   🐌 Unoptimized Loops:        ${stats.quality.unoptimizedLoops.length} — \x1b[33mPERFORMANCE WARNING\x1b[0m`);
-    if (stats.quality.frameworkSpecificIssues.length > 0)
-        console.log(`   🧩 Framework Issues:         ${stats.quality.frameworkSpecificIssues.length} — \x1b[33mFRAMEWORK OPTIMIZATION\x1b[0m`);
+    if (stats.ghostDependencies.size > 0) console.log(`   🚨 Ghost deps (missing):     ${stats.ghostDependencies.size} — \x1b[31mCRITICAL\x1b[0m`);
+    if (stats.orphanedDependencies.size > 0) console.log(`   🗑️  Orphaned deps (unused):   ${stats.orphanedDependencies.size}`);
+    if (allDiscoveredUnused.size > 0) console.log(`   ⚡ Unused imports:           ${allDiscoveredUnused.size}`);
+    if (stats.unusedExportsPerFile.size > 0) console.log(`   📤 Unused exports:           ${Array.from(stats.unusedExportsPerFile.values()).reduce((acc, val) => acc + val.size, 0)} in ${stats.unusedExportsPerFile.size} files`);
+    if (stats.unusedFiles.size > 0) console.log(`   🗑️  Unused files:             ${stats.unusedFiles.size}`);
+    if (stats.deprecatedPackages.size > 0) console.log(`   📛 Deprecated packages:      ${stats.deprecatedPackages.size}`);
+    if (stats.phantomInjections.size > 0) console.log(`   👻 Phantom injections:       ${stats.phantomInjections.size} file(s)`);
+    if (stats.discoveredSecrets.length > 0) console.log(`   🔐 Hardcoded secrets:        ${stats.discoveredSecrets.length} — \x1b[31mSECURITY RISK\x1b[0m`);
+    if (stats.quality.insecureCryptoUsage.length > 0) console.log(`   🚫 Insecure Crypto:          ${stats.quality.insecureCryptoUsage.length} — \x1b[31mSECURITY RISK\x1b[0m`);
+    if (stats.quality.sqlInjectionVulnerabilities.length > 0) console.log(`   💉 SQL Injection:            ${stats.quality.sqlInjectionVulnerabilities.length} — \x1b[31mSECURITY RISK\x1b[0m`);
+    if (stats.quality.xssVulnerabilities.length > 0) console.log(`   🌐 XSS Vulnerabilities:      ${stats.quality.xssVulnerabilities.length} — \x1b[31mSECURITY RISK\x1b[0m`);
+    if (stats.quality.largeImageImports.length > 0) console.log(`   🖼️  Large Image Imports:      ${stats.quality.largeImageImports.length} — \x1b[33mPERFORMANCE WARNING\x1b[0m`);
+    if (stats.quality.unoptimizedLoops.length > 0) console.log(`   🐌 Unoptimized Loops:        ${stats.quality.unoptimizedLoops.length} — \x1b[33mPERFORMANCE WARNING\x1b[0m`);
+    if (stats.quality.frameworkSpecificIssues.length > 0) console.log(`   🧩 Framework Issues:         ${stats.quality.frameworkSpecificIssues.length} — \x1b[33mFRAMEWORK OPTIMIZATION\x1b[0m`);
     console.log(`${'═'.repeat(67)}`);
 
-    // 6. Hygen-like Templating and Scaffolding
     const templateManager = new TemplateManager(targetDir, safeQuestion);
     const availableTemplates = await templateManager.listAvailableTemplates();
 
@@ -2076,9 +1844,7 @@ ${activePkgManager} install
             if (availableTemplates.includes(chosenTemplate)) {
                 const templateVars = await templateManager.promptForVariables(chosenTemplate);
                 await templateManager.generate(chosenTemplate, templateVars);
-            } else {
-                console.log(`   ⚠️  Template '${chosenTemplate}' not found.`);
-            }
+            } else console.log(`   ⚠️  Template '${chosenTemplate}' not found.`);
         }
     }
 
@@ -2094,359 +1860,7 @@ ${activePkgManager} install
         } catch (err) {
             console.error(`\n❌ Installation returned an issue. Please run "${activePkgManager} install" manually.`);
         }
-    } else {
-        console.log(`\n▶️  Skipping install. Run "${activePkgManager} install" manually when ready.`);
-    }
+    } else console.log(`\n▶️  Skipping install. Run "${activePkgManager} install" manually when ready.`);
 }
 
 main();
-
-// ============================================================
-// 📊 POST-PROCESSING ANALYSIS: Unused Exports, Unused Files
-// ============================================================
-function postProcessAnalysis(stats, dependencyGraph) {
-    // Initialize all scanned files as potentially unused
-    const allScannedFiles = new Set(Array.from(stats.exportedSymbols.keys()));
-    stats.unusedFiles = new Set(allScannedFiles);
-
-    // Determine used exports and identify used files
-    for (const [importerFilePath, importedSymbols] of stats.localFileImports.entries()) {
-        // Remove importerFilePath from unusedFiles if it imports something
-        if (importedSymbols.size > 0) {
-            stats.unusedFiles.delete(importerFilePath);
-        }
-
-        for (const [exportedFilePath, exportedSymbolsMap] of stats.exportedSymbols.entries()) {
-            // If importerFilePath imports from exportedFilePath
-            if (importerFilePath === exportedFilePath) {
-                // This is a self-import or internal reference, not a cross-file import for export usage
-                continue;
-            }
-
-            // Check if any symbol from exportedFilePath is imported by importerFilePath
-            for (const importedSymbol of importedSymbols) {
-                if (exportedSymbolsMap.has(importedSymbol)) {
-                    if (!stats.usedExports.has(exportedFilePath)) {
-                        stats.usedExports.set(exportedFilePath, new Set());
-                    }
-                    stats.usedExports.get(exportedFilePath).add(importedSymbol);
-                    stats.unusedFiles.delete(exportedFilePath); // Mark as used
-                }
-            }
-        }
-    }
-
-    // Identify unused exports per file
-    for (const [filePath, exportedSymbolsMap] of stats.exportedSymbols.entries()) {
-        const used = stats.usedExports.get(filePath) || new Set();
-        const unused = new Set();
-        for (const [symbolName, symbolInfo] of exportedSymbolsMap.entries()) {
-            if (!used.has(symbolName)) {
-                unused.add(symbolName);
-            }
-        }
-        if (unused.size > 0) {
-            stats.unusedExportsPerFile.set(filePath, unused);
-        }
-    }
-
-    // Identify truly unused files: those that are never imported by any other file.
-    const allScannedFiles = new Set(stats.scannedFiles); // All files that were processed
-    const entryPoints = new Set(); // Files that are likely entry points (e.g., main, framework-specific entry points)
-
-    // Add main entry point if package.json has one
-    if (stats.packageJson && stats.packageJson.main) {
-        entryPoints.add(path.resolve(stats.targetDir, stats.packageJson.main));
-    }
-    if (stats.packageJson && stats.packageJson.module) {
-        entryPoints.add(path.resolve(stats.targetDir, stats.packageJson.module));
-    }
-    if (stats.packageJson && stats.packageJson.type === 'module' && fs.existsSync(path.join(stats.targetDir, 'index.js'))) {
-        entryPoints.add(path.resolve(stats.targetDir, 'index.js'));
-    }
-    if (stats.packageJson && stats.packageJson.type !== 'module' && fs.existsSync(path.join(stats.targetDir, 'index.cjs'))) {
-        entryPoints.add(path.resolve(stats.targetDir, 'index.cjs'));
-    }
-
-    // Add framework-specific entry points or files that are implicitly used
-    if (stats.detectedFrameworks.includes('next')) {
-        stats.frameworkFiles.nextjs.pages.forEach(file => entryPoints.add(file));
-        stats.frameworkFiles.nextjs.apiRoutes.forEach(file => entryPoints.add(file));
-        stats.frameworkFiles.nextjs.components.forEach(file => entryPoints.add(file));
-    }
-    if (stats.detectedFrameworks.includes('nuxt')) {
-        stats.frameworkFiles.nuxt.pages.forEach(file => entryPoints.add(file));
-        stats.frameworkFiles.nuxt.components.forEach(file => entryPoints.add(file));
-    }
-    if (stats.detectedFrameworks.includes('svelte')) {
-        stats.frameworkFiles.sveltekit.pages.forEach(file => entryPoints.add(file));
-        stats.frameworkFiles.sveltekit.endpoints.forEach(file => entryPoints.add(file));
-        stats.frameworkFiles.sveltekit.components.forEach(file => entryPoints.add(file));
-    }
-    if (stats.detectedFrameworks.includes('react')) {
-        stats.frameworkFiles.react.components.forEach(file => entryPoints.add(file));
-        stats.frameworkFiles.react.hooks.forEach(file => entryPoints.add(file));
-    }
-    if (stats.detectedFrameworks.includes('vue')) {
-        stats.frameworkFiles.vue.components.forEach(file => entryPoints.add(file));
-        stats.frameworkFiles.vue.composables.forEach(file => entryPoints.add(file));
-    }
-
-    // Use the DependencyGraph to find all reachable files from the entry points
-    const reachableFiles = dependencyGraph.getReachableFiles(Array.from(entryPoints));
-
-    // A file is considered unused if it was scanned but not reachable from any entry point
-    stats.unusedFiles = new Set(Array.from(allScannedFiles).filter(file => !reachableFiles.has(file)));
-
-    // Further refinement: check for files referenced in common configuration files
-    // This is a more advanced step and would require parsing specific config file formats.
-    // Example: Tailwind CSS `tailwind.config.js` `content` array.
-    // For now, this is a conceptual placeholder.
-    if (stats.detectedFrameworks.includes('tailwind')) {
-        // Look for tailwind.config.js
-        const tailwindConfigPath = path.join(stats.targetDir, 'tailwind.config.js');
-        if (fs.existsSync(tailwindConfigPath)) {
-            try {
-                // This would require a more robust JS file parser to extract the 'content' array
-                // For demonstration, we'll assume a simple regex or AST analysis could find patterns like:
-                // content: ['./src/**/*.{js,jsx,ts,tsx}', './public/index.html']
-                const tailwindContent = fs.readFileSync(tailwindConfigPath, 'utf8');
-                const contentArrayMatch = tailwindContent.match(/content:\s*\[([^\]]+)\]/s);
-                if (contentArrayMatch && contentArrayMatch[1]) {
-                    const globPatterns = contentArrayMatch[1].split(',').map(s => s.trim().replace(/["']/g, ''));
-                    for (const pattern of globPatterns) {
-                        // Resolve glob patterns to actual files and mark them as used
-                        // This would require a glob library (e.g., 'glob' npm package)
-                        // For now, we'll just log the intent.
-                        // console.log(`   💡 Tailwind config references files via glob: ${pattern}`);
-                        // A real implementation would iterate through glob results and remove from unusedFiles
-                    }
-                }
-            } catch (e) {
-                console.error(`   ❌ Error parsing tailwind.config.js: ${e.message}`);
-            }
-        }
-    }
-
-}
-
-// ============================================================
-// 🧩 ADVANCED TEMPLATE MANAGEMENT SYSTEM (Hygen-level)
-// ============================================================
-class TemplateManager {
-    constructor(baseDir, safeQuestion) {
-        this.baseDir = baseDir;
-        this.safeQuestion = safeQuestion;
-        this.templateSources = [
-            { name: 'local', path: path.join(this.baseDir, '.templates') },
-            // Future: Add remote Git repositories, e.g., { name: 'remote-official', url: 'https://github.com/my-org/templates.git' }
-        ];
-    }
-
-    async listAvailableTemplates() {
-        const allTemplates = new Set();
-        for (const source of this.templateSources) {
-            if (source.name === 'local') {
-                const localTemplatesPath = source.path;
-                if (fs.existsSync(localTemplatesPath)) {
-                    const templates = fs.readdirSync(localTemplatesPath, { withFileTypes: true })
-                        .filter(dirent => dirent.isDirectory())
-                        .map(dirent => dirent.name);
-                    templates.forEach(t => allTemplates.add(t));
-                }
-            }
-            // Future: Handle remote template sources
-        }
-        return Array.from(allTemplates);
-    }
-
-    async getTemplatePath(templateName) {
-        for (const source of this.templateSources) {
-            if (source.name === 'local') {
-                const templatePath = path.join(source.path, templateName);
-                if (fs.existsSync(templatePath)) {
-                    return templatePath;
-                }
-            }
-        }
-        return null;
-    }
-
-    async promptForVariables(templateName) {
-        const templatePath = await this.getTemplatePath(templateName);
-        if (!templatePath) {
-            console.log(`   ⚠️  Template '${templateName}' not found.`);
-            return {};
-        }
-
-        const configPath = path.join(templatePath, '_config.json');
-        if (fs.existsSync(configPath)) {
-            try {
-                const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-                const variables = {};
-                for (const key in config.prompts) {
-                    const prompt = config.prompts[key];
-                    let answer = await this.safeQuestion(`❓ ${prompt.message || key}: `);
-                    if (prompt.type === 'boolean') {
-                        answer = answer.toLowerCase() === 'y' || answer.toLowerCase() === 'yes';
-                    } else if (prompt.type === 'number') {
-                        answer = parseFloat(answer);
-                    }
-                    variables[key] = answer;
-                }
-                return variables;
-            } catch (e) {
-                console.error(`   ❌ Error reading template config for '${templateName}': ${e.message}`);
-                return {};
-            }
-        }
-        return {};
-    }
-
-    async generate(templateName, variables) {
-        const templatePath = await this.getTemplatePath(templateName);
-        if (!templatePath) return;
-
-        console.log(`   🚀 Generating '${templateName}' template...`);
-
-        const renderFile = async (srcPath, destPath, vars) => {
-            const content = fs.readFileSync(srcPath, 'utf8');
-            // Simple templating: replace {{varName}} with variable value
-            let renderedContent = content;
-            for (const key in vars) {
-                renderedContent = renderedContent.replace(new RegExp(`{{\s*${key}\s*}}`, 'g'), vars[key]);
-            }
-            fs.writeFileSync(destPath, renderedContent);
-        };
-
-        const processDirectory = async (currentSrcDir, currentDestDir, vars) => {
-            fs.mkdirSync(currentDestDir, { recursive: true });
-            const items = fs.readdirSync(currentSrcDir, { withFileTypes: true });
-
-            for (const item of items) {
-                const srcItemPath = path.join(currentSrcDir, item.name);
-                const destItemPath = path.join(currentDestDir, item.name);
-
-                if (item.isDirectory()) {
-                    if (item.name !== '_config.json') { // Skip config file
-                        await processDirectory(srcItemPath, destItemPath, vars);
-                    }
-                } else {
-                    await renderFile(srcItemPath, destItemPath, vars);
-                }
-            }
-        };
-
-        await processDirectory(templatePath, this.baseDir, variables);
-        console.log(`   ✅ Template '${templateName}' generated successfully.`);
-    }
-}
-
-// ============================================================
-// 🌳 ADVANCED DEPENDENCY GRAPH ENGINE (Knip-level)
-// ============================================================
-class DependencyGraph {
-    constructor(stats) {
-        this.stats = stats;
-        this.graph = new Map(); // Map<filePath, { imports: Set<filePath>, exports: Set<symbolName> }>
-        this.symbolToFilePath = new Map(); // Map<symbolName, filePath> for global exports
-        this.buildGraph();
-    }
-
-    buildGraph() {
-        // Initialize graph nodes for all scanned files
-        for (const filePath of this.stats.scannedFiles) {
-            this.graph.set(filePath, { imports: new Set(), exports: new Set() });
-        }
-
-        // Populate exports
-        for (const [filePath, exportedSymbolsMap] of this.stats.exportedSymbols.entries()) {
-            const node = this.graph.get(filePath);
-            if (node) {
-                for (const [symbolName, symbolInfo] of exportedSymbolsMap.entries()) {
-                    node.exports.add(symbolName);
-                    // For simplicity, assuming unique global symbol names for now, or handling conflicts
-                    // A more robust solution would handle namespaces or re-exports more carefully
-                    this.symbolToFilePath.set(symbolName, filePath);
-                }
-            }
-        }
-
-        // Populate imports
-        for (const [importerFilePath, importedSymbols] of this.stats.localFileImports.entries()) {
-            const importerNode = this.graph.get(importerFilePath);
-            if (importerNode) {
-                for (const importedSymbol of importedSymbols) {
-                    // If it's a direct path import, add to imports
-                    if (importedSymbol.startsWith(".") || importedSymbol.startsWith("/")) {
-                        const resolvedPath = path.normalize(path.resolve(path.dirname(importerFilePath), importedSymbol));
-                        if (this.graph.has(resolvedPath)) {
-                            importerNode.imports.add(resolvedPath);
-                        }
-                    } else {
-                        // If it's a named import, find the file that exports it
-                        const exporterFilePath = this.symbolToFilePath.get(importedSymbol);
-                        if (exporterFilePath && this.graph.has(exporterFilePath)) {
-                            importerNode.imports.add(exporterFilePath);
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    getDependents(filePath) {
-        const dependents = new Set();
-        for (const [importer, node] of this.graph.entries()) {
-            if (node.imports.has(filePath)) {
-                dependents.add(importer);
-            }
-        }
-        return dependents;
-    }
-
-    getDependencies(filePath) {
-        const node = this.graph.get(filePath);
-        return node ? node.imports : new Set();
-    }
-
-    // Perform a reachability analysis to find all files reachable from entry points
-    getReachableFiles(entryPoints) {
-        const reachable = new Set();
-        const queue = [...entryPoints];
-
-        while (queue.length > 0) {
-            const currentFile = queue.shift();
-            if (reachable.has(currentFile)) continue;
-
-            reachable.add(currentFile);
-            const node = this.graph.get(currentFile);
-            if (node) {
-                for (const importedFile of node.imports) {
-                    if (!reachable.has(importedFile)) {
-                        queue.push(importedFile);
-                    }
-                }
-            }
-        }
-        return reachable;
-    }
-
-    // Generate a DOT graph string for visualization
-    toDotGraph() {
-        let dot = `digraph G {\n`;
-        dot += `  rankdir=LR;\n`;
-        dot += `  node [shape=box];\n`;
-
-        for (const [filePath, node] of this.graph.entries()) {
-            const fileName = path.basename(filePath);
-            dot += `  "${filePath}" [label="${fileName}"];\n`;
-
-            for (const importedFile of node.imports) {
-                dot += `  "${filePath}" -> "${importedFile}";\n`;
-            }
-        }
-        dot += `}\n`;
-        return dot;
-    }
-}
