@@ -20,6 +20,7 @@
     "nuxt",
     "remix",
     "sveltekit",
-    "astro"
+    "astro",
+    "typescript"
   ]
 }

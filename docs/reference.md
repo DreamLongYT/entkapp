@@ -1,23 +1,25 @@
-# CLI Reference
+# CLI Reference v3.2.0
 
-This page lists all available command-line options for `pkg-scaffold v3.1.1`.
+This page lists all available command-line options and configuration keys for `pkg-scaffold v3.2.0`.
 
 ```text
 Usage: pkg-scaffold [options]
+
 Ultimate Enterprise Codebase Janitor & Self-Healing Engine
 
 Options:
-  -V, --version             output the version number
-  -c, --cwd <path>          Specify the execution context root directory
-  -r, --run                 Execute the primary operational pipeline loop (Required to start analysis)
-  --fix                     Enable atomic code updates, structural file pruning, and active type sanitization (default: true)
-  --no-fix                  Disable direct file manipulation modifications (dry-run reporting mode)
-  --tsconfig <filename>     Specify path to custom layout configurations (default: "tsconfig.json")
-  --test-command <command>  Integrated continuous safety test validation script execution path (default: "npm test")
-  --workspace               Enable high-density workspace workspace/monorepo cluster mesh evaluation parsing (default: false)
-  --verbose                 Toggle expanded trace telemetry for debug operational diagnostics (default: false)
-  -y, --yes                 Skip confirmation prompts and execute planned structural modifications automatically (default: false)
-  -h, --help                display help for command
+  -V, --version          output the version number
+  -c, --cwd <path>       Specify the execution context root directory
+  -r, --run              Execute the primary operational pipeline loop
+  --fix                  Enable atomic code updates and self-healing (default: true)
+  --no-fix               Disable direct file manipulation (dry-run mode)
+  --tsconfig <path>      Specify path to custom layout configurations
+  --test-command <cmd>   Integrated safety test validation script (default: "npm test")
+  --workspace            Enable monorepo cluster mesh evaluation
+  --verbose              Toggle expanded trace telemetry for diagnostics
+  -y, --yes              Skip confirmation prompts for automatic execution
+  --init                 Initialize a new pkg-scaffold configuration in the current directory
+  -h, --help             display help for command
 ```
 
 ## Options in Detail
@@ -26,31 +28,46 @@ Options:
 Displays the current version of `pkg-scaffold`.
 
 ### `-c`, `--cwd <path>`
-Defines the root directory where `pkg-scaffold` should be executed. By default, this is the current working directory.
+Defines the root directory where `pkg-scaffold` should be executed.
 
 ### `-r`, `--run`
-**New in v3.1.0.** This flag is required to initiate the actual analysis and refactoring process. If omitted, the CLI will enter interactive onboarding mode or display configuration status.
+Initiates the analysis and refactoring process. This is required for execution.
 
-### `--fix`
-Activates the mode for atomic code updates, structural file pruning, and active type sanitization. This is the mode in which `pkg-scaffold` makes actual changes to your code.
+### `--fix` / `--no-fix`
+Controls whether the engine should apply changes to the filesystem.
 
-### `--no-fix`
-Disables direct file manipulation modifications. `pkg-scaffold` performs an analysis and reports on potential changes without applying them (dry-run mode).
-
-### `--tsconfig <filename>`
-Specifies the path to a custom `tsconfig.json` file. By default, `pkg-scaffold` looks for `tsconfig.json` in the current working directory.
-
-### `--test-command <command>`
-Defines the command to be executed for integrated continuous safety test validation after changes. By default, `npm test` is used.
+### `--init`
+**New in v3.2.0.** Automatically sets up the `/pkg-scaffold` directory and a default `config.json` in your project root.
 
 ### `--workspace`
-Enables evaluation of workspaces/monorepo clusters. When this option is enabled, `pkg-scaffold` analyzes and optimizes all packages within a monorepo.
+Enables deep analysis of monorepos, linking dependencies across multiple packages.
 
-### `--verbose`
-Enables expanded trace telemetry for debug operational diagnostics, providing more detailed output during execution.
+## Plugin API Reference (v3.2.0)
 
-### `-y`, `--yes`
-Skips all confirmation prompts and automatically executes planned structural modifications. **Use with caution in production environments without prior review.**
+### `BasePlugin` Methods
 
-### `-h`, `--help`
-Displays help information for `pkg-scaffold`.
+| Method | Description | Return Type |
+| --- | --- | --- |
+| `get name()` | Unique identifier for the plugin | `string` |
+| `getConfigFiles()` | Files that trigger plugin activation | `string[]` |
+| `getRoutePatterns()` | Regex for entry point detection | `RegExp[]` |
+| `getRequiredSystemContracts()` | Symbols that must be preserved | `string[]` |
+| `get(key)` | **New in v3.2.0.** Dynamic getter for custom properties | `any` |
+| `isActive(dir)` | Async check for project compatibility | `Promise<boolean>` |
+
+### Configuration (`pkg-scaffold/config.json`)
+
+```json
+{
+  "interface": "CLI",
+  "useBuiltinPlugins": true,
+  "useCustomPlugins": true,
+  "supportKnipPlugins": true,
+  "options": {
+    "verbose": false,
+    "fastMode": true,
+    "selfHealing": true
+  },
+  "enabledPlugins": ["nextjs", "nuxt", "remix", "sveltekit", "astro"]
+}
+```

@@ -1,6 +1,6 @@
-# Getting Started with pkg-scaffold
+# Getting Started with pkg-scaffold v3.2.0
 
-This guide will walk you through the installation and basic usage of `pkg-scaffold`. Learn how to quickly clean and optimize your project.
+This guide will walk you through the installation and basic usage of `pkg-scaffold`. Learn how to quickly clean and optimize your project with the latest customization features.
 
 ## Installation
 
@@ -8,10 +8,6 @@ This guide will walk you through the installation and basic usage of `pkg-scaffo
 
 ```bash
 npm install --save-dev pkg-scaffold
-# or
-yarn add --dev pkg-scaffold
-# or
-pnpm add --save-dev pkg-scaffold
 ```
 
 After installation, you can run `pkg-scaffold` via `npx` or by adding a script to your `package.json`.
@@ -26,36 +22,65 @@ Before making any changes to your project, it is always advisable to use the dry
 npx pkg-scaffold --no-fix
 ```
 
-This command will output a summary of identified issues, such as orphaned files or potential refactoring opportunities.
-
 ### Applying Changes
 
-If you are satisfied with the proposed changes, you can run `pkg-scaffold` with the `--fix` option to apply the changes to your project. The `--yes` option skips the confirmation prompt.
+If you are satisfied with the proposed changes, you can run `pkg-scaffold` with the `--fix` option to apply the changes to your project.
 
 ```bash
 npx pkg-scaffold --fix --yes
 ```
 
-**Caution:** Ensure you have backed up your changes or are in a version control system before using this option.
+## Customization Update 3.2.0: Custom Getters
 
-### Monorepo Support
+Version 3.2.0 introduces a powerful new way to customize plugins using **Dynamic Custom Getters**.
 
-For projects organized in a monorepo, `pkg-scaffold` can be run with the `--workspace` option to analyze and optimize all packages within the workspace.
+### New `get(key)` Method
 
-```bash
-npx pkg-scaffold --workspace --fix --yes
+Plugins can now implement custom getter methods that are accessible via a unified `get()` interface. This allows users to define and retrieve custom metadata or functionality within their plugins.
+
+#### Example: Custom Plugin with Getters
+
+```javascript
+export default class MyCustomPlugin extends BasePlugin {
+  get name() {
+    return 'my-custom-tool';
+  }
+
+  // New in 3.2.0: Custom Getter for version
+  getVersion() {
+    return '1.0.0';
+  }
+
+  // Custom data point
+  getAuthor() {
+    return 'Jane Doe';
+  }
+
+  // Usage: plugin.get('version') -> calls getVersion()
+  // Usage: plugin.get('author')  -> calls getAuthor()
+}
 ```
 
-## Next Steps
+### Advanced Plugin Structure
 
-*   Learn more about all available options in the [Reference](/reference).
-*   Visit the [GitHub Repository](https://github.com/DreamLongYT/pkg-scaffold) for the latest updates and to report issues.
+The `BasePlugin` now includes a `get(key)` helper that automatically maps `get('something')` to a method named `getSomething()`.
+
+```javascript
+export default class MyAdvancedPlugin extends BasePlugin {
+  // ... standard methods ...
+
+  // Custom logic that can be queried by the engine or other plugins
+  getCustomStatus() {
+    return this.context.metrics.totalFilesScanned > 100 ? 'large' : 'small';
+  }
+}
+```
 
 ## Plugin Development
 
-Building a plugin for pkg-scaffold is straightforward. You need to export a class that extends the `BasePlugin` (or follows its structure).
+Building a plugin for pkg-scaffold is straightforward. You need to export a class that extends the `BasePlugin`.
 
-### Basic Plugin Structure
+### Basic Plugin Template
 
 ```javascript
 export default class MyCustomPlugin {
@@ -63,58 +88,30 @@ export default class MyCustomPlugin {
     this.context = context;
   }
 
-  // Unique identifier for the plugin
   get name() {
     return 'my-plugin';
   }
 
-  // Files that indicate this ecosystem is active
   getConfigFiles() {
     return ['my-config.json'];
   }
 
-  // Regex patterns for entry point files
   getRoutePatterns() {
-    return [
-      /\/src\/routes\/.*\.js$/
-    ];
+    return [ /\/src\/routes\/.*\.js$/ ];
   }
 
-  // Symbols that should never be flagged as unused in entry points
   getRequiredSystemContracts() {
-    return ['default', 'handler', 'config'];
+    return ['default', 'handler'];
   }
 
-  // Logic to determine if the plugin should run
   async isActive(baseDir) {
-    // Return true if your framework is detected
     return true; 
   }
 }
 ```
 
-### Advanced: Interfacing with the Engine
-
-Plugins have access to the `context`, allowing them to trigger specific engine behaviors like `fastMode` or `selfHealing` for certain file types.
-
-### Knip Compatibility
-
-If you are porting a Knip plugin, ensure the export mappings align with the `getRoutePatterns()` and `getRequiredSystemContracts()` methods to ensure full compatibility with the pkg-scaffold resolution graph.
-
-### Default Plugins
+## Default Plugins
 
 *   **NextJsPlugin**: Optimizes Next.js projects, detecting unused pages and API routes.
-*   **GenericPlugins**: Basic optimizations for standard JavaScript/TypeScript projects.
-
-### Disabling Plugins
-
-In the `pkg-scaffold/config.json`, plugins can be controlled under the `plugins` key:
-
-```json
-{
-  "plugins": {
-    "nextjs": false,
-    "typescript": true
-  }
-}
-```
+*   **TypeScriptPlugin**: Advanced support for TypeScript projects, detecting `tsconfig.json` and managing `.ts` and `.d.ts` entry points.
+*   **GenericPlugins**: Basic optimizations for standard JavaScript/TypeScript projects (Nuxt, Remix, SvelteKit, Astro).
