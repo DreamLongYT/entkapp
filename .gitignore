@@ -9,3 +9,4 @@ dist/
 build/
 !docs/.vitepress/config.mts
 !docs/.vitepress/theme/
+!docs/.vitepress/public/

@@ -4,6 +4,15 @@ import { defineConfig } from 'vitepress'
 export default defineConfig({
   title: "pkg-scaffold Documentation",
   base: '/pkg-scaffold/',
+  head: [
+    [
+      'meta',
+      { 
+        name: 'google-site-verification', 
+        content: '9Ao1YuH76KcgDtMO6KV8CLJQ6Tq4iCdqOrmU-MRr6ms' // Replace with your actual code from Google
+      }
+    ]
+  ],
   description: "An advanced, AST-driven dependency resolution, refactoring, and self-healing engine.",
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
