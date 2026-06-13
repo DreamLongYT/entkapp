@@ -3,6 +3,7 @@ import { defineConfig } from 'vitepress'
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
   title: "pkg-scaffold Docs",
+  base: '/pkg-scaffold/',
   description: "An advanced, AST-driven dependency resolution, refactoring, and self-healing engine.",
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
