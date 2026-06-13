@@ -10,7 +10,10 @@
   "scripts": {
     "start": "node bin/cli.js",
     "test": "echo \"Error: no test specified\" && exit 0",
-    "test:stability": "npm run test"
+    "test:stability": "npm run test",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs"
   },
   "keywords": [
     "scaffold",
@@ -48,7 +51,14 @@
     "typescript": "^5.4.5",
     "yocto-spinner": "^0.1.0"
   },
+  "devDepencies": {
+    "vitepress": "^1.0.0",
+    "vue": ">=3.5.0"
+  },
   "engines": {
     "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "vitepress": "^1.6.4"
   }
 }
