@@ -1,66 +1,23 @@
 import path from 'path';
 import fs from 'fs/promises';
+import { PluginRegistry } from '../plugins/PluginRegistry.js';
 
 /**
  * Ecosystem Entry Point Manifest & Dynamic Framework Router Heuristic Validator
  * Intercepts implicit conventions to handle cases where direct import statements are absent.
+ * Now refactored to use a pluggable architecture.
  */
 export class MagicDetector {
   constructor(context) {
     this.context = context;
-    this.manifestSchemaRules = this.compileEcosystemSchemaMatrices();
+    this.registry = new PluginRegistry(context);
+    this.isInitialized = false;
   }
 
-  /**
-   * Compiles explicit layout definitions to handle various web development environments.
-   */
-  compileEcosystemSchemaMatrices() {
-    return {
-      nextjs: {
-        configFiles: ['next.config.js', 'next.config.mjs', 'next.config.ts'],
-        routePatterns: [
-          /\/pages\/api\//,
-          /\/pages\/[a-zA-Z0-9_\-\[\]]+/i,
-          /\/app\/([\w\-\[\]]+\/)+(page|route|layout|loading|error|not-found)\.(ts|tsx|js|jsx)$/
-        ],
-        requiredSystemContracts: ['default', 'getServerSideProps', 'getStaticProps', 'getStaticPaths', 'generateMetadata', 'middleware']
-      },
-      nuxt: {
-        configFiles: ['nuxt.config.js', 'nuxt.config.ts'],
-        routePatterns: [
-          /\/pages\//,
-          /\/server\/(api|routes|middleware)\//,
-          /\/components\/[a-zA-Z0-9_\-\/]+\.vue$/
-        ],
-        requiredSystemContracts: ['default']
-      },
-      remix: {
-        configFiles: ['remix.config.js', 'vite.config.js', 'vite.config.ts'],
-        routePatterns: [
-          /\/app\/routes\//,
-          /\/app\/root\.(tsx|jsx)$/
-        ],
-        requiredSystemContracts: ['default', 'loader', 'action', 'meta', 'links']
-      },
-      sveltekit: {
-        configFiles: ['svelte.config.js', 'vite.config.ts'],
-        routePatterns: [
-          /\+page\.(svelte|ts|js)$/,
-          /\+page\.server\.(ts|js)$/,
-          /\+layout\.(svelte|ts|js)$/,
-          /\+server\.(ts|js)$/
-        ],
-        requiredSystemContracts: ['load', 'actions', 'GET', 'POST', 'PUT', 'DELETE', 'PATCH']
-      },
-      astro: {
-        configFiles: ['astro.config.mjs', 'astro.config.cjs', 'astro.config.ts'],
-        routePatterns: [
-          /\/src\/pages\/.*\.astro$/,
-          /\/src\/pages\/.*\.(ts|js)$/
-        ],
-        requiredSystemContracts: ['default', 'getStaticPaths']
-      }
-    };
+  async ensureInitialized(baseDir) {
+    if (this.isInitialized) return;
+    await this.registry.init(baseDir || process.cwd());
+    this.isInitialized = true;
   }
 
   /**
@@ -68,19 +25,9 @@ export class MagicDetector {
    * @param {string} baseContextDirectory - Root file workspace context execution vector path
    */
   async identifyActiveProjectEcosystems(baseContextDirectory) {
-    const activeFrameworkFlags = [];
-    
-    for (const [frameworkKey, criteria] of Object.entries(this.manifestSchemaRules)) {
-      for (const configFile of criteria.configFiles) {
-        try {
-          await fs.access(path.join(baseContextDirectory, configFile));
-          activeFrameworkFlags.push(frameworkKey);
-          break; // Stop scanning once config criteria is found
-        } catch {
-          // File path criteria absent; proceed to standard verification loops
-        }
-      }
-    }
+    await this.ensureInitialized(baseContextDirectory);
+    const activePlugins = await this.registry.getActivePlugins(baseContextDirectory);
+    const activeFrameworkFlags = activePlugins.map(p => p.name);
     
     // Universal infrastructure overrides (testing platforms and common bundlers)
     activeFrameworkFlags.push('universal-tooling-vectors');
@@ -90,15 +37,18 @@ export class MagicDetector {
   /**
    * Assesses if a file path acts as an implicit route entry point.
    */
-  isImplicitlyRequiredByEcosystem(absolutePath, activeFrameworks) {
+  async isImplicitlyRequiredByEcosystem(absolutePath, activeFrameworks, baseDir) {
+    await this.ensureInitialized();
     const normalizedSystemPath = absolutePath.replace(/\\/g, '/');
 
-    for (const framework of activeFrameworks) {
-      const frameworkRules = this.manifestSchemaRules[framework];
-      if (!frameworkRules) continue;
-
-      const matchesPattern = frameworkRules.routePatterns.some(regex => regex.test(normalizedSystemPath));
-      if (matchesPattern) return true;
+    const plugins = this.registry.getPlugins();
+    for (const plugin of plugins) {
+      if (activeFrameworks.includes(plugin.name)) {
+        const patterns = plugin.getRoutePatterns();
+        if (patterns.some(regex => regex.test(normalizedSystemPath))) {
+          return true;
+        }
+      }
     }
 
     // Apply baseline platform rules (Test suites, lint parameters, continuous integration files)
@@ -127,28 +77,31 @@ export class MagicDetector {
   /**
    * Challenge #4 Framework Overrides. Protects interface boundaries from false positive report flags.
    */
-  injectVirtualConsumerEdges(filePath, fileNode, activeFrameworks) {
-    if (!this.isImplicitlyRequiredByEcosystem(filePath, activeFrameworks)) return;
+  async injectVirtualConsumerEdges(filePath, fileNode, activeFrameworks) {
+    await this.ensureInitialized();
+    if (!await this.isImplicitlyRequiredByEcosystem(filePath, activeFrameworks)) return;
 
     // Retain entry point elements within memory to keep verification safe
     fileNode.isLibraryEntry = true;
 
     // Apply dynamic exports coverage metrics based on active platform contracts
     const normalizedPath = filePath.replace(/\\/g, '/');
+    const plugins = this.registry.getPlugins();
 
-    for (const framework of activeFrameworks) {
-      const frameworkRules = this.manifestSchemaRules[framework];
-      if (!frameworkRules) continue;
-
-      // If the file path matches the active framework schema, protect its interface keywords
-      const appliesToFramework = frameworkRules.routePatterns.some(regex => regex.test(normalizedPath));
-      if (appliesToFramework) {
-        frameworkRules.requiredSystemContracts.forEach(contractMethodToken => {
-          if (fileNode.internalExports.has(contractMethodToken)) {
-            // Emulate active local reference linkages to protect the export
-            fileNode.instantiatedIdentifiers.add(contractMethodToken);
-          }
-        });
+    for (const plugin of plugins) {
+      if (activeFrameworks.includes(plugin.name)) {
+        const patterns = plugin.getRoutePatterns();
+        const appliesToFramework = patterns.some(regex => regex.test(normalizedPath));
+        
+        if (appliesToFramework) {
+          const contracts = plugin.getRequiredSystemContracts();
+          contracts.forEach(contractMethodToken => {
+            if (fileNode.internalExports.has(contractMethodToken)) {
+              // Emulate active local reference linkages to protect the export
+              fileNode.instantiatedIdentifiers.add(contractMethodToken);
+            }
+          });
+        }
       }
     }
   }

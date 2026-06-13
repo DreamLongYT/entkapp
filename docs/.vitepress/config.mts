@@ -29,8 +29,7 @@ export default defineConfig({
     ],
 
     socialLinks: [
-      { icon: 'github', link: 'https://github.com/DreamLongYT/pkg-scaffold' },
-      { icon: 'npm', link: 'https://www.npmjs.com/package/pkg-scaffold'}
+      { icon: 'github', link: 'https://github.com/DreamLongYT/pkg-scaffold' }
     ],
 
     footer: {

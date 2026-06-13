@@ -13,6 +13,7 @@ import ansis from 'ansis';
 import path from 'path';
 import fs from 'fs/promises';
 import { fileURLToPath } from 'url';
+import readline from 'readline/promises';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -37,12 +38,91 @@ async function bootstrap() {
       .option('--test-command <command>', 'Integrated continuous safety test validation script execution path', 'npm test')
       .option('--workspace', 'Enable high-density workspace workspace/monorepo cluster mesh evaluation parsing', false)
       .option('--verbose', 'Toggle expanded trace telemetry for debug operational diagnostics', false)
+      .option('-r, --run', 'Execute the primary operational pipeline loop', false)
       .option('-y, --yes', 'Skip confirmation prompts and execute planned structural modifications automatically', false);
 
     program.parse(process.argv);
     const options = program.opts();
 
-    console.log(ansis.bold.green(`\n📦 pkg-scaffold v${packageJsonContent.version || '3.0.0'} Engine Activation`));
+    const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+
+    // --- Onboarding Check ---
+    const targetCwd = path.resolve(options.cwd);
+    const pkgJsonPath = path.join(targetCwd, 'package.json');
+    const configDirPath = path.join(targetCwd, 'pkg-scaffold');
+
+    let pkgJson;
+    try {
+      pkgJson = JSON.parse(await fs.readFile(pkgJsonPath, 'utf8'));
+    } catch (e) {
+      // No package.json found in target
+    }
+
+    // 1. Ask to install script
+    if (pkgJson && !pkgJson.scripts?.['pkg-scaffold:run']) {
+      const answer = await rl.question(ansis.bold.yellow('❓ No "pkg-scaffold:run" script found in package.json. Install it? (y/n): '));
+      if (answer.toLowerCase() === 'y') {
+        pkgJson.scripts = pkgJson.scripts || {};
+        pkgJson.scripts['pkg-scaffold:run'] = 'pkg-scaffold --fix';
+        await fs.writeFile(pkgJsonPath, JSON.stringify(pkgJson, null, 2));
+        console.log(ansis.green('✅ "pkg-scaffold:run" script added to package.json.'));
+      }
+    }
+
+    // 2. Ask to install config folder
+    let configInstalled = false;
+    try {
+      await fs.access(configDirPath);
+      configInstalled = true;
+    } catch (e) {
+      const answer = await rl.question(ansis.bold.yellow('❓ No "/pkg-scaffold" configuration folder found. Create it with defaults? (y/n): '));
+      if (answer.toLowerCase() === 'y') {
+        await fs.mkdir(configDirPath, { recursive: true });
+        await fs.mkdir(path.join(configDirPath, 'plugins'), { recursive: true });
+        const defaultConfig = {
+          interface: "CLI",
+          useBuiltinPlugins: true,
+          useCustomPlugins: true,
+          supportKnipPlugins: true,
+          options: { verbose: false, fastMode: true, selfHealing: true },
+          enabledPlugins: ["nextjs", "nuxt", "remix", "sveltekit", "astro"]
+        };
+        await fs.writeFile(path.join(configDirPath, 'config.json'), JSON.stringify(defaultConfig, null, 2));
+        console.log(ansis.green('✅ "/pkg-scaffold" folder and default config created.'));
+        configInstalled = true;
+      }
+    }
+
+    if (pkgJson?.scripts?.['pkg-scaffold:run'] || configInstalled) {
+      console.log(ansis.bold.cyan('\n🚀 Setup complete! To start the engine, run:'));
+      console.log(ansis.white(`   - pkg-scaffold -r`));
+      console.log(ansis.white(`   - npm run pkg-scaffold:run\n`));
+    }
+
+    rl.close();
+
+    // Load local config if available
+    let localConfig = {};
+    try {
+      const configPath = path.join(targetCwd, 'pkg-scaffold', 'config.json');
+      const configData = await fs.readFile(configPath, 'utf8');
+      localConfig = JSON.parse(configData);
+    } catch (e) {}
+
+    // Merge options with local config
+    const finalInterface = localConfig.interface || 'CLI';
+    if (finalInterface === 'GUI') {
+      console.log(ansis.bold.magenta('🎨 GUI Mode Detected. Starting Web Interface...'));
+      // In a real scenario, we'd start a local server or Electron here
+      return;
+    }
+
+    // Only proceed to execution if -r/--run is provided
+    if (!options.run) {
+      return;
+    }
+
+    console.log(ansis.bold.green(`\n📦 pkg-scaffold v${packageJsonContent.version || '3.1.0'} Engine Activation`));
     console.log(ansis.dim('------------------------------------------------------------'));
     console.log(`${ansis.bold('Target Workspace Root :')} ${ansis.blue(path.resolve(options.cwd))}`);
     console.log(`${ansis.bold('Refactoring Mode     :')} ${options.fix ? ansis.yellow('Active Fixing & Self-Healing Enabled') : ansis.gray('Dry-Run Reporting Only')}`);

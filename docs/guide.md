@@ -50,3 +50,53 @@ npx pkg-scaffold --workspace --fix --yes
 
 *   Learn more about all available options in the [Reference](/reference).
 *   Visit the [GitHub Repository](https://github.com/DreamLongYT/pkg-scaffold) for the latest updates and to report issues.
+
+## Plugin Development
+
+Building a plugin for pkg-scaffold is straightforward. You need to export a class that extends the `BasePlugin` (or follows its structure).
+
+### Basic Plugin Structure
+
+```javascript
+export default class MyCustomPlugin {
+  constructor(context) {
+    this.context = context;
+  }
+
+  // Unique identifier for the plugin
+  get name() {
+    return 'my-plugin';
+  }
+
+  // Files that indicate this ecosystem is active
+  getConfigFiles() {
+    return ['my-config.json'];
+  }
+
+  // Regex patterns for entry point files
+  getRoutePatterns() {
+    return [
+      /\/src\/routes\/.*\.js$/
+    ];
+  }
+
+  // Symbols that should never be flagged as unused in entry points
+  getRequiredSystemContracts() {
+    return ['default', 'handler', 'config'];
+  }
+
+  // Logic to determine if the plugin should run
+  async isActive(baseDir) {
+    // Return true if your framework is detected
+    return true; 
+  }
+}
+```
+
+### Advanced: Interfacing with the Engine
+
+Plugins have access to the `context`, allowing them to trigger specific engine behaviors like `fastMode` or `selfHealing` for certain file types.
+
+### Knip Compatibility
+
+If you are porting a Knip plugin, ensure the export mappings align with the `getRoutePatterns()` and `getRequiredSystemContracts()` methods to ensure full compatibility with the pkg-scaffold resolution graph.

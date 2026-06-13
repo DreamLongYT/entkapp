@@ -2,7 +2,7 @@
 
 /**
  * ============================================================================
- * 📦 pkg-scaffold v2.3.0: Enterprise Dependency Intelligence & Scaffolding Engine
+ * 📦 pkg-scaffold v3.1.0: Ultimate Enterprise Codebase Janitor & Self-Healing Engine
  * ============================================================================
  * * Eine hochgradig integrierte Code-Analyse- und Projektbootstrapping-Engine.
  * Kombiniert rekursive Erreichbarkeitsanalysen (Reachability Graphs) auf 
