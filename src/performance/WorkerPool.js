@@ -65,6 +65,14 @@ export class WorkerPool {
         if (result.localSuppressedRules) {
           result.localSuppressedRules.forEach(r => node.localSuppressedRules.add(r));
         }
+        if (result.externalPackageUsage) {
+          result.externalPackageUsage.forEach(p => node.externalPackageUsage.add(p));
+        }
+        if (result.symbolSourceLocations) {
+          Object.entries(result.symbolSourceLocations).forEach(([k, v]) => {
+            node.symbolSourceLocations.set(k, v);
+          });
+        }
       });
 
       return true;

@@ -43,6 +43,7 @@ export class GraphNode {
     this.securityThreats = [];
     this.calculatedDynamicImports = [];
     this.localSuppressedRules = new Set();
+    this.externalPackageUsage = new Set(); // Tracked third-party package names
     
     // Detailed AST Location Diagnostics (Symbol -> Structural Location Mapping)
     this.symbolSourceLocations = new Map(); // Symbol -> { line: number, column: number, length: number }
@@ -59,7 +60,22 @@ export class GraphNode {
       const parentNode = projectGraph.get(parentPath);
       if (!parentNode) continue;
 
-      // Direct identity reference check
+      // Check if the symbol is explicitly imported by the parent
+      const importKey = `${path.relative(path.dirname(parentPath), this.filePath).replace(/\\/g, '/')}:${symbolName}`;
+      const importKeyAlt = `${path.relative(path.dirname(parentPath), this.filePath).replace(/\\/g, '/').replace(/\.(js|ts|tsx|jsx)$/, '')}:${symbolName}`;
+      
+      if (parentNode.importedSymbols.has(importKey) || parentNode.importedSymbols.has(importKeyAlt)) {
+        return true;
+      }
+
+      // Check for star imports or namespace imports
+      const starKey = `${path.relative(path.dirname(parentPath), this.filePath).replace(/\\/g, '/')}:*`;
+      const starKeyAlt = `${path.relative(path.dirname(parentPath), this.filePath).replace(/\\/g, '/').replace(/\.(js|ts|tsx|jsx)$/, '')}:*`;
+      if (parentNode.importedSymbols.has(starKey) || parentNode.importedSymbols.has(starKeyAlt)) {
+        return true;
+      }
+
+      // Direct identity reference check (for cases where it's used but not explicitly imported in a traceable way, or global)
       if (parentNode.instantiatedIdentifiers.has(symbolName)) return true;
       
       // Property lookup reference checks (e.g., config.databaseUrl)
@@ -125,8 +141,11 @@ export class EngineContext {
       prunedFilesCount: 0,
       prunedExportsCount: 0,
       totalSymbolsAnalyzed: 0,
-      securityVulnerabilitiesMitigated: 0
+      securityVulnerabilitiesMitigated: 0,
+      unusedDependenciesCount: 0
     };
+    this.usedExternalPackages = new Set(); // Global set of used npm packages
+    this.manifestDependencies = new Map(); // Package.json path -> { dependencies, devDependencies }
   }
 
   /**
@@ -221,7 +240,8 @@ export class EngineContext {
       structuralIssuesDetected: {
         deadFiles: [],
         deadExports: [],
-        securityThreats: []
+        securityThreats: [],
+        unusedDependencies: []
       },
       modificationsExecuted: {
         filesUnlinked: this.metrics.prunedFilesCount,
@@ -279,6 +299,23 @@ export class EngineContext {
             line: threat.line || 1
           });
         });
+      }
+    }
+
+    // Category D: Unused Dependencies Audit
+    for (const [manifestPath, manifestData] of this.manifestDependencies.entries()) {
+      const relativeManifest = path.relative(this.cwd, manifestPath);
+      
+      // We only audit 'dependencies' for now as devDependencies are harder to track (test files, tools, etc.)
+      for (const dep of manifestData.dependencies) {
+        if (!this.usedExternalPackages.has(dep)) {
+          summary.structuralIssuesDetected.unusedDependencies.push({
+            manifest: relativeManifest,
+            package: dep,
+            type: 'dependency'
+          });
+          this.metrics.unusedDependenciesCount++;
+        }
       }
     }
 

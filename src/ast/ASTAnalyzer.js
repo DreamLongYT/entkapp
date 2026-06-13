@@ -57,6 +57,14 @@ export class ASTAnalyzer {
         if (node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier)) {
           const specifier = node.moduleSpecifier.text;
           fileNode.explicitImports.add(specifier);
+          
+          // Identify potential external package usage
+          if (!specifier.startsWith('.') && !specifier.startsWith('/')) {
+            const pkgName = specifier.startsWith('@') 
+              ? specifier.split('/').slice(0, 2).join('/')
+              : specifier.split('/')[0];
+            fileNode.externalPackageUsage.add(pkgName);
+          }
 
           if (node.importClause) {
             // Trace named bounds: import { activeToken } from 'module';
@@ -115,17 +123,19 @@ export class ASTAnalyzer {
       }
 
       // Handle Variable Declaration Assignments & Challenge #11 (AST Secret Scanning)
-      case ts.SyntaxKind.VariableDeclaration: {
-        if (node.name && ts.isIdentifier(node.name)) {
-          this.auditAssignmentSafety(node.name.text, node.initializer, fileNode, sourceFile);
-        } else if (node.name && (ts.isObjectBindingPattern(node.name) || ts.isArrayBindingPattern(node.name))) {
-          // Flatten binding properties to map destructured usage accurately
-          node.name.elements.forEach(element => {
-            if (element.name && ts.isIdentifier(element.name)) {
-              this.auditAssignmentSafety(element.name.text, null, fileNode, sourceFile);
-            }
-          });
-        }
+      case ts.SyntaxKind.VariableStatement: {
+        const isExported = this.hasExportModifier(node);
+        node.declarationList.declarations.forEach(decl => {
+          if (decl.name && ts.isIdentifier(decl.name)) {
+            this.auditAssignmentSafety(decl.name, decl.initializer, fileNode, sourceFile, isExported);
+          } else if (decl.name && (ts.isObjectBindingPattern(decl.name) || ts.isArrayBindingPattern(decl.name))) {
+            decl.name.elements.forEach(element => {
+              if (element.name && ts.isIdentifier(element.name)) {
+                this.auditAssignmentSafety(element.name, null, fileNode, sourceFile, isExported);
+              }
+            });
+          }
+        });
         break;
       }
 
@@ -141,8 +151,12 @@ export class ASTAnalyzer {
             // Register under 'default'; also store the real name as referencedSymbol for diagnostics
             const realName = node.name && ts.isIdentifier(node.name) ? node.name.text : 'anonymous';
             fileNode.internalExports.set('default', { type: 'default-function', referencedSymbol: realName, start: node.getStart(sourceFile), end: node.getEnd() });
+            const loc = sourceFile.getLineAndCharacterOfPosition(node.getStart(sourceFile));
+            fileNode.symbolSourceLocations.set('default', { line: loc.line + 1, column: loc.character + 1 });
           } else if (node.name && ts.isIdentifier(node.name)) {
             fileNode.internalExports.set(node.name.text, { type: 'function', start: node.getStart(sourceFile), end: node.getEnd() });
+            const loc = sourceFile.getLineAndCharacterOfPosition(node.getStart(sourceFile));
+            fileNode.symbolSourceLocations.set(node.name.text, { line: loc.line + 1, column: loc.character + 1 });
           }
         }
         break;
@@ -155,8 +169,12 @@ export class ASTAnalyzer {
           if (isDefaultExport) {
             const realName = node.name && ts.isIdentifier(node.name) ? node.name.text : 'anonymous';
             fileNode.internalExports.set('default', { type: 'default-class', referencedSymbol: realName, start: node.getStart(sourceFile), end: node.getEnd() });
+            const loc = sourceFile.getLineAndCharacterOfPosition(node.getStart(sourceFile));
+            fileNode.symbolSourceLocations.set('default', { line: loc.line + 1, column: loc.character + 1 });
           } else if (node.name && ts.isIdentifier(node.name)) {
             fileNode.internalExports.set(node.name.text, { type: 'class', start: node.getStart(sourceFile), end: node.getEnd() });
+            const loc = sourceFile.getLineAndCharacterOfPosition(node.getStart(sourceFile));
+            fileNode.symbolSourceLocations.set(node.name.text, { line: loc.line + 1, column: loc.character + 1 });
           }
         }
         break;
@@ -168,6 +186,8 @@ export class ASTAnalyzer {
           const name = node.name.text;
           if (this.hasExportModifier(node)) {
             fileNode.internalExports.set(name, { type: 'interface', start: node.getStart(sourceFile), end: node.getEnd() });
+            const loc = sourceFile.getLineAndCharacterOfPosition(node.getStart(sourceFile));
+            fileNode.symbolSourceLocations.set(name, { line: loc.line + 1, column: loc.character + 1 });
           }
         }
         break;
@@ -179,6 +199,8 @@ export class ASTAnalyzer {
           const name = node.name.text;
           if (this.hasExportModifier(node)) {
             fileNode.internalExports.set(name, { type: 'type-alias', start: node.getStart(sourceFile), end: node.getEnd() });
+            const loc = sourceFile.getLineAndCharacterOfPosition(node.getStart(sourceFile));
+            fileNode.symbolSourceLocations.set(name, { line: loc.line + 1, column: loc.character + 1 });
           }
         }
         break;
@@ -243,10 +265,17 @@ export class ASTAnalyzer {
   /**
    * Challenge #11: AST Secret Scanning. Evaluates entropy and patterns directly via assignments.
    */
-  auditAssignmentSafety(variableName, initializer, fileNode, sourceFile) {
-    // Process variable mapping target indicators first
-    if (this.hasExportModifier(variableName.parent)) {
-      fileNode.internalExports.set(variableName.text, { type: 'variable', start: variableName.parent.getStart(sourceFile), end: variableName.parent.getEnd() });
+  auditAssignmentSafety(variableNameNode, initializer, fileNode, sourceFile, isExported) {
+    const variableName = variableNameNode.text;
+
+    if (isExported) {
+      fileNode.internalExports.set(variableName, { 
+        type: 'variable', 
+        start: variableNameNode.parent.getStart(sourceFile), 
+        end: variableNameNode.parent.getEnd() 
+      });
+      const loc = sourceFile.getLineAndCharacterOfPosition(variableNameNode.getStart(sourceFile));
+      fileNode.symbolSourceLocations.set(variableName, { line: loc.line + 1, column: loc.character + 1 });
     }
 
     if (!initializer || !ts.isStringLiteral(initializer)) return;
@@ -301,8 +330,11 @@ export class ASTAnalyzer {
   }
 
   hasExportModifier(node) {
-    if (!node || !node.modifiers) return false;
-    return node.modifiers.some(modifier => modifier.kind === ts.SyntaxKind.ExportKeyword);
+    if (!node) return false;
+    const modifiers = ts.canHaveModifiers(node) ? ts.getModifiers(node) : undefined;
+    // if (this.context.verbose && modifiers) console.log(`[AST Debug] Node Kind: ${ts.SyntaxKind[node.kind]}, Modifiers: ${modifiers.map(m => ts.SyntaxKind[m.kind]).join(', ')}`);
+    if (!modifiers) return false;
+    return modifiers.some(modifier => modifier.kind === ts.SyntaxKind.ExportKeyword);
   }
 
   isNodeDeclarationName(node) {

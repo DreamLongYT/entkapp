@@ -28,7 +28,10 @@ async function processThreadChunks() {
         instantiatedIdentifiers: new Set(),
         propertyAccessChains: new Set(),
         internalExports: new Map(),
-        securityThreats: []
+        securityThreats: [],
+        localSuppressedRules: new Set(),
+        externalPackageUsage: new Set(),
+        symbolSourceLocations: new Map()
       };
 
       const sourceFile = ts.createSourceFile(
@@ -52,7 +55,9 @@ async function processThreadChunks() {
         propertyAccessChains: Array.from(mockNode.propertyAccessChains),
         internalExports: Object.fromEntries(mockNode.internalExports),
         securityThreats: mockNode.securityThreats,
-        localSuppressedRules: Array.from(mockNode.localSuppressedRules)
+        localSuppressedRules: Array.from(mockNode.localSuppressedRules),
+        externalPackageUsage: Array.from(mockNode.externalPackageUsage),
+        symbolSourceLocations: Object.fromEntries(mockNode.symbolSourceLocations)
       });
     } catch {
       // Ignore unparseable or locked syntax nodes in thread loops

@@ -132,6 +132,9 @@ export class RefactoringEngine {
 
         // Apply ecosystem overrides directly to our parsed memory maps
         this.magicDetector.injectVirtualConsumerEdges(filePath, node, activeFrameworkEcosystems);
+
+        // Aggregate used external packages for the dependency audit
+        node.externalPackageUsage.forEach(pkg => this.context.usedExternalPackages.add(pkg));
       }
 
       // Pass 4: Evaluate graph edges and link connections across the codebase mesh
@@ -160,6 +163,11 @@ export class RefactoringEngine {
           if (analysisSummary.structuralIssuesDetected.deadExports.length > 0) {
             console.log(ansis.bold(`  ✂️  Prune ${analysisSummary.structuralIssuesDetected.deadExports.length} unused named exports:`));
             analysisSummary.structuralIssuesDetected.deadExports.forEach(e => console.log(ansis.dim(`    • ${e.symbol} in ${e.file}:${e.line}`)));
+          }
+
+          if (analysisSummary.structuralIssuesDetected.unusedDependencies.length > 0) {
+            console.log(ansis.bold(`  📦 Remove ${analysisSummary.structuralIssuesDetected.unusedDependencies.length} unused dependencies:`));
+            analysisSummary.structuralIssuesDetected.unusedDependencies.forEach(d => console.log(ansis.dim(`    • ${d.package} (in ${d.manifest})`)));
           }
           console.log(ansis.dim('------------------------------------------------------------'));
 
@@ -273,6 +281,12 @@ export class RefactoringEngine {
       const devDeps = Object.keys(data.devDependencies || {});
       const totalDependencies = [...prodDeps, ...devDeps];
 
+      // Register dependencies for later audit
+      this.context.manifestDependencies.set(packageJsonPath, {
+        dependencies: prodDeps,
+        devDependencies: devDeps
+      });
+
       // Pass dependencies down to our Levenshtein string-distance guard to find typosquat targets
       const supplyChainThreats = this.supplyChainGuard.detectTyposquattingAnomalies(totalDependencies);
       
@@ -309,6 +323,9 @@ export class RefactoringEngine {
       Object.entries(cachedRecord.symbolSourceLocations).forEach(([k, v]) => {
         node.symbolSourceLocations.set(k, v);
       });
+    }
+    if (cachedRecord.externalPackageUsage) {
+      cachedRecord.externalPackageUsage.forEach(p => node.externalPackageUsage.add(p));
     }
   }
 
@@ -377,6 +394,15 @@ export class RefactoringEngine {
       report.structuralIssuesDetected.securityThreats.forEach(threat => {
         console.log(`  • ${ansis.red(threat.file)}:${threat.line} -> Variable [${ansis.bold(threat.identifier)}] contains a high-entropy secret (Shannon Score: ${threat.entropy})`);
       });
+    }
+
+    if (report.structuralIssuesDetected.unusedDependencies.length > 0) {
+      console.log(ansis.bold.red(`\nUnused External Dependencies Flagged (${report.structuralIssuesDetected.unusedDependencies.length}):`));
+      report.structuralIssuesDetected.unusedDependencies.forEach(d => {
+        console.log(`  • Package [${ansis.red(d.package)}] in ${ansis.dim(d.manifest)}`);
+      });
+    } else {
+      console.log(ansis.green('\n✨ No unused external dependencies found in manifest files.'));
     }
 
     console.log(ansis.dim('\n============================================================\n'));
