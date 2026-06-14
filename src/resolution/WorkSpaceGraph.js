@@ -62,8 +62,14 @@ export class WorkspaceGraph {
           workspaceGlobs = Array.isArray(pkg.workspaces) ? pkg.workspaces : (pkg.workspaces.packages || []);
         }
       } catch {
-        return; // Workspace mesh maps skipped for single-package targets
+        // No workspaces found
       }
+    }
+
+    if (workspaceGlobs.length > 0) {
+      this.context.isWorkspaceEnabled = true;
+    } else {
+      return; // Workspace mesh maps skipped for single-package targets
     }
 
     // Crawl target glob configurations to locate workspace packages
@@ -131,8 +137,16 @@ export class WorkspaceGraph {
 
     // Default file index fallback configurations
     if (entries.size === 0) {
+      // Standard roots
       entries.add(path.resolve(pkgDir, 'index.js'));
       entries.add(path.resolve(pkgDir, 'index.ts'));
+      entries.add(path.resolve(pkgDir, 'index.tsx'));
+      entries.add(path.resolve(pkgDir, 'index.jsx'));
+      // Common src patterns
+      entries.add(path.resolve(pkgDir, 'src/index.ts'));
+      entries.add(path.resolve(pkgDir, 'src/index.tsx'));
+      entries.add(path.resolve(pkgDir, 'src/index.js'));
+      entries.add(path.resolve(pkgDir, 'src/index.jsx'));
     }
 
     return Array.from(entries);

@@ -25,6 +25,9 @@ export class GraphNode {
     this.explicitImports = new Set();
     this.dynamicImports = new Set();
     this.importedSymbols = new Set(); // Format: 'specifier:symbol' or 'specifier:*'
+    this.jsxComponents = new Set();
+    this.jsxProps = new Set();
+    this.decorators = new Set();
     
     // Internal API Exposed Interfaces (Symbol Name -> ExportMetadata)
     this.internalExports = new Map();
@@ -87,6 +90,17 @@ export class GraphNode {
 
       // Safe fallback lookup inside string reference caches (e.g., obj['databaseUrl'])
       if (parentNode.rawStringReferences.has(symbolName)) return true;
+
+      // Check for JSX component usage
+      if (parentNode.jsxComponents.has(symbolName)) return true;
+
+      // Check for JSX prop usage (e.g., <MyComponent myProp={symbolName} />)
+      for (const jsxProp of parentNode.jsxProps) {
+        if (jsxProp.endsWith(`:${symbolName}`)) return true;
+      }
+
+      // Check for decorator usage
+      if (parentNode.decorators.has(symbolName)) return true;
     }
 
     return false;

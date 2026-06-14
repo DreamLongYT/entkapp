@@ -1,3 +1,4 @@
+import { loadAdditionalPlugins } from "./ecosystems/PluginLoader.js";
 import path from 'path';
 import fs from 'fs/promises';
 import { pathToFileURL } from 'url';

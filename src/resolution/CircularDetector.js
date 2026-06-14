@@ -1,31 +1,14 @@
-/**
- * ============================================================================
- * Circular Dependency Detector for pkg-scaffold v3.3.0
- * 
- * Copyright (C) 2026 DreamLongYT
- * Licensed under the Apache License, Version 2.0.
- * "The Original Code was made by DreamLongYT"
- * ============================================================================
- * Implements a high-performance Tarjan-based algorithm to
- * detect circular dependencies in the codebase graph.
- * Addresses Knip Issue #1734.
- */
-
 export class CircularDetector {
   constructor(context) {
     this.context = context;
     this.cycles = [];
   }
 
-  /**
-   * Detects cycles in the provided dependency graph using Tarjan's SCC algorithm
-   * @param {Map} graph - The codebase dependency graph
-   * @returns {Array} List of detected cycles
-   */
   detectCycles(graph, context = null) {
     if (context) this.context = context;
     this.cwd = context?.cwd || this.context?.cwd || process.cwd();
     this.cycles = [];
+    
     let index = 0;
     const stack = [];
     const indices = new Map();
@@ -63,7 +46,6 @@ export class CircularDetector {
         if (component.length > 1) {
           this.cycles.push(component.reverse());
         } else {
-          // Check for self-loops
           const node = graph.get(v);
           if (node && node.outgoingEdges && node.outgoingEdges.has(v)) {
             this.cycles.push([v]);
@@ -81,18 +63,11 @@ export class CircularDetector {
     return this.cycles;
   }
 
-  /**
-   * Formats cycles for reporting with file paths
-   */
   formatCycles() {
     return this.cycles.map(cycle => {
       const paths = cycle.map(p => {
-        // Extract relative path for readability
         let rel = p.replace(this.context.cwd, '').replace(/^\//, '');
-        // Convert absolute Windows paths
-        if (rel.includes(':\\')) {
-          rel = rel.split(':\\')[1] || rel;
-        }
+        if (rel.includes(':\\')) rel = rel.split(':\\')[1] || rel;
         return rel;
       });
       if (cycle.length === 1) return `${paths[0]} -> (self-loop)`;
@@ -100,17 +75,12 @@ export class CircularDetector {
     });
   }
 
-  /**
-   * Gets detailed cycle information
-   */
   getCycleDetails() {
     return this.cycles.map((cycle, idx) => ({
       cycleId: idx + 1,
       files: cycle.map(p => {
         let rel = p.replace(this.context.cwd, '').replace(/^\//, '');
-        if (rel.includes(':\\')) {
-          rel = rel.split(':\\')[1] || rel;
-        }
+        if (rel.includes(':\\')) rel = rel.split(':\\')[1] || rel;
         return rel;
       }),
       length: cycle.length,
@@ -118,5 +88,4 @@ export class CircularDetector {
     }));
   }
 }
-
 export default CircularDetector;

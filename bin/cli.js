@@ -105,9 +105,9 @@ async function bootstrap() {
     // Load local config if available
     let localConfig = {};
     try {
-      const configPath = path.join(targetCwd, 'pkg-scaffold', 'config.json');
-      const configData = await fs.readFile(configPath, 'utf8');
-      localConfig = JSON.parse(configData);
+      const { ConfigLoader } = await import('../src/resolution/ConfigLoader.js');
+      const loader = new ConfigLoader(targetCwd);
+      localConfig = await loader.loadConfig(targetCwd);
     } catch (e) {}
 
     // Merge options with local config
@@ -132,7 +132,7 @@ async function bootstrap() {
 
     console.log(ansis.bold.green(`\n📦 pkg-scaffold v${packageJsonContent.version || '3.3.2'} Engine Activation`));
     console.log(ansis.dim('------------------------------------------------------------'));
-    console.log(`${ansis.bold('Target Workspace Root :')} ${ansis.blue(path.resolve(options.cwd))}`);
+    console.log(`${ansis.bold('Target Workspace Root :')} ${ansis.blue(targetCwd)}`);
     console.log(`${ansis.bold('Refactoring Mode     :')} ${options.fix ? ansis.yellow('Active Fixing & Self-Healing Enabled') : ansis.gray('Dry-Run Reporting Only')}`);
     console.log(`${ansis.bold('Validation Sandbox   :')} ${ansis.magenta(options.testCommand)}`);
     console.log(ansis.dim('------------------------------------------------------------\n'));
@@ -140,7 +140,7 @@ async function bootstrap() {
     const { RefactoringEngine } = await import('../src/index.js');
 
     const engine = new RefactoringEngine({
-      cwd: path.resolve(options.cwd),
+      cwd: targetCwd,
       autoFix: options.fix,
       tsconfig: options.tsconfig,
       testCommand: options.testCommand,

@@ -68,7 +68,9 @@ export class MagicDetector {
       'jest.config.', 'vitest.config.', 'playwright.config.', 'cypress.config.',
       'webpack.config.', 'vite.config.', 'rollup.config.', 'tailwind.config.',
       '.eslintrc.', 'prettier.config.', '.postcssrc.', 'postcss.config.',
-      'bin/cli.js', 'index.js', 'WorkerTaskRunner.js'
+      'bin/cli.js', 'index.js', 'WorkerTaskRunner.js',
+      'src/server.ts', 'src/main.ts', 'src/app.ts', 'src/index.tsx', 'src/index.ts',
+      'server.ts', 'main.ts', 'app.ts'
     ];
     
     return testEnvironments.some(matchPattern => normalizedPath.includes(matchPattern));

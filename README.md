@@ -1,44 +1,82 @@
-# README
+# 📦 pkg-scaffold
 
 ![Logo](./logo.png)
 
-**The Ultimate Enterprise Codebase Janitor: OXC-Powered, Type-Aware, and Self-Healing.**
+> **The Ultimate Enterprise Codebase Janitor.** Faster than Knip with OXC integration, type-aware analysis, and self-healing capabilities. Fully standalone - solving what Knip cannot.
 
-[![Version](https://img.shields.io/npm/v/pkg-scaffold)](https://www.npmjs.com/package/pkg-scaffold)
-[![License](https://img.shields.io/npm/l/pkg-scaffold)]() 
-![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/DreamLongYT/pkg-scaffold/npm-publish.yml?branch=main) 
-![Performance](https://img.shields.io/badge/performance-OXC--Inside-blueviolet.svg)
+![Version](https://img.shields.io/npm/v/pkg-scaffold) ![License](https://img.shields.io/badge/license-Apache--2.0-green.svg) ![Performance](https://img.shields.io/badge/performance-OXC--Inside-blueviolet.svg)
 
-`pkg-scaffold` is the industry's most advanced codebase optimization engine. Version 3.1.3 marks a massive leap forward, outperforming Knip v6 with a hybrid **OXC + TypeScript** architecture. It doesn't just find dead code—it safely prunes it and validates your project's integrity through a unique **Self-Healing Loop**.
+`pkg-scaffold` is a next-generation tool designed to declutter your JavaScript and TypeScript projects. It finds unused files, unused dependencies, dead code, circular dependencies, and more. It is built to be a direct and superior competitor to `knip.dev`.
 
-## Features
+## 🚀 Why pkg-scaffold over Knip?
 
-- **Extreme Speed with OXC**: By integrating the Rust-based OXC parser, `pkg-scaffold` achieves a 2-4x performance boost.
-- **True Type-Aware Analysis**: Uses the full TypeScript Compiler API to resolve types across your entire project.
-- **Automated Self-Healing**: Identifies unused code, removes it, and validates the change through tests.
-- **Modular Plugin Ecosystem**: Supports local configurations and custom plugins, including Knip compatibility.
+*   **⚡ Blazing Fast:** Powered by `oxc-parser` (Rust-based) for lightning-fast AST traversal. Fallback to TypeScript compiler API when needed.
+*   **🔌 Massive Plugin Ecosystem:** Over 20+ built-in plugins (Next.js, Nuxt, SvelteKit, Tailwind, Jest, Vitest, Playwright, GitHub Actions, Webpack, Babel, Rollup, ESLint, Prettier, Husky, and many more).
+*   **💀 True Dead Code Detection:** Advanced graph-based reachability analysis to find truly dead files and unused exports, even deep within your codebase.
+*   **🔄 Circular Dependency Detection:** High-performance Tarjan-based algorithm to detect and report circular dependencies.
+*   **🛡️ Supply Chain Guard:** Detects typosquatting and verifies integrity lockfile hashes.
+*   **🔐 Secret Detection:** Scans for hardcoded secrets (API keys, tokens) using AST and Regex.
+*   **🛠️ Self-Healing:** Not just reporting, but automatically fixing structural issues (removing dead files, pruning unused dependencies).
+*   **⚙️ Flexible Configuration:** Supports `pkg-scaffold.json`, `pkg-scaffold.ts`, `scaffold.config.js`, and more.
 
-## Getting Started
-
-### Installation
-
-```bash
-npm install -g pkg-scaffold
-```
-
-### Usage
+## 📦 Installation
 
 ```bash
-pkg-scaffold init my-project
-pkg-scaffold --fix --test-command 'npm test'
+npm install -D pkg-scaffold
+# or
+pnpm add -D pkg-scaffold
+# or
+yarn add -D pkg-scaffold
 ```
 
-## Documentation
+## 🚀 Usage
 
-- [home](https://dreamlongyt.github.io/pkg-scaffold/)
-- [guide](https://dreamlongyt.github.io/pkg-scaffold/guide)
-- [references](https://dreamlongyt.github.io/pkg-scaffold/reference)
+Run the CLI at the root of your project:
 
-## License
+```bash
+npx pkg-scaffold --run
+```
 
-MIT © DreamLongYT & The Enhanced Contributors.
+### CLI Options
+
+*   `-c, --cwd <path>`: Specify the execution context root directory.
+*   `--fix`: Enable atomic code updates, structural file pruning, and active type sanitization.
+*   `--no-fix`: Disable direct file manipulation (dry-run reporting mode).
+*   `--tsconfig <filename>`: Specify path to custom layout configurations.
+*   `--verbose`: Toggle expanded trace telemetry for debug operational diagnostics.
+*   `-r, --run`: Execute the primary operational pipeline loop.
+*   `-y, --yes`: Skip confirmation prompts.
+
+## ⚙️ Configuration
+
+Create a `pkg-scaffold.json` (or `.js`, `.ts`) in your project root:
+
+```json
+{
+  "entryPoints": ["src/index.ts"],
+  "exclude": ["node_modules/**", "dist/**", "**/*.test.ts"],
+  "rules": {
+    "no-unused-exports": "error",
+    "no-dead-code": "error"
+  }
+}
+```
+
+## 🔌 Supported Plugins
+
+`pkg-scaffold` automatically detects your ecosystem and enables the relevant plugins:
+
+*   **Frameworks:** Next.js, Nuxt, Remix, SvelteKit, Astro, Vue, Angular
+*   **Testing:** Jest, Vitest, Playwright, Cypress
+*   **Build Tools:** Webpack, Rollup, Babel, PostCSS, TailwindCSS
+*   **Linters/Formatters:** ESLint, Prettier, Commitlint, Lint-Staged, Husky
+*   **CI/CD:** GitHub Actions
+*   **And more!**
+
+## 🤝 Contributing
+
+Contributions are welcome! Please open an issue or submit a pull request.
+
+## 📄 License
+
+Apache-2.0 License.

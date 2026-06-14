@@ -99,6 +99,18 @@ export class BarrelParser {
           node.declarationList.declarations.forEach(decl => {
             if (ts.isIdentifier(decl.name)) {
               spec.declaredLocalExports.add(decl.name.text);
+            } else if (ts.isObjectBindingPattern(decl.name)) {
+              decl.name.elements.forEach(element => {
+                if (element.name && ts.isIdentifier(element.name)) {
+                  spec.declaredLocalExports.add(element.name.text);
+                }
+              });
+            } else if (ts.isArrayBindingPattern(decl.name)) {
+              decl.name.elements.forEach(element => {
+                if (ts.isBindingElement(element) && element.name && ts.isIdentifier(element.name)) {
+                  spec.declaredLocalExports.add(element.name.text);
+                }
+              });
             }
           });
         }
@@ -148,36 +160,36 @@ export class BarrelParser {
     if (spec.forwardedNamedExports.has(targetSymbolName)) {
       const routingRule = spec.forwardedNamedExports.get(targetSymbolName);
       const fullyResolvedPath = this.resolver.resolveModulePath(contextFilePath, routingRule.targetModule);
-      return this.determineSymbolDeclarationOrigin(fullyResolvedPath, routingRule.sourceSymbol, activeProjectGraph, protectionStack);
+      if (fullyResolvedPath) {
+        return this.determineSymbolDeclarationOrigin(fullyResolvedPath, routingRule.sourceSymbol, activeProjectGraph, protectionStack);
+      }
     }
 
-    // Rule C: Evaluate structural namespace alias groupings
-    if (spec.namespacedWildcardExports.has(targetSymbolName)) {
-      const relativeModule = spec.namespacedWildcardExports.get(targetSymbolName);
-      const fullyResolvedPath = this.resolver.resolveModulePath(contextFilePath, relativeModule);
-      return { originFile: fullyResolvedPath, originSymbol: '*' };
+    // Rule C: Evaluate structural namespace alias groupings (export * as name from 'module')
+    for (const [namespaceAlias, relativeModule] of spec.namespacedWildcardExports.entries()) {
+      // If the targetSymbolName is prefixed with the namespaceAlias, then it's a member of this namespace re-export
+      if (targetSymbolName.startsWith(`${namespaceAlias}.`)) {
+        const originalSymbol = targetSymbolName.substring(namespaceAlias.length + 1);
+        const fullyResolvedPath = this.resolver.resolveModulePath(contextFilePath, relativeModule);
+        if (fullyResolvedPath) {
+          return this.determineSymbolDeclarationOrigin(fullyResolvedPath, originalSymbol, activeProjectGraph, protectionStack);
+        }
+      }
     }
 
-    // Rule D: Sweep through anonymous star re-exports vectors
+    // Rule D: Sweep through anonymous star re-exports vectors (export * from 'module')
     for (const relativePath of spec.wildcardExports) {
       const fullyResolvedPath = this.resolver.resolveModulePath(contextFilePath, relativePath);
       
-      // Look inside the graph metadata map configuration to verify child target availability
-      const targetSubSpec = await this.parseBarrelSpecification(fullyResolvedPath);
-      
-      if (targetSubSpec.declaredLocalExports.has(targetSymbolName) || 
-          targetSubSpec.forwardedNamedExports.has(targetSymbolName)) {
-        return this.determineSymbolDeclarationOrigin(fullyResolvedPath, targetSymbolName, activeProjectGraph, protectionStack);
-      }
-
-      // Dynamic recursive trace for multi-tier nested barrel file layouts
-      if (targetSubSpec.isBarrelInstance) {
+      if (fullyResolvedPath) {
+        // Look inside the graph metadata map configuration to verify child target availability
         const continuousResolutionTrace = await this.determineSymbolDeclarationOrigin(
           fullyResolvedPath,
           targetSymbolName,
           activeProjectGraph,
           protectionStack
         );
+        // If a resolution was found in a child barrel, return it
         if (continuousResolutionTrace && continuousResolutionTrace.originFile !== fullyResolvedPath) {
           return continuousResolutionTrace;
         }

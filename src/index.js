@@ -1,3 +1,5 @@
+import { DeadCodeDetector } from "./ast/DeadCodeDetector.js";
+import { OxcAnalyzer } from "./ast/OxcAnalyzer.js";
 /**
  * ============================================================================
  * 📦 pkg-scaffold v3.3.2: Unified Architectural Refactoring Orchestrator
@@ -47,6 +49,7 @@ export class RefactoringEngine {
     
     // Stage 3: Wire official AST Syntax parsers and framework processors
     this.analyzer = new ASTAnalyzer(this.context);
+    this.oxcAnalyzer = new OxcAnalyzer(this.context);
     this.barrelParser = new BarrelParser(this.context, this.resolver);
     this.magicDetector = new MagicDetector(this.context);
     
@@ -110,16 +113,7 @@ export class RefactoringEngine {
         }
       }
 
-      // Initialize TypeScript program for AST analysis (required before processFile)
-      if (sourceCodeFilesList.length > 0) {
-        try {
-          this.analyzer.initProgram(sourceCodeFilesList);
-        } catch (e) {
-          if (this.context.verbose) {
-            console.warn('Warning: Failed to initialize TypeScript program:', e.message);
-          }
-        }
-      }
+
 
       // Pass 3: Process source file tokens using high-performance concurrent workers
       let parallelParseCompleted = false;
@@ -139,7 +133,12 @@ export class RefactoringEngine {
           this.hydrateNodeFromCache(node, cacheManifest[filePath]);
         } else if (!parallelParseCompleted) {
           this.context.metrics.cacheMisses++;
-          await this.analyzer.processFile(filePath, node);
+          const fileContent = await fs.readFile(filePath, 'utf8'); // Read file content here
+          if (this.oxcAnalyzer.isAvailable) {
+            this.oxcAnalyzer.parseFile(filePath, fileContent, node);
+          } else {
+            this.analyzer.parseFile(filePath, fileContent, node);
+          }
         }
 
         this.magicDetector.injectVirtualConsumerEdges(filePath, node, activeFrameworkEcosystems);
