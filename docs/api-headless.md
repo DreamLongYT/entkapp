@@ -61,7 +61,7 @@ Initialize the API with a project context.
   - `tsconfigPath` (string): Path to tsconfig.json
   - `workspaceEnabled` (boolean): Enable monorepo support (default: false)
 
-**Returns:** Promise<void>
+**Returns:** `Promise<void>`
 
 **Example:**
 ```javascript
@@ -76,7 +76,7 @@ await api.initialize('/path/to/project', {
 
 Analyze the codebase without making changes.
 
-**Returns:** Promise<Object> - Analysis results containing:
+**Returns:** `Promise<Object>` - Analysis results containing:
 - `structuralIssuesDetected` (Object)
   - `deadFiles` (Array): Unused files
   - `deadExports` (Array): Unused exports
@@ -97,7 +97,7 @@ Get detailed impact analysis for a specific file or export.
 - `filePath` (string): Path to the file
 - `symbol` (string, optional): Specific export symbol to analyze
 
-**Returns:** Promise<Object> - Impact analysis containing:
+**Returns:** `Promise<Object>` - Impact analysis containing:
 - `file` (string): File path
 - `symbol` (string): Export symbol
 - `directDependents` (Array): Files that depend on this
@@ -122,7 +122,7 @@ Apply refactoring changes with automatic rollback on test failure.
   - `removeUnusedExports` (boolean): Remove unused exports (default: true)
   - `removeUnusedDependencies` (boolean): Remove unused dependencies (default: true)
 
-**Returns:** Promise<Object> - Refactoring results containing:
+**Returns:** `Promise<Object>` - Refactoring results containing:
 - `filesDeleted` (Array): Deleted files
 - `exportsRemoved` (Array): Removed exports
 - `dependenciesRemoved` (Array): Removed dependencies

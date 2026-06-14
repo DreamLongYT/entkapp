@@ -40,8 +40,9 @@ export class ASTAnalyzer {
    */
   async processFile(filePath, fileNode) {
     // Fast Path: Use OXC for rapid scanning if type checking is not strictly required for this file
-    if (this.context.fastMode) {
-      return await this.oxc.processFile(filePath, fileNode);
+    if (this.context.fastMode && this.oxc.isAvailable) {
+      const success = await this.oxc.processFile(filePath, fileNode);
+      if (success) return true;
     }
 
     if (!this.program) {

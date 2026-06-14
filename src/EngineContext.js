@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * 📦 pkg-scaffold v3.0.0: Enterprise In-Memory Codebase State Manifest
+ * 📦 pkg-scaffold v3.3.0: Enterprise In-Memory Codebase State Manifest
  * ============================================================================
  * Implements a high-density, centralized graph database context for tracking
  * software engineering debt, dependencies, types, and vulnerabilities.
@@ -145,7 +145,7 @@ export class EngineContext {
       unusedDependenciesCount: 0
     };
     this.usedExternalPackages = new Set(); // Global set of used npm packages
-    this.manifestDependencies = new Map(); // Package.json path -> { dependencies, devDependencies }
+    this.manifestDependencies = new Map(); // Package.json path -> { dependencies, devDependencies, peerDependencies, optionalDependencies }
   }
 
   /**
@@ -256,20 +256,17 @@ export class EngineContext {
 
       const relativePath = path.relative(this.cwd, filePath);
 
-      // Category A: Completely orphaned components (no references, not library/framework entries)
-      // A file with ANY @scaffold-suppress directive is considered intentionally retained and must
-      // never be flagged as orphaned, even if no other file imports it directly.
+      // Category A: Completely orphaned components
       const fileHasSuppressDirective = node.localSuppressedRules.size > 0;
       if (node.incomingEdges.size === 0 && !node.isLibraryEntry && !node.isFrameworkContract && !fileHasSuppressDirective) {
         summary.structuralIssuesDetected.deadFiles.push(relativePath);
-        continue; // An orphaned file implies all internal sub-exports are dead; skip sub-checks
+        continue;
       }
 
-      // Category B: Dead Named Exports inside active files
+      // Category B: Dead Named Exports
       for (const [exportName, meta] of node.internalExports.entries()) {
         this.metrics.totalSymbolsAnalyzed++;
         
-        // Skip entry configurations, global suppresses, and type-suppressed symbols
         if (exportName === 'default' || 
             this.globallyIgnoredSymbols.has(exportName) || 
             node.localSuppressedRules.has(exportName)) {
@@ -288,7 +285,7 @@ export class EngineContext {
         }
       }
 
-      // Category C: High-Entropy Password / Key Hardcode Vulnerabilities
+      // Category C: Security Vulnerabilities
       if (node.securityThreats && node.securityThreats.length > 0) {
         node.securityThreats.forEach(threat => {
           summary.structuralIssuesDetected.securityThreats.push({
@@ -302,21 +299,28 @@ export class EngineContext {
       }
     }
 
-    // Category D: Unused Dependencies Audit
+    // Category D: Unused Dependencies Audit (Enhanced Classification)
     for (const [manifestPath, manifestData] of this.manifestDependencies.entries()) {
       const relativeManifest = path.relative(this.cwd, manifestPath);
       
-      // We only audit 'dependencies' for now as devDependencies are harder to track (test files, tools, etc.)
-      for (const dep of manifestData.dependencies) {
-        if (!this.usedExternalPackages.has(dep)) {
-          summary.structuralIssuesDetected.unusedDependencies.push({
-            manifest: relativeManifest,
-            package: dep,
-            type: 'dependency'
-          });
-          this.metrics.unusedDependenciesCount++;
+      const checkDeps = (deps, type) => {
+        if (!deps) return;
+        for (const dep of deps) {
+          if (!this.usedExternalPackages.has(dep)) {
+            summary.structuralIssuesDetected.unusedDependencies.push({
+              manifest: relativeManifest,
+              package: dep,
+              type: type
+            });
+            this.metrics.unusedDependenciesCount++;
+          }
         }
-      }
+      };
+
+      checkDeps(manifestData.dependencies, 'dependency');
+      checkDeps(manifestData.devDependencies, 'devDependency');
+      checkDeps(manifestData.peerDependencies, 'peerDependency');
+      checkDeps(manifestData.optionalDependencies, 'optionalDependency');
     }
 
     return summary;

@@ -28,7 +28,7 @@ async function bootstrap() {
     program
       .name('pkg-scaffold')
       .description(ansis.cyan('Enterprise-Grade AST Syntax Refactoring & Self-Healing Engine'))
-      .version(packageJsonContent.version || '3.0.0');
+      .version(packageJsonContent.version || '3.3.2');
 
     program
       .option('-c, --cwd <path>', 'Specify the execution context root directory', process.cwd())
@@ -39,14 +39,15 @@ async function bootstrap() {
       .option('--workspace', 'Enable high-density workspace workspace/monorepo cluster mesh evaluation parsing', false)
       .option('--verbose', 'Toggle expanded trace telemetry for debug operational diagnostics', false)
       .option('-r, --run', 'Execute the primary operational pipeline loop', false)
-      .option('-y, --yes', 'Skip confirmation prompts and execute planned structural modifications automatically', false);
+      .option('-y, --yes', 'Skip confirmation prompts and execute planned structural modifications automatically', false)
+      .option('--timeout <ms>', 'Set execution timeout in milliseconds', '30000');
 
     program.parse(process.argv);
     const options = program.opts();
 
     const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
 
-    // --- Onboarding Check ---
+    // --- Onboarding Check (Skipped in Non-Interactive Mode) ---
     const targetCwd = path.resolve(options.cwd);
     const pkgJsonPath = path.join(targetCwd, 'package.json');
     const configDirPath = path.join(targetCwd, 'pkg-scaffold');
@@ -54,49 +55,49 @@ async function bootstrap() {
     let pkgJson;
     try {
       pkgJson = JSON.parse(await fs.readFile(pkgJsonPath, 'utf8'));
-    } catch (e) {
-      // No package.json found in target
-    }
+    } catch (e) {}
 
-    // 1. Ask to install script
-    if (pkgJson && !pkgJson.scripts?.['pkg-scaffold:run']) {
-      const answer = await rl.question(ansis.bold.yellow('❓ No "pkg-scaffold:run" script found in package.json. Install it? (y/n): '));
-      if (answer.toLowerCase() === 'y') {
-        pkgJson.scripts = pkgJson.scripts || {};
-        pkgJson.scripts['pkg-scaffold:run'] = 'pkg-scaffold --fix';
-        await fs.writeFile(pkgJsonPath, JSON.stringify(pkgJson, null, 2));
-        console.log(ansis.green('✅ "pkg-scaffold:run" script added to package.json.'));
-      }
-    }
-
-    // 2. Ask to install config folder
     let configInstalled = false;
-    try {
-      await fs.access(configDirPath);
-      configInstalled = true;
-    } catch (e) {
-      const answer = await rl.question(ansis.bold.yellow('❓ No "/pkg-scaffold" configuration folder found. Create it with defaults? (y/n): '));
-      if (answer.toLowerCase() === 'y') {
-        await fs.mkdir(configDirPath, { recursive: true });
-        await fs.mkdir(path.join(configDirPath, 'plugins'), { recursive: true });
-        const defaultConfig = {
-          interface: "CLI",
-          useBuiltinPlugins: true,
-          useCustomPlugins: true,
-          supportKnipPlugins: true,
-          options: { verbose: false, fastMode: true, selfHealing: true },
-          enabledPlugins: ["nextjs", "nuxt", "remix", "sveltekit", "astro"]
-        };
-        await fs.writeFile(path.join(configDirPath, 'config.json'), JSON.stringify(defaultConfig, null, 2));
-        console.log(ansis.green('✅ "/pkg-scaffold" folder and default config created.'));
-        configInstalled = true;
+    if (!options.yes && !options.run) {
+      // 1. Ask to install script
+      if (pkgJson && !pkgJson.scripts?.['pkg-scaffold:run']) {
+        const answer = await rl.question(ansis.bold.yellow('❓ No "pkg-scaffold:run" script found in package.json. Install it? (y/n): '));
+        if (answer.toLowerCase() === 'y') {
+          pkgJson.scripts = pkgJson.scripts || {};
+          pkgJson.scripts['pkg-scaffold:run'] = 'pkg-scaffold --fix';
+          await fs.writeFile(pkgJsonPath, JSON.stringify(pkgJson, null, 2));
+          console.log(ansis.green('✅ "pkg-scaffold:run" script added to package.json.'));
+        }
       }
-    }
 
-    if (pkgJson?.scripts?.['pkg-scaffold:run'] || configInstalled) {
-      console.log(ansis.bold.cyan('\n🚀 Setup complete! To start the engine, run:'));
-      console.log(ansis.white(`   - pkg-scaffold -r`));
-      console.log(ansis.white(`   - npm run pkg-scaffold:run\n`));
+      // 2. Ask to install config folder
+      try {
+        await fs.access(configDirPath);
+        configInstalled = true;
+      } catch (e) {
+        const answer = await rl.question(ansis.bold.yellow('❓ No "/pkg-scaffold" configuration folder found. Create it with defaults? (y/n): '));
+        if (answer.toLowerCase() === 'y') {
+          await fs.mkdir(configDirPath, { recursive: true });
+          await fs.mkdir(path.join(configDirPath, 'plugins'), { recursive: true });
+          const defaultConfig = {
+            interface: "CLI",
+            useBuiltinPlugins: true,
+            useCustomPlugins: true,
+            supportKnipPlugins: true,
+            options: { verbose: false, fastMode: true, selfHealing: true },
+            enabledPlugins: ["nextjs", "nuxt", "remix", "sveltekit", "astro"]
+          };
+          await fs.writeFile(path.join(configDirPath, 'config.json'), JSON.stringify(defaultConfig, null, 2));
+          console.log(ansis.green('✅ "/pkg-scaffold" folder and default config created.'));
+          configInstalled = true;
+        }
+      }
+
+      if (pkgJson?.scripts?.['pkg-scaffold:run'] || configInstalled) {
+        console.log(ansis.bold.cyan('\n🚀 Setup complete! To start the engine, run:'));
+        console.log(ansis.white(`   - pkg-scaffold -r`));
+        console.log(ansis.white(`   - npm run pkg-scaffold:run\n`));
+      }
     }
 
     rl.close();
@@ -113,7 +114,6 @@ async function bootstrap() {
     const finalInterface = localConfig.interface || 'CLI';
     if (finalInterface === 'GUI') {
       console.log(ansis.bold.magenta('🎨 GUI Mode Detected. Starting Web Interface...'));
-      // In a real scenario, we'd start a local server or Electron here
       return;
     }
 
@@ -122,31 +122,23 @@ async function bootstrap() {
       return;
     }
 
-    console.log(ansis.bold.green(`\n📦 pkg-scaffold v${packageJsonContent.version || '3.1.0'} Engine Activation`));
+    // --- Timeout Handling ---
+    const timeoutMs = parseInt(options.timeout);
+    const timeoutTimer = setTimeout(() => {
+      console.error(ansis.bold.red(`\n🚨 Execution Timeout: The process exceeded the limit of ${timeoutMs}ms.`));
+      process.exit(1);
+    }, timeoutMs);
+    timeoutTimer.unref(); // Allow process to exit if work finishes
+
+    console.log(ansis.bold.green(`\n📦 pkg-scaffold v${packageJsonContent.version || '3.3.2'} Engine Activation`));
     console.log(ansis.dim('------------------------------------------------------------'));
     console.log(`${ansis.bold('Target Workspace Root :')} ${ansis.blue(path.resolve(options.cwd))}`);
     console.log(`${ansis.bold('Refactoring Mode     :')} ${options.fix ? ansis.yellow('Active Fixing & Self-Healing Enabled') : ansis.gray('Dry-Run Reporting Only')}`);
     console.log(`${ansis.bold('Validation Sandbox   :')} ${ansis.magenta(options.testCommand)}`);
     console.log(ansis.dim('------------------------------------------------------------\n'));
 
-    const engineModulePath = path.resolve(__dirname, '../src/EngineContext.js');
-    
-    try {
-      await fs.access(engineModulePath);
-    } catch {
-      console.error(ansis.red(`🚨 Execution Fault: Core engine architecture files missing. Ensure src/ directory layout is fully generated.`));
-      process.exit(1);
-    }
-
-    // Lazy load execution context wrapper to align with domain initialization
     const { RefactoringEngine } = await import('../src/index.js');
 
-    if (!RefactoringEngine) {
-      console.error(ansis.red('🚨 Architecture Boundary Error: RefactoringEngine could not be resolved from code topology channels.'));
-      process.exit(1);
-    }
-
-    // Ensure cwd is always an absolute path regardless of how it was passed (e.g., '--cwd .')
     const engine = new RefactoringEngine({
       cwd: path.resolve(options.cwd),
       autoFix: options.fix,
@@ -158,7 +150,8 @@ async function bootstrap() {
     });
 
     await engine.run();
-
+    
+    clearTimeout(timeoutTimer);
     console.log(ansis.bold.green('\n✨ Core cycle execution completed successfully. Structural layout is clean.'));
     process.exit(0);
 

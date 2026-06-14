@@ -105,6 +105,17 @@ export class HeadlessAPI extends EventEmitter {
         }
       }
 
+      // Initialize TypeScript program for AST analysis (required before processFile)
+      if (sourceCodeFilesList.length > 0) {
+        try {
+          this.engine.analyzer.initProgram(sourceCodeFilesList);
+        } catch (e) {
+          if (this.engine.context.verbose) {
+            console.warn('Warning: Failed to initialize TypeScript program:', e.message);
+          }
+        }
+      }
+
       // Parallel processing
       let parallelParseCompleted = false;
       if (sourceCodeFilesList.length > 10) {
