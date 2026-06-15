@@ -110,17 +110,12 @@ export class MagicDetector {
       // CLI binaries
       '/bin/cli.js', '/bin/cli.ts', '/bin/cli.mjs',
       '/bin/index.js', '/bin/index.ts',
-      // Server / app entry points
-      '/src/server.ts', '/src/server.js',
+      // Server / app entry points (Reduced in v3.3.6 to avoid false positives in libraries)
       '/src/main.ts', '/src/main.js',
       '/src/app.ts', '/src/app.js',
-      '/src/index.ts', '/src/index.tsx',
-      '/src/index.js', '/src/index.jsx',
-      '/server.ts', '/server.js',
+      '/src/api/HeadlessAPI.js', '/src/api/PluginSDK.js',
       '/main.ts', '/main.js',
       '/app.ts', '/app.js',
-      '/index.ts', '/index.tsx',
-      '/index.js', '/index.jsx',
     ];
     if (entryPatterns.some(p => normalizedPath.endsWith(p))) return true;
 

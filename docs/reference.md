@@ -1,6 +1,6 @@
-# CLI Reference v3.2.0
+# CLI Reference v3.3.6
 
-This page lists all available command-line options and configuration keys for `pkg-scaffold v3.2.0`.
+This page lists all available command-line options and configuration keys for `pkg-scaffold v3.3.6`.
 
 ```text
 Usage: pkg-scaffold [options]
@@ -19,8 +19,8 @@ Options:
   --verbose              Toggle expanded trace telemetry for diagnostics
   -y, --yes              Skip confirmation prompts for automatic execution
   --init                 Initialize a new pkg-scaffold configuration in the current directory
+  --timeout <ms>         Set execution timeout in milliseconds (default: 30000)
   -h, --help             display help for command
-  -r, --run              Start Tool
 ```
 
 ## Options in Detail
@@ -38,12 +38,15 @@ Initiates the analysis and refactoring process. This is required for execution.
 Controls whether the engine should apply changes to the filesystem.
 
 ### `--init`
-**New in v3.2.0.** Automatically sets up the `/pkg-scaffold` directory and a default `config.json` in your project root.
+Automatically sets up the `/pkg-scaffold` directory and a default `config.json` in your project root.
 
 ### `--workspace`
-Enables deep analysis of monorepos, linking dependencies across multiple packages.
+Enables deep analysis of monorepos, linking dependencies across multiple packages. **v3.3.6+ automatically detects monorepo layouts.**
 
-## Plugin API Reference (v3.2.0)
+### Secrets Scanning (v3.3.6)
+The engine now automatically scans for hardcoded secrets and credentials during the analysis pass. Findings are reported in the summary and can be suppressed using `@scaffold-suppress` comments.
+
+## Plugin API Reference (v3.3.6)
 
 ### `BasePlugin` Methods
 

@@ -1,8 +1,9 @@
 import { DeadCodeDetector } from "./ast/DeadCodeDetector.js";
 import { OxcAnalyzer } from "./ast/OxcAnalyzer.js";
+import { SecretScanner } from './ast/SecretScanner.js';
 /**
  * ============================================================================
- * 📦 pkg-scaffold v3.4.0: Unified Architectural Refactoring Orchestrator
+ * 📦 pkg-scaffold v3.3.6: Unified Architectural Refactoring Orchestrator
  * ============================================================================
  * Main execution bridge managing multi-pass compilation cycles, semantic cross-linking,
  * supply-chain validation audits, and automated structural healing rollbacks.
@@ -64,6 +65,8 @@ export class RefactoringEngine {
     this.workerPool = new WorkerPool(this.context);
     this.gitSandbox = new GitSandbox(this.context);
     this.selfHealer = new SelfHealer(this.context, this.txManager, this.gitSandbox);
+    // Stage 6: Secret / hardcoded credential scanner
+    this.secretScanner = new SecretScanner();
   }
 
   /**
@@ -130,6 +133,15 @@ export class RefactoringEngine {
         if (isFileCached) {
           this.context.metrics.cacheHits++;
           this.hydrateNodeFromCache(node, cacheManifest[filePath]);
+          // Re-run secret scan even on cached files (secrets may change without AST change)
+          try {
+            const cachedContent = await fs.readFile(filePath, 'utf8');
+            const secretFindings = this.secretScanner.scanFileContent(filePath, cachedContent);
+            if (secretFindings.length > 0) {
+              node.securityThreats = (node.securityThreats || []).concat(secretFindings);
+              secretFindings.forEach(f => this.context.allSecretFindings.push(f));
+            }
+          } catch { /* unreadable file – skip */ }
         } else if (!parallelParseCompleted) {
           this.context.metrics.cacheMisses++;
           const fileContent = await fs.readFile(filePath, 'utf8'); // Read file content here
@@ -137,6 +149,12 @@ export class RefactoringEngine {
             this.oxcAnalyzer.parseFile(filePath, fileContent, node);
           } else {
             this.analyzer.parseFile(filePath, fileContent, node);
+          }
+          // Secret scan on freshly parsed content
+          const secretFindings = this.secretScanner.scanFileContent(filePath, fileContent);
+          if (secretFindings.length > 0) {
+            node.securityThreats = (node.securityThreats || []).concat(secretFindings);
+            secretFindings.forEach(f => this.context.allSecretFindings.push(f));
           }
         }
 
@@ -189,8 +207,33 @@ export class RefactoringEngine {
         this.circularDetector.formatCycles().forEach(c => console.log(ansis.dim(`    • ${c}`)));
       }
 
+      // Pass 4b: Report hardcoded secrets
+      console.log(ansis.dim('🔐 Scanning for hardcoded secrets...'));
+      const allSecrets = this.context.allSecretFindings || [];
+      if (allSecrets.length > 0) {
+        const criticalSecrets = allSecrets.filter(s => s.severity === 'CRITICAL');
+        const otherSecrets = allSecrets.filter(s => s.severity !== 'CRITICAL');
+        console.log(ansis.bold.red(`\n🔐 Hardcoded Secrets Detected (${allSecrets.length}):`) );
+        if (criticalSecrets.length > 0) {
+          console.log(ansis.red(`  CRITICAL (${criticalSecrets.length}):`));
+          criticalSecrets.forEach(s => {
+            const relPath = path.relative(this.context.cwd, s.file);
+            const varInfo = s.variableName ? ` [${s.label}]` : ` [${s.label}]`;
+            console.log(ansis.dim(`    • ${s.variableName || '<literal>'} in ${relPath}:${s.line}${varInfo}`));
+          });
+        }
+        if (otherSecrets.length > 0) {
+          console.log(ansis.yellow(`  HIGH/MEDIUM (${otherSecrets.length}):`));
+          otherSecrets.forEach(s => {
+            const relPath = path.relative(this.context.cwd, s.file);
+            console.log(ansis.dim(`    • ${s.variableName || '<literal>'} in ${relPath}:${s.line} [${s.label}]`));
+          });
+        }
+      }
+
       // Pass 5: Compile metrics summary and print diagnostics report
       const analysisSummary = await this.context.generateSummaryReport();
+      analysisSummary.structuralIssuesDetected.hardcodedSecrets = allSecrets;
       this.displayConsoleDiagnostics(analysisSummary);
 
       // Pass 6: Display Optimization Plan and Run Automated Structural Healing
@@ -275,6 +318,7 @@ export class RefactoringEngine {
       const res = path.resolve(dir, entry.name);
       if (entry.isDirectory()) {
         if (entry.name === 'node_modules' || entry.name === '.git' || entry.name === '.scaffold-cache') continue;
+        if (this.context.verbose) console.log(ansis.dim(`📂 Scanning deep folder: ${res}`));
         await this.discoverSourceFiles(res, fileList);
       } else {
         const ext = path.extname(entry.name);
@@ -304,6 +348,15 @@ export class RefactoringEngine {
         }
       }
 
+      // Pass A.2: Mark package entry points as library entries
+      for (const pkg of this.workspaceGraph.packageManifests.values()) {
+        for (const entryPath of pkg.entryPoints) {
+          if (this.context.graph.has(entryPath)) {
+            this.context.graph.get(entryPath).isLibraryEntry = true;
+          }
+        }
+      }
+
       // Pass B: Link named-symbol imports through barrel/re-export chains
       for (const specToken of node.importedSymbols) {
         const delimiterIndex = specToken.indexOf(':');
@@ -326,6 +379,9 @@ export class RefactoringEngine {
           if (traceResolution && this.context.graph.has(traceResolution.originFile)) {
             this.context.graph.get(traceResolution.originFile).incomingEdges.add(filePath);
             node.outgoingEdges.add(traceResolution.originFile);
+            // Fix: Store the absolute resolution in importedSymbols so isSymbolReferencedExternally can find it
+            // Use the traced symbol name (in case of re-exports with renaming)
+            node.importedSymbols.add(`${traceResolution.originFile}:${traceResolution.symbolName}`);
           }
         }
       }
@@ -356,9 +412,11 @@ export class RefactoringEngine {
     console.log(`💾 Cache Optimization: ${summary.graphCacheOptimization.ratio} hits`);
     
     console.log(ansis.bold('\n🔍 Structural Integrity:'));
+    const secretCount = (summary.structuralIssuesDetected.hardcodedSecrets || []).length;
     if (summary.structuralIssuesDetected.deadFiles.length === 0 && 
         summary.structuralIssuesDetected.deadExports.length === 0 &&
-        summary.structuralIssuesDetected.unusedDependencies.length === 0) {
+        summary.structuralIssuesDetected.unusedDependencies.length === 0 &&
+        secretCount === 0) {
       console.log(ansis.green('  ✅ No major structural debt detected.'));
     } else {
       if (summary.structuralIssuesDetected.deadFiles.length > 0) {
@@ -369,6 +427,9 @@ export class RefactoringEngine {
       }
       if (summary.structuralIssuesDetected.unusedDependencies.length > 0) {
         console.log(ansis.yellow(`  📦 Found ${summary.structuralIssuesDetected.unusedDependencies.length} unused dependencies.`));
+      }
+      if (secretCount > 0) {
+        console.log(ansis.red(`  🔐 Found ${secretCount} hardcoded secret(s) / credential(s).`));
       }
     }
 

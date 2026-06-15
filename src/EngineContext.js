@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * 📦 pkg-scaffold v3.3.5: Enterprise In-Memory Codebase State Manifest
+ * 📦 pkg-scaffold v3.3.6: Enterprise In-Memory Codebase State Manifest
  * ============================================================================
  * Implements a high-density, centralized graph database context for tracking
  * software engineering debt, dependencies, types, and vulnerabilities.
@@ -50,6 +50,8 @@ export class GraphNode {
     
     // Detailed AST Location Diagnostics (Symbol -> Structural Location Mapping)
     this.symbolSourceLocations = new Map(); // Symbol -> { line: number, column: number, length: number }
+    // Security threat findings for this file
+    this.securityThreats = [];
   }
 
   /**
@@ -64,17 +66,25 @@ export class GraphNode {
       if (!parentNode) continue;
 
       // Check if the symbol is explicitly imported by the parent
-      const importKey = `${path.relative(path.dirname(parentPath), this.filePath).replace(/\\/g, '/')}:${symbolName}`;
-      const importKeyAlt = `${path.relative(path.dirname(parentPath), this.filePath).replace(/\\/g, '/').replace(/\.(js|ts|tsx|jsx)$/, '')}:${symbolName}`;
+      // Strategy 1: Check absolute path based tokens (more reliable)
+      const absoluteImportKey = `${this.filePath}:${symbolName}`;
+      const absoluteStarKey = `${this.filePath}:*`;
       
-      if (parentNode.importedSymbols.has(importKey) || parentNode.importedSymbols.has(importKeyAlt)) {
+      if (parentNode.importedSymbols.has(absoluteImportKey) || parentNode.importedSymbols.has(absoluteStarKey)) {
         return true;
       }
 
-      // Check for star imports or namespace imports
-      const starKey = `${path.relative(path.dirname(parentPath), this.filePath).replace(/\\/g, '/')}:*`;
-      const starKeyAlt = `${path.relative(path.dirname(parentPath), this.filePath).replace(/\\/g, '/').replace(/\.(js|ts|tsx|jsx)$/, '')}:*`;
-      if (parentNode.importedSymbols.has(starKey) || parentNode.importedSymbols.has(starKeyAlt)) {
+      // Strategy 2: Check relative path based tokens (legacy/compatibility)
+      const relativePath = path.relative(path.dirname(parentPath), this.filePath).replace(/\\/g, '/');
+      const relativePathNoExt = relativePath.replace(/\.(js|ts|tsx|jsx)$/, '');
+      
+      const importKey = `${relativePath}:${symbolName}`;
+      const importKeyAlt = `${relativePathNoExt}:${symbolName}`;
+      const starKey = `${relativePath}:*`;
+      const starKeyAlt = `${relativePathNoExt}:*`;
+      
+      if (parentNode.importedSymbols.has(importKey) || parentNode.importedSymbols.has(importKeyAlt) ||
+          parentNode.importedSymbols.has(starKey) || parentNode.importedSymbols.has(starKeyAlt)) {
         return true;
       }
 
@@ -117,7 +127,7 @@ export class GraphNode {
       incomingDependenciesCount: this.incomingEdges.size,
       outgoingDependenciesCount: this.outgoingEdges.size,
       isDanglingOrphan: this.incomingEdges.size === 0 && !this.isLibraryEntry,
-      trackedThreatsCount: this.securityThreats.length
+      trackedThreatsCount: (this.securityThreats || []).length
     };
   }
 }
@@ -160,6 +170,7 @@ export class EngineContext {
     };
     this.usedExternalPackages = new Set(); // Global set of used npm packages
     this.manifestDependencies = new Map(); // Package.json path -> { dependencies, devDependencies, peerDependencies, optionalDependencies }
+    this.allSecretFindings = []; // Aggregated hardcoded secret findings across all scanned files
 
     // DependencyProfiler instance for implicit invocation tracing
     this._depProfiler = new DependencyProfiler(this);

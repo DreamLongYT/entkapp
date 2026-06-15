@@ -274,6 +274,8 @@ export class ASTAnalyzer {
             start: decl.getStart(sourceFile), 
             end: decl.getEnd() 
           });
+          const loc = sourceFile.getLineAndCharacterOfPosition(decl.getStart(sourceFile));
+          fileNode.symbolSourceLocations.set(name, { line: loc.line + 1, column: loc.character + 1 });
           this.addDeclaredSymbol(name, decl, sourceFile);
         } else if (decl.name && ts.isObjectBindingPattern(decl.name)) {
            decl.name.elements.forEach(element => {
@@ -284,6 +286,8 @@ export class ASTAnalyzer {
                        start: element.getStart(sourceFile),
                        end: element.getEnd()
                    });
+                   const loc = sourceFile.getLineAndCharacterOfPosition(element.getStart(sourceFile));
+                   fileNode.symbolSourceLocations.set(name, { line: loc.line + 1, column: loc.character + 1 });
                    this.addDeclaredSymbol(name, element, sourceFile);
                }
            });
@@ -296,6 +300,8 @@ export class ASTAnalyzer {
                        start: element.getStart(sourceFile),
                        end: element.getEnd()
                    });
+                   const loc = sourceFile.getLineAndCharacterOfPosition(element.getStart(sourceFile));
+                   fileNode.symbolSourceLocations.set(name, { line: loc.line + 1, column: loc.character + 1 });
                    this.addDeclaredSymbol(name, element, sourceFile);
                }
            });

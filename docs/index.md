@@ -2,7 +2,7 @@
 layout: home
 
 hero:
-  name: pkg-scaffold v3.3.4
+  name: pkg-scaffold v3.3.6
   text: The Ultimate Enterprise Codebase Janitor
   tagline: Solving what Knip cannot. Circular-Aware & Self-Healing.
   image:
@@ -59,9 +59,9 @@ In large-scale enterprise projects, codebases naturally accumulate "cruft" – u
 
 ## Quick Test
 
-### pkg-scaffold v3.3.4
+### pkg-scaffold v3.3.6
 
-> **📦 pkg-scaffold v3.3.4 Engine Activation**
+> **📦 pkg-scaffold v3.3.6 Engine Activation**
 
 ```
 Target Workspace Root : E:\Download\final-test-package
@@ -80,15 +80,17 @@ Validation Sandbox   : npm test
 > **📊 Operational Diagnostics Summary:**
 
 ```
-⏱️  Duration             : 0.59s
-📁 Files Processed      : 5
-🧠 Cache Hit Ratio      : 0.0%
+⏱️  Duration             : 0.09s
+📁 Files Processed      : 4
+💾 Cache Optimization   : 50.0% hits
 ```
 
-> **💀 Dead Files Detected (1):**
+> **🔍 Structural Integrity:**
+> ❌ Found 2 orphaned/dead files.
 
 ```
-   • test-folder\src\App.tsx
+   • clutter.ts
+   • util.ts
 ```
 
 > **✂️  Dead Exports Detected (8):**

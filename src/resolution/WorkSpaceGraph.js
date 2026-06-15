@@ -83,6 +83,15 @@ export class WorkspaceGraph {
 
     if (workspaceGlobs.length > 0) {
       this.context.isWorkspaceEnabled = true;
+      if (this.context.verbose) {
+        console.log(`🌐 Auto-detected monorepo layout with ${workspaceGlobs.length} glob patterns.`);
+      }
+    } else if (this.context.isWorkspaceEnabled) {
+      // Force enabled via flag but no patterns found; default to standard packages/*
+      workspaceGlobs = ['packages/*'];
+      if (this.context.verbose) {
+        console.log(`🌐 Workspace mode forced via flag. Using default patterns: ${workspaceGlobs.join(', ')}`);
+      }
     } else {
       return; // Workspace mesh maps skipped for single-package targets
     }

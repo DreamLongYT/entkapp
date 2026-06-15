@@ -1,8 +1,8 @@
-# Getting Started with pkg-scaffold v3.3.4
+# Getting Started with pkg-scaffold v3.3.6
 
 ## Overview
 
-pkg-scaffold v3.3.4 is a major update focused on solving the most critical issues currently facing the JavaScript/TypeScript ecosystem—many of which remain open in competing tools like Knip.
+pkg-scaffold v3.3.6 is a major update focused on solving the most critical issues currently facing the JavaScript/TypeScript ecosystem—many of which remain open in competing tools like Knip.
 
 ## Why v3.3.4?
 
@@ -10,7 +10,7 @@ This version isn't just a number; it's a statement. We've analyzed the most requ
 
 ### 🚀 Key Improvements over Knip
 
-| Feature | pkg-scaffold v3.3.4 | Knip v6 Status |
+| Feature | pkg-scaffold v3.3.6 | Knip v6 Status |
 | :--- | :--- | :--- |
 | **Circular Dependency Tracking** | ✅ Native Support | 💡 Open Feature Request (#1734) |
 | **tsConfig Path Resolution** | ✅ Robust & v6-Ready | 🔄 Open Issue (#1794) |
@@ -39,13 +39,20 @@ npm install pkg-scaffold
 
 ### Basic Usage
 ```bash
-npx pkg-scaffold --fix
+npx pkg-scaffold -r --fix
 ```
 
 ### Check for Circular Dependencies
 ```bash
-npx pkg-scaffold --circular
+npx pkg-scaffold -r --circular
 ```
+
+### Scan for Hardcoded Secrets
+```bash
+npx pkg-scaffold -r
+```
+
+> **Note**: Always use the `-r` or `--run` flag to execute the analysis loop. v3.3.6 focuses on security and precision.
 
 ## Community-Driven Development
 

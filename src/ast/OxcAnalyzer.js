@@ -1,19 +1,42 @@
 export class OxcAnalyzer {
   constructor(context) {
     this.context = context;
+    this.oxc = null;
+    this.isAvailable = false;
+    // Initialization is handled via init() or lazily during parseFile
+  }
+
+  async init() {
+    if (this.isAvailable) return true;
     try {
-      this.oxc = require("oxc-parser");
+      // In ESM, we use dynamic import()
+      const oxc = await import("oxc-parser");
+      this.oxc = oxc;
       this.isAvailable = true;
+      return true;
     } catch (e) {
-      this.isAvailable = false;
-      if (this.context.verbose) {
-        console.warn("[OxcAnalyzer] oxc-parser not found, falling back to TypeScript compiler API.");
+      try {
+        // Fallback for older node versions or specific bundling setups
+        const { createRequire } = await import('module');
+        const require = createRequire(import.meta.url);
+        this.oxc = require("oxc-parser");
+        this.isAvailable = true;
+        return true;
+      } catch (err) {
+        this.isAvailable = false;
+        if (this.context.verbose) {
+          console.warn("[OxcAnalyzer] oxc-parser not found or failed to load, falling back to TypeScript compiler API.");
+        }
+        return false;
       }
     }
   }
 
-  parseFile(filePath, content, fileNode) {
-    if (!this.isAvailable) return false;
+  async parseFile(filePath, content, fileNode) {
+    if (!this.isAvailable) {
+      const initialized = await this.init();
+      if (!initialized) return false;
+    }
 
     try {
       if (this.context.verbose) {
@@ -32,6 +55,26 @@ export class OxcAnalyzer {
       fileNode.decorators = new Set();
 
       this.walkOxcAst(ast.program, fileNode, content);
+      
+      // Compute line/column for each export start position
+      const lines = content.split('\n');
+      const getLineCol = (pos) => {
+        let count = 0;
+        for (let i = 0; i < lines.length; i++) {
+          if (count + lines[i].length + 1 > pos) {
+            return { line: i + 1, column: pos - count + 1 };
+          }
+          count += lines[i].length + 1;
+        }
+        return { line: 1, column: 1 };
+      };
+
+      for (const [name, meta] of fileNode.internalExports.entries()) {
+        if (meta.start !== undefined) {
+          fileNode.symbolSourceLocations.set(name, getLineCol(meta.start));
+        }
+      }
+
       return true;
     } catch (e) {
       if (this.context.verbose) {
@@ -62,6 +105,10 @@ export class OxcAnalyzer {
         break;
       case "Decorator":
         this.handleDecorator(node, fileNode);
+        break;
+      case "StringLiteral":
+        // Track for secret scanning if it looks like a secret
+        fileNode.rawStringReferences.add(node.value);
         break;
     }
 
@@ -109,7 +156,7 @@ export class OxcAnalyzer {
     if (node.type === "ExportAllDeclaration") {
       const sourceSpecifier = node.source ? node.source.value : null;
       if (sourceSpecifier) {
-        // FIX: Register re-export source as an explicit import so the graph linker
+        // Register re-export source as an explicit import so the graph linker
         // creates an incomingEdge on the re-exported file.
         fileNode.explicitImports.add(sourceSpecifier);
 
@@ -128,7 +175,7 @@ export class OxcAnalyzer {
         } else {
           // export * from 'module'
           fileNode.internalExports.set("*", { type: "re-export-all", source: sourceSpecifier });
-          // FIX: Register as wildcard importedSymbol so graph linker creates incomingEdge
+          // Register as wildcard importedSymbol so graph linker creates incomingEdge
           fileNode.importedSymbols.add(`${sourceSpecifier}:*`);
         }
       }
@@ -138,7 +185,7 @@ export class OxcAnalyzer {
     if (node.source) {
       // Re-export with source: export { x } from 'module'
       const specifier = node.source.value;
-      // FIX: Register re-export source as an explicit import
+      // Register re-export source as an explicit import
       fileNode.explicitImports.add(specifier);
 
       // Track external package usage from re-exports
@@ -157,7 +204,7 @@ export class OxcAnalyzer {
             start: node.start,
             end: node.end,
           });
-          // FIX: Register as importedSymbol so barrel-tracer can resolve origin file
+          // Register as importedSymbol so barrel-tracer can resolve origin file
           fileNode.importedSymbols.add(`${specifier}:${localName}`);
         });
       }
@@ -276,15 +323,10 @@ export class OxcAnalyzer {
     if (node.expression.type === "CallExpression") {
       node.expression.arguments.forEach(arg => {
         // Further analysis of arguments can be done here if needed
-        // e.g., if (arg.type === "StringLiteral") fileNode.decoratorArgs.add(`${decoratorName}:${arg.value}`);
       });
     }
   }
 
-  /**
-   * Extracts the root npm package name from an import specifier.
-   * Handles scoped packages (@scope/pkg) and subpath imports (pkg/utils, @scope/pkg/utils).
-   */
   _extractPackageName(specifier) {
     if (specifier.startsWith('@')) {
       const parts = specifier.split('/');

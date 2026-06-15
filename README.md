@@ -14,6 +14,7 @@
 *   **🔌 Massive Plugin Ecosystem:** Over 20+ built-in plugins (Next.js, Nuxt, SvelteKit, Tailwind, Jest, Vitest, Playwright, GitHub Actions, Webpack, Babel, Rollup, ESLint, Prettier, Husky, and many more).
 *   **💀 True Dead Code Detection:** Advanced graph-based reachability analysis to find truly dead files and unused exports, even deep within your codebase.
 *   **🔄 Circular Dependency Detection:** High-performance Tarjan-based algorithm to detect and report circular dependencies.
+*   **🔐 Secrets Scanning:** Automatically detects hardcoded API keys, tokens, and credentials (v3.3.6+).
 *   **🛡️ Supply Chain Guard:** Detects typosquatting and verifies integrity lockfile hashes.
 *   **🛠️ Automated Structural Healing:** Not just reporting, but automatically fixing structural issues (removing dead files, pruning unused dependencies) with git-based rollback protection.
 *   **⚙️ Flexible Configuration:** Supports `pkg-scaffold.json`, `pkg-scaffold.ts`, `scaffold.config.js`, and more.
@@ -33,8 +34,10 @@ pnpm add -D pkg-scaffold
 Run the CLI at the root of your project:
 
 ```bash
-npx pkg-scaffold --run
+npx pkg-scaffold -r
 ```
+
+> **Note**: Always use the `-r` flag to start the analysis loop. v3.3.6+ also features **Auto-Detection for Monorepos**.
 
 ### CLI Options
 

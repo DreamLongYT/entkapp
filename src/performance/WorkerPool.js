@@ -1,6 +1,7 @@
-import { Worker, isMainThread, parentPort, workerData } from 'worker_threads';
+import { Worker } from 'worker_threads';
 import os from 'os';
 import path from 'path';
+import { fileURLToPath } from 'url';
 
 /**
  * Host CPU Thread-Distribution Pipeline Supervisor
@@ -11,7 +12,9 @@ export class WorkerPool {
     this.context = context;
     // Dynamically query host specs; default down to 1 if threading channels are choked
     this.hardwareConcurrencyCoreCount = maximumConcurrencyLimit || os.availableParallelism?.() || os.cpus().length || 2;
-    this.workerScriptPath = path.resolve(path.dirname(import.meta.url.replace('file://', '')), 'WorkerTaskRunner.js');
+    // Resolve worker script path relative to this module
+    const __dir = path.dirname(fileURLToPath(import.meta.url));
+    this.workerScriptPath = path.resolve(__dir, 'WorkerTaskRunner.js');
   }
 
   /**
@@ -86,7 +89,7 @@ export class WorkerPool {
 
   executeChunkInsideThread(fileChunkSubset) {
     return new Promise((resolve, reject) => {
-      const workerInstance = new Worker(this.workerScriptPath, {
+      const workerInstance = new Worker(this.workerScriptPath, { type: 'module',
         workerData: { files: fileChunkSubset, contextOptions: { verbose: this.context.verbose } }
       });
 

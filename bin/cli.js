@@ -64,7 +64,7 @@ async function bootstrap() {
         const answer = await rl.question(ansis.bold.yellow('❓ No "pkg-scaffold:run" script found in package.json. Install it? (y/n): '));
         if (answer.toLowerCase() === 'y') {
           pkgJson.scripts = pkgJson.scripts || {};
-          pkgJson.scripts['pkg-scaffold:run'] = 'pkg-scaffold --fix';
+          pkgJson.scripts['pkg-scaffold:run'] = 'npx pkg-scaffold --fix';
           await fs.writeFile(pkgJsonPath, JSON.stringify(pkgJson, null, 2));
           console.log(ansis.green('✅ "pkg-scaffold:run" script added to package.json.'));
         }
@@ -95,7 +95,7 @@ async function bootstrap() {
 
       if (pkgJson?.scripts?.['pkg-scaffold:run'] || configInstalled) {
         console.log(ansis.bold.cyan('\n🚀 Setup complete! To start the engine, run:'));
-        console.log(ansis.white(`   - pkg-scaffold -r`));
+        console.log(ansis.white(`   - npx pkg-scaffold -r`));
         console.log(ansis.white(`   - npm run pkg-scaffold:run\n`));
       }
     }

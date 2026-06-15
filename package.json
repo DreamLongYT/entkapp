@@ -1,6 +1,6 @@
 {
   "name": "pkg-scaffold",
-  "version": "3.3.5",
+  "version": "3.3.6",
   "description": "The Ultimate Enterprise Codebase Janitor. Faster than Knip with OXC integration, type-aware analysis, and automated structural healing. Fully standalone - solving what Knip cannot.",
   "type": "module",
   "main": "index.js",
@@ -9,7 +9,7 @@
   },
   "scripts": {
     "start": "node bin/cli.js",
-    "pkg-scaffold:run": "node bin/cli.js",
+    "pkg-scaffold:run": "npx pkg-scaffold --fix",
     "test": "echo \"Error: no test specified\" && exit 0",
     "test:stability": "npm run test",
     "docs:dev": "vitepress dev docs",
@@ -48,7 +48,12 @@
     "package.json",
     "packages",
     "scan",
-
+    "security",
+    "secret-scanner",
+    "secrets",
+    "hardcoded-secrets",
+    "credentials",
+    "audit",
     "structural-healing",
     "setup",
     "type",
