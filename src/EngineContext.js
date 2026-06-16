@@ -96,7 +96,8 @@ export class GraphNode {
 
 export class EngineContext {
   constructor(cwd) {
-    this.cwd = cwd;
+    // FIX: Ensure cwd is always defined, fallback to process.cwd()
+    this.cwd = cwd || process.cwd();
     this.projectGraph = new Map(); // Path -> GraphNode
     this.usedExternalPackages = new Set();
     this.unimportedUsedPackages = new Set(); // NEW: For "Unimported but used"

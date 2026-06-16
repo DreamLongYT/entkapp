@@ -1,7 +1,7 @@
 import { defineConfig } from 'vitepress'
 
 export default defineConfig({
-  title: "pkg-scaffold v3.3.8 Documentation",
+  title: "pkg-scaffold v3.3.10 Documentation",
   base: '/pkg-scaffold/',
   head: [
     ['link', { rel: 'icon', href: '/logo.png' }],
@@ -60,7 +60,7 @@ export default defineConfig({
     ],
     footer: {
       message: 'Released under the Apache 2.0 License. "The Original Code was made by DreamLongYT"',
-      copyright: 'Copyright © 2026 DreamLongYT'
+      copyright: '2026 DreamLongYT'
     }
   }
 })

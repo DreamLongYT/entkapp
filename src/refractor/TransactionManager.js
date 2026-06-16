@@ -9,7 +9,9 @@ import crypto from 'crypto';
 export class TransactionManager {
   constructor(context) {
     this.context = context;
-    this.backupDirectory = path.join(context.cacheDir, 'backups');
+    // FIX: Ensure context.cwd is always defined, fallback to process.cwd()
+    const cwd = context?.cwd || process.cwd();
+    this.backupDirectory = path.join(cwd, 'backups');
     this.journal = [];
     this.isLocked = false;
   }
