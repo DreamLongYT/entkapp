@@ -240,14 +240,11 @@ export class RefactoringEngine {
       }
 
       // Pass 5: Compile metrics summary and print diagnostics report
-      const analysisSummary = await this.context.generateSummaryReport();
-      analysisSummary.hardcodedSecrets = allSecrets;
-      // this.displayConsoleDiagnostics(analysisSummary);
-
+      
       // =========================================================================
-      // 🛡️ GRAPH EDGE RECONCILIATION: Filter entry points out of orphanedFiles
+      // 🛡️ ROOT GRAPH EDGE RECONCILIATION: Filter entry points directly inside context
       // =========================================================================
-      if (this.workspaceGraph && this.workspaceGraph.packageManifests) {
+      if (this.workspaceGraph && this.workspaceGraph.packageManifests && this.context.orphanedFiles) {
         const verifiedSeeds = new Set();
 
         // 1. Gather all absolute entry points your WorkspaceGraph read from package.json files
@@ -259,16 +256,22 @@ export class RefactoringEngine {
           }
         }
 
-        // 2. Remove these valid manifest entry points from your orphaned files pool array
-        analysisSummary.orphanedFiles = analysisSummary.orphanedFiles.filter(flaggedFile => {
+        // 2. Intercept and mutate the central context tracking array directly
+        this.context.orphanedFiles = this.context.orphanedFiles.filter(flaggedFile => {
           const absoluteFlaggedPath = path.resolve(this.context.cwd, flaggedFile);
           const isAGraphSeed = verifiedSeeds.has(path.normalize(absoluteFlaggedPath));
           
-          return !isAGraphSeed; // Keep if it's dead code (like knip.ts), remove if it's an entry seed
+          return !isAGraphSeed; // Remove if it's an entry seed, keep if it's actual dead code (like knip.ts)
         });
       }
+      // =========================================================================
 
-      // 3. Declare and re-evaluate staging metrics with clean, workspace-aware data arrays
+      // Now generate the summary report. It will inherit the strictly filtered dataset.
+      const analysisSummary = await this.context.generateSummaryReport();
+      analysisSummary.hardcodedSecrets = allSecrets;
+      // this.displayConsoleDiagnostics(analysisSummary);
+
+      // Declare staging metrics using the fully synchronized summary object
       const structuralModificationsStaged = 
           analysisSummary.orphanedFiles.length > 0 || 
           analysisSummary.deadExports.length > 0 ||
