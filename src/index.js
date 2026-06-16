@@ -244,12 +244,37 @@ export class RefactoringEngine {
       analysisSummary.hardcodedSecrets = allSecrets;
       // this.displayConsoleDiagnostics(analysisSummary);
 
-      // Pass 6: Display Optimization Plan and Run Automated Structural Healing
-      console.log("JSON_START", JSON.stringify(analysisSummary), "JSON_END"); const structuralModificationsStaged = 
-        analysisSummary.orphanedFiles.length > 0 || 
-        analysisSummary.deadExports.length > 0 ||
-        analysisSummary.unusedDependencies.length > 0;
+      // =========================================================================
+      // 🛡️ GRAPH EDGE RECONCILIATION: Filter entry points out of orphanedFiles
+      // =========================================================================
+      if (this.workspaceGraph && this.workspaceGraph.packageManifests) {
+        const verifiedSeeds = new Set();
 
+        // 1. Gather all absolute entry points your WorkspaceGraph read from package.json files
+        for (const [_, metadata] of this.workspaceGraph.packageManifests.entries()) {
+          if (metadata.entryPoints) {
+            metadata.entryPoints.forEach(absolutePath => {
+              verifiedSeeds.add(path.normalize(absolutePath));
+            });
+          }
+        }
+
+        // 2. Remove these valid manifest entry points from your orphaned files pool array
+        analysisSummary.orphanedFiles = analysisSummary.orphanedFiles.filter(flaggedFile => {
+          const absoluteFlaggedPath = path.resolve(this.context.cwd, flaggedFile);
+          const isAGraphSeed = verifiedSeeds.has(path.normalize(absoluteFlaggedPath));
+          
+          return !isAGraphSeed; // Keep if it's dead code (like knip.ts), remove if it's an entry seed
+        });
+      }
+
+      // 3. Declare and re-evaluate staging metrics with clean, workspace-aware data arrays
+      const structuralModificationsStaged = 
+          analysisSummary.orphanedFiles.length > 0 || 
+          analysisSummary.deadExports.length > 0 ||
+          analysisSummary.unusedDependencies.length > 0;
+
+      // Pass 6: Display Optimization Plan and Run Automated Structural Healing
       if (structuralModificationsStaged) {
         console.log(ansis.bold.yellow('\n📋 Proposed Optimization Plan:'));
         console.log(ansis.dim('------------------------------------------------------------'));
