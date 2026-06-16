@@ -2,7 +2,7 @@
 
 ## Overview
 
-pkg-scaffold v3.3.8 is designed from the ground up to support modern monorepo structures. It now features **Automatic Workspace Detection**, meaning it will automatically find your `pnpm-workspace.yaml` or `workspaces` field in `package.json`. It understands workspace protocols, cross-package dependencies, and the complex graph relationships inherent in large-scale multi-package projects.
+pkg-scaffold v3.3.8+ is designed from the ground up to support modern monorepo structures. It now features **Automatic Workspace Detection**, meaning it will automatically find your `pnpm-workspace.yaml` or `workspaces` field in `package.json`. It understands workspace protocols, cross-package dependencies, and the complex graph relationships inherent in large-scale multi-package projects.
 
 ## Supported Tools
 

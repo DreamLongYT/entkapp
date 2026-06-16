@@ -1,6 +1,6 @@
-# CLI Reference v3.3.8
+# CLI Reference v3.3.8+
 
-This page lists all available command-line options and configuration keys for `pkg-scaffold v3.3.8`.
+This page lists all available command-line options and configuration keys for `pkg-scaffold v3.3.8+`.
 
 ```text
 Usage: pkg-scaffold [options]
@@ -43,10 +43,10 @@ Automatically sets up the `/pkg-scaffold` directory and a default `config.json` 
 ### `--workspace`
 Enables deep analysis of monorepos, linking dependencies across multiple packages. **v3.3.8+ automatically detects monorepo layouts.**
 
-### Secrets Scanning (v3.3.8)
+### Secrets Scanning (v3.3.8+)
 The engine now automatically scans for hardcoded secrets and credentials during the analysis pass. Findings are reported in the summary and can be suppressed using `@scaffold-suppress` comments.
 
-## Plugin API Reference (v3.3.8)
+## Plugin API Reference (v3.3.8+)
 
 ### `BasePlugin` Methods
 

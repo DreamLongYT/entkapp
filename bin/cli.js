@@ -28,7 +28,7 @@ async function bootstrap() {
     program
       .name('pkg-scaffold')
       .description(ansis.cyan('Enterprise-Grade AST Syntax Refactoring & Self-Healing Engine'))
-      .version(packageJsonContent.version || '3.3.5');
+      .version(packageJsonContent.version || '3.3.9');
 
     program
       .option('-c, --cwd <path>', 'Specify the execution context root directory', process.cwd())
@@ -48,7 +48,8 @@ async function bootstrap() {
     const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
 
     // --- Onboarding Check (Skipped in Non-Interactive Mode) ---
-    const targetCwd = path.resolve(options.cwd);
+    // FIX: Ensure options.cwd is always a string, never undefined
+    const targetCwd = path.resolve(options.cwd || process.cwd());
     const pkgJsonPath = path.join(targetCwd, 'package.json');
     const configDirPath = path.join(targetCwd, 'pkg-scaffold');
 
@@ -130,7 +131,7 @@ async function bootstrap() {
     }, timeoutMs);
     timeoutTimer.unref(); // Allow process to exit if work finishes
 
-    console.log(ansis.bold.green(`\n📦 pkg-scaffold v${packageJsonContent.version || '3.3.5'} Engine Activation`));
+    console.log(ansis.bold.green(`\n📦 pkg-scaffold v${packageJsonContent.version || '3.3.9'} Engine Activation`));
     console.log(ansis.dim('------------------------------------------------------------'));
     console.log(`${ansis.bold('Target Workspace Root :')} ${ansis.blue(targetCwd)}`);
     console.log(`${ansis.bold('Refactoring Mode     :')} ${options.fix ? ansis.yellow('Active Fixing & Self-Healing Enabled') : ansis.gray('Dry-Run Reporting Only')}`);
