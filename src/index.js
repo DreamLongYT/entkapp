@@ -246,7 +246,7 @@ export class RefactoringEngine {
 
       // Pass 6: Display Optimization Plan and Run Automated Structural Healing
       console.log("JSON_START", JSON.stringify(analysisSummary), "JSON_END"); const structuralModificationsStaged = 
-        analysisSummary.deadFiles.length > 0 || 
+        analysisSummary.orphanedFiles.length > 0 || 
         analysisSummary.deadExports.length > 0 ||
         analysisSummary.unusedDependencies.length > 0;
 
@@ -254,9 +254,9 @@ export class RefactoringEngine {
         console.log(ansis.bold.yellow('\n📋 Proposed Optimization Plan:'));
         console.log(ansis.dim('------------------------------------------------------------'));
         
-        if (analysisSummary.deadFiles.length > 0) {
-          console.log(ansis.bold(`  🗑️  Delete ${analysisSummary.deadFiles.length} orphaned files:`));
-          analysisSummary.deadFiles.forEach(f => console.log(ansis.dim(`    • ${f}`)));
+        if (analysisSummary.orphanedFiles.length > 0) {
+          console.log(ansis.bold(`  🗑️  Delete ${analysisSummary.orphanedFiles.length} orphaned files:`));
+          analysisSummary.orphanedFiles.forEach(f => console.log(ansis.dim(`    • ${f}`)));
         }
         
         if (analysisSummary.deadExports.length > 0) {
@@ -280,7 +280,7 @@ export class RefactoringEngine {
           if (proceed) {
             // Execute healing lifecycle (git-state-capture -> apply -> verify -> commit/rollback)
             await this.selfHealer.runSelfHealingLifecycle(async () => {
-              for (const relPath of analysisSummary.deadFiles) {
+              for (const relPath of analysisSummary.orphanedFiles) {
                 const absPath = path.resolve(this.context.cwd, relPath);
                 console.log(ansis.red(`✂️  Removing unreferenced file: ${relPath}`));
                 await this.txManager.stageDeletion(absPath);

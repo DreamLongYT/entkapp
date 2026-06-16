@@ -1,7 +1,7 @@
 import { defineConfig } from 'vitepress'
 
 export default defineConfig({
-  title: "pkg-scaffold v3.3.10 Documentation",
+  title: "pkg-scaffold Documentation",
   base: '/pkg-scaffold/',
   head: [
     ['link', { rel: 'icon', href: '/logo.png' }],
@@ -12,7 +12,7 @@ export default defineConfig({
         content: '9Ao1YuH76KcgDtMO6KV8CLJQ6Tq4iCdqOrmU-MRr6ms'
       }
     ],
-    ['meta', { name: 'keywords', content: 'pkg-scaffold, monorepo framework, project skeleton generator, pnpm workspace tool, plugin sdk, security, secret scanner, hardcoded secrets, dead code detection, dependency audit, code, knip, pkg, scaffold, auto, automation, javascript, node, npm, pnpm, js, unused, oxc, typescript, dependencies, depencies, devdependencies, devdepencies' }],
+    ['meta', { name: 'keywords', content: 'pkg-scaffold, monorepo framework, project skeleton generator, pnpm workspace tool, plugin sdk, security, secret scanner, hardcoded secrets, dead code detection, dependency audit, code, knip, pkg, scaffold, auto, automation, javascript, node, npm, pnpm, js, unused, oxc, typescript, dependencies, depencies, devdependencies, devdepencies, generator, monorepo, setup, yarn, package, scaffolding, ts'}],
     ['meta', { property: 'og:title', content: 'pkg-scaffold - Monorepo Scaffolding Engine' }],
     ['meta', { property: 'og:description', content: 'Automatically generate project structures, detect dead code, find hardcoded secrets, and manage plugin ecosystems seamlessly.' }],
     ['meta', { property: 'og:type', content: 'website' }],
