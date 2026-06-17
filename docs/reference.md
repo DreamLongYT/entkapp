@@ -1,6 +1,6 @@
-# CLI Reference v3.3.8+
+# CLI Reference v4.1.0+
 
-This page lists all available command-line options and configuration keys for `entkapp v3.3.8+`.
+This page lists all available command-line options and configuration keys for `entkapp v4.1.0+`.
 
 ```text
 Usage: entkapp [options]
@@ -21,6 +21,7 @@ Options:
   --init                 Initialize a new entkapp configuration in the current directory
   --timeout <ms>         Set execution timeout in milliseconds (default: 30000)
   -h, --help             display help for command
+  --debug                Developer's Help Tool, for debugging
 ```
 
 ## Options in Detail

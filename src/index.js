@@ -3,7 +3,7 @@ import { OxcAnalyzer } from "./ast/OxcAnalyzer.js";
 import { SecretScanner } from './ast/SecretScanner.js';
 /**
  * ============================================================================
- * 📦 entkapp v4.1.0: Unified Architectural Refactoring Orchestrator
+ * 📦 entkapp v4.2.0: Unified Architectural Refactoring Orchestrator
  * ============================================================================
  * Main execution bridge managing multi-pass compilation cycles, semantic cross-linking,
  * supply-chain validation audits, and automated structural healing rollbacks.
@@ -262,7 +262,11 @@ export class RefactoringEngine {
       if (!this.context.unlistedDependencies) this.context.unlistedDependencies = [];
 
       // Simple internal helper to guarantee matching forward slash strings across all platforms
-      const slashify = (p) => path.resolve(this.context.cwd, p).replace(/\\/g, '/');
+      const slashify = (p) => {
+        if (!p) return p;
+        if (Array.isArray(p)) p = p[0];
+        return path.resolve(this.context.cwd, p).replace(/\\/g, '/');
+      };
 
       if (this.context.projectGraph && typeof this.context.projectGraph.entries === 'function') {
         for (const [filePath, fileNode] of this.context.projectGraph.entries()) {
@@ -271,12 +275,10 @@ export class RefactoringEngine {
           const cleanFilePath = slashify(filePath);
 
           // 🚀 ROOT DEPS HARVESTER SHADOW TRACKING:
-          // If external packages are parsed from ANY file node in the monorepo, 
-          // ensure the auditor registries register their footprint so root checking works!
           if (fileNode.externalPackageUsage) {
             fileNode.externalPackageUsage.forEach(pkg => {
-              const relativeToRoot = path.relative(this.context.cwd, filePath);
-              if (relativeToRoot.startsWith('packages' + path.sep) || relativeToRoot.startsWith('packages/')) {
+              const relativeToRoot = path.relative(this.context.cwd, filePath).replace(/\\/g, '/');
+              if (relativeToRoot.startsWith('packages/')) {
                 this.context.consumedWorkspacePackages.add(pkg);
               } else {
                 this.context.consumedRootPackages.add(pkg);
@@ -294,17 +296,17 @@ export class RefactoringEngine {
               if (!this.context.exportRegistry.has(cleanFilePath)) {
                 this.context.exportRegistry.set(cleanFilePath, new Set());
               }
-              exportKeys.forEach(key => this.context.exportRegistry.get(cleanFilePath).add(key));
+              exportKeys.forEach(key => {
+                if (key !== '*') { // Don't track wildcard as a dead export symbol
+                  this.context.exportRegistry.get(cleanFilePath).add(key);
+                }
+              });
             }
           }
 
           // 2. Gather cross-file usage tokens using unified slashes
-          if (fileNode.explicitImports && fileNode.importedSymbols) {
-            const symbolsArray = typeof fileNode.importedSymbols.forEach === 'function'
-              ? Array.from(fileNode.importedSymbols)
-              : (Array.isArray(fileNode.importedSymbols) ? fileNode.importedSymbols : []);
-
-            for (const symbolToken of symbolsArray) {
+          if (fileNode.importedSymbols) {
+            for (const symbolToken of fileNode.importedSymbols) {
               if (typeof symbolToken !== 'string') continue;
 
               const splitIndex = symbolToken.indexOf(':');
@@ -314,31 +316,20 @@ export class RefactoringEngine {
               const symbolName = symbolToken.slice(splitIndex + 1);
 
               let targetFile = null;
-              if (this.workspaceGraph && typeof this.workspaceGraph.isLocalWorkspaceSpecifier === 'function' && this.workspaceGraph.isLocalWorkspaceSpecifier(specifier)) {
+              // If specifier is already an absolute path (resolved during linkDependencyGraph)
+              if (path.isAbsolute(specifier)) {
+                targetFile = specifier;
+              } else if (this.workspaceGraph && this.workspaceGraph.isLocalWorkspaceSpecifier(specifier)) {
                 const match = this.workspaceGraph.getWorkspacePackageMatch(specifier);
                 if (match && match.entryPoints && match.entryPoints.length > 0) {
-                  targetFile = Array.isArray(match.entryPoints) ? match.entryPoints : match.entryPoints;
+                  targetFile = match.entryPoints[0];
                 }
               } else if (specifier.startsWith('.')) {
-                targetFile = path.resolve(path.dirname(filePath), specifier);
-                
-                // 🚀 COMPILE-TO-SOURCE EXTENSION SWAP:
-                // If a barrel file imports relative paths using compiled targets (like './used-fn.js'),
-                // replace the extension to check for active source components directly ('.ts' / '.tsx')
-                if (targetFile.endsWith('.js')) {
-                  targetFile = targetFile.slice(0, -3);
-                }
-
-                if (!path.extname(targetFile)) {
-                  if (existsSync(targetFile + '.ts')) targetFile += '.ts';
-                  else if (existsSync(targetFile + '.tsx')) targetFile += '.tsx';
-                  else if (existsSync(targetFile + '.js')) targetFile += '.js';
-                }
+                targetFile = this.resolver.resolveModulePath(filePath, specifier);
               }
 
               if (targetFile) {
-                // Enforce uniform forward slash formats on targets
-                const cleanTargetFile = Array.isArray(targetFile) ? slashify(targetFile[0]) : slashify(targetFile);
+                const cleanTargetFile = slashify(targetFile);
                 this.context.importUsageRegistry.add(`${cleanTargetFile}:${symbolName}`);
               }
             }
@@ -478,15 +469,32 @@ export class RefactoringEngine {
           }
           if (isPackageEntryPoint) continue;
 
+          const originalNode = this.context.projectGraph.get(cleanExportedFile);
+          const unusedExportsInThisFile = [];
+          
           for (const symbol of exportsSet) {
             const consumptionToken = `${cleanExportedFile}:${symbol}`;
             if (!this.context.importUsageRegistry?.has(consumptionToken)) {
-              analysisSummary.deadExports.push({
+              // Retrieve the real source location if available
+              const loc = (originalNode && originalNode.symbolSourceLocations) ? originalNode.symbolSourceLocations.get(symbol) || { line: 0 } : { line: 0 };
+              unusedExportsInThisFile.push({
                 symbol: symbol,
                 file: relativeExportedFile,
-                line: 7
+                line: loc.line
               });
             }
+          }
+
+          // --- NEW: Orphaned File Detection based on Export Coverage ---
+          // If every single export in this file is unused, and it's not an entry point,
+          // we suggest deleting the entire file instead of pruning individual exports.
+          if (unusedExportsInThisFile.length > 0 && unusedExportsInThisFile.length === exportsSet.size) {
+            if (!analysisSummary.orphanedFiles.includes(relativeExportedFile)) {
+              analysisSummary.orphanedFiles.push(relativeExportedFile);
+            }
+          } else {
+            // Otherwise, just append the individual dead exports as usual
+            analysisSummary.deadExports.push(...unusedExportsInThisFile);
           }
         }
       }
@@ -598,34 +606,52 @@ export class RefactoringEngine {
   }
 
   async linkDependencyGraph() {
+    // Pass 1: Global Entry-Point Protection (Seeds)
+    // Mark all package entry points and explicit config entry points as library entries first.
+    const seeds = new Set();
+    
+    // Add workspace entry points
+    if (this.workspaceGraph && this.workspaceGraph.packageManifests) {
+      for (const pkg of this.workspaceGraph.packageManifests.values()) {
+        if (pkg.entryPoints) {
+          pkg.entryPoints.forEach(ep => seeds.add(path.resolve(ep)));
+        }
+      }
+    }
+
+    // Add explicit config entry points
+    if (this.context.entryPoints) {
+      this.context.entryPoints.forEach(ep => seeds.add(path.resolve(this.context.cwd, ep)));
+    }
+
+    for (const seedPath of seeds) {
+      if (this.context.projectGraph.has(seedPath)) {
+        this.context.projectGraph.get(seedPath).isLibraryEntry = true;
+      }
+    }
+
+    // Pass 2: Edge Linking
     for (const [filePath, node] of this.context.projectGraph.entries()) {
-      // Pass A: Link all explicit imports (static + dynamic + re-export sources)
+      // A. Explicit Imports (Files)
       for (const specifier of node.explicitImports) {
         const resolvedPath = this.resolver.resolveModulePath(filePath, specifier);
         if (resolvedPath && this.context.projectGraph.has(resolvedPath)) {
-          this.context.projectGraph.get(resolvedPath).incomingEdges.add(filePath);
+          const targetNode = this.context.projectGraph.get(resolvedPath);
+          targetNode.incomingEdges.add(filePath);
           node.outgoingEdges.add(resolvedPath);
           
-          // Fix: Ensure all internal exports from a re-exported source are marked as used
-          // so the source file itself is never considered orphaned.
-          const targetNode = this.context.projectGraph.get(resolvedPath);
-          const isReExport = Array.from(node.internalExports.values()).some(exp => exp.source === specifier);
-          if (isReExport) {
-            targetNode.isLibraryEntry = true; // Protect re-exported internal files
+          // Re-export protection: If this file re-exports everything from another file, 
+          // the target file should be treated as an entry point for its own exports.
+          const isReExportAll = Array.from(node.internalExports.values()).some(exp => 
+            (exp.type === "re-export-all" || exp.type === "re-export-namespace") && exp.source === specifier
+          );
+          if (isReExportAll) {
+            targetNode.isLibraryEntry = true; 
           }
         }
       }
 
-      // Pass A.2: Mark package entry points as library entries
-      for (const pkg of this.workspaceGraph.packageManifests.values()) {
-        for (const entryPath of pkg.entryPoints) {
-          if (this.context.projectGraph.has(entryPath)) {
-            this.context.projectGraph.get(entryPath).isLibraryEntry = true;
-          }
-        }
-      }
-
-      // Pass B: Link named-symbol imports through barrel/re-export chains
+      // B. Symbol-level Linking (Tracing through barrels)
       for (const specToken of node.importedSymbols) {
         const delimiterIndex = specToken.indexOf(':');
         if (delimiterIndex === -1) continue;
@@ -636,18 +662,18 @@ export class RefactoringEngine {
         if (!resolvedPath) continue;
 
         if (symbol === '*') {
-          // Wildcard import / re-export-all: add a direct edge to the resolved file.
           if (this.context.projectGraph.has(resolvedPath)) {
             this.context.projectGraph.get(resolvedPath).incomingEdges.add(filePath);
             node.outgoingEdges.add(resolvedPath);
           }
         } else {
-          // Named import: trace through barrel files to the actual declaration origin.
           const traceResolution = await this.barrelParser.determineSymbolDeclarationOrigin(resolvedPath, symbol, this.context.projectGraph);
           if (traceResolution && this.context.projectGraph.has(traceResolution.originFile)) {
-            this.context.projectGraph.get(traceResolution.originFile).incomingEdges.add(filePath);
+            const originNode = this.context.projectGraph.get(traceResolution.originFile);
+            originNode.incomingEdges.add(filePath);
             node.outgoingEdges.add(traceResolution.originFile);
-            node.importedSymbols.add(`${traceResolution.originFile}:${traceResolution.symbolName}`);
+            // Register the actual resolved symbol for dead export detection
+            node.importedSymbols.add(`${traceResolution.originFile}:${traceResolution.originSymbol}`);
           }
         }
       }

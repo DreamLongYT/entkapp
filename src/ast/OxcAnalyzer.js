@@ -3,20 +3,17 @@ export class OxcAnalyzer {
     this.context = context;
     this.oxc = null;
     this.isAvailable = false;
-    // Initialization is handled via init() or lazily during parseFile
   }
 
   async init() {
     if (this.isAvailable) return true;
     try {
-      // In ESM, we use dynamic import()
       const oxc = await import("oxc-parser");
       this.oxc = oxc;
       this.isAvailable = true;
       return true;
     } catch (e) {
       try {
-        // Fallback for older node versions or specific bundling setups
         const { createRequire } = await import('module');
         const require = createRequire(import.meta.url);
         this.oxc = require("oxc-parser");
@@ -25,7 +22,7 @@ export class OxcAnalyzer {
       } catch (err) {
         this.isAvailable = false;
         if (this.context.verbose) {
-          console.warn("[OxcAnalyzer] oxc-parser not found or failed to load, falling back to TypeScript compiler API.");
+          console.warn("[OxcAnalyzer] oxc-parser not found or failed to load.");
         }
         return false;
       }
@@ -39,24 +36,18 @@ export class OxcAnalyzer {
     }
 
     try {
-      if (this.context.verbose) {
-        console.log(`[OXC] Fast-parsing: ${filePath}`);
-      }
-
       const ast = this.oxc.parseSync(content, {
         sourceType: "module",
         sourceFilename: filePath,
         ecmaVersion: "latest",
       });
 
-      // Initialize new properties for JSX and Decorator analysis
       fileNode.jsxComponents = new Set();
       fileNode.jsxProps = new Set();
       fileNode.decorators = new Set();
 
       this.walkOxcAst(ast.program, fileNode, content);
       
-      // Compute line/column for each export start position
       const lines = content.split('\n');
       const getLineCol = (pos) => {
         let count = 0;
@@ -100,19 +91,17 @@ export class OxcAnalyzer {
         this.handleCallExpression(node, fileNode);
         break;
       case "JSXElement":
-      case "JSXFragment": // Consider fragments as well
+      case "JSXFragment":
         this.handleJsxElement(node, fileNode);
         break;
       case "Decorator":
         this.handleDecorator(node, fileNode);
         break;
       case "StringLiteral":
-        // Track for secret scanning if it looks like a secret
         fileNode.rawStringReferences.add(node.value);
         break;
     }
 
-    // Traverse children
     for (const key in node) {
       if (node[key] && typeof node[key] === "object") {
         if (Array.isArray(node[key])) {
@@ -128,7 +117,6 @@ export class OxcAnalyzer {
     const specifier = node.source.value;
     fileNode.explicitImports.add(specifier);
 
-    // Track external package usage for dependency analysis
     if (!specifier.startsWith('.') && !specifier.startsWith('/')) {
       fileNode.externalPackageUsage.add(this._extractPackageName(specifier));
     }
@@ -136,7 +124,7 @@ export class OxcAnalyzer {
     if (node.specifiers) {
       node.specifiers.forEach((spec) => {
         if (spec.type === "ImportSpecifier") {
-          const importedName = spec.imported.name;
+          const importedName = spec.imported.name || (spec.imported.type === "Identifier" ? spec.imported.name : spec.imported.value);
           fileNode.importedSymbols.add(`${specifier}:${importedName}`);
         } else if (spec.type === "ImportDefaultSpecifier") {
           fileNode.importedSymbols.add(`${specifier}:default`);
@@ -148,86 +136,83 @@ export class OxcAnalyzer {
   }
 
   handleExportDeclaration(node, fileNode, content) {
+    // 1. Default Exports
     if (node.type === "ExportDefaultDeclaration") {
-      fileNode.internalExports.set("default", { type: "default", start: node.start, end: node.end });
+      fileNode.internalExports.set("default", { 
+        type: "default", 
+        start: node.start, 
+        end: node.end 
+      });
       return;
     }
 
+    // 2. Re-export All: export * from 'mod' or export * as ns from 'mod'
     if (node.type === "ExportAllDeclaration") {
-      const sourceSpecifier = node.source ? node.source.value : null;
-      if (sourceSpecifier) {
-        // Register re-export source as an explicit import so the graph linker
-        // creates an incomingEdge on the re-exported file.
-        fileNode.explicitImports.add(sourceSpecifier);
+      const sourceSpecifier = node.source.value;
+      fileNode.explicitImports.add(sourceSpecifier);
+      if (!sourceSpecifier.startsWith('.') && !sourceSpecifier.startsWith('/')) {
+        fileNode.externalPackageUsage.add(this._extractPackageName(sourceSpecifier));
+      }
 
-        // Track external package usage from re-exports
-        if (!sourceSpecifier.startsWith('.') && !sourceSpecifier.startsWith('/')) {
-          fileNode.externalPackageUsage.add(this._extractPackageName(sourceSpecifier));
-        }
-
-        if (node.exported) {
-          // export * as name from 'module'
-          const name = node.exported.name || (node.exported.type === "Identifier" ? node.exported.name : null);
-          if (name) {
-            fileNode.internalExports.set(name, { type: "re-export-namespace", source: sourceSpecifier, originalName: "*", start: node.start, end: node.end });
-            fileNode.importedSymbols.add(`${sourceSpecifier}:*`);
-          }
-        } else {
-          // export * from 'module'
-          fileNode.internalExports.set("*", { type: "re-export-all", source: sourceSpecifier });
-          // Register as wildcard importedSymbol so graph linker creates incomingEdge
+      if (node.exported) {
+        // export * as ns from 'mod'
+        const name = node.exported.name || (node.exported.type === "Identifier" ? node.exported.name : null);
+        if (name) {
+          fileNode.internalExports.set(name, { 
+            type: "re-export-namespace", 
+            source: sourceSpecifier, 
+            originalName: "*", 
+            start: node.start, 
+            end: node.end 
+          });
           fileNode.importedSymbols.add(`${sourceSpecifier}:*`);
         }
+      } else {
+        // export * from 'mod'
+        fileNode.internalExports.set("*", { 
+          type: "re-export-all", 
+          source: sourceSpecifier 
+        });
+        fileNode.importedSymbols.add(`${sourceSpecifier}:*`);
       }
       return;
     }
 
+    // 3. Named Exports & Re-exports with specifiers
     if (node.source) {
-      // Re-export with source: export { x } from 'module'
+      // Re-export: export { x } from 'mod'
       const specifier = node.source.value;
-      // Register re-export source as an explicit import
       fileNode.explicitImports.add(specifier);
-
-      // Track external package usage from re-exports
       if (!specifier.startsWith('.') && !specifier.startsWith('/')) {
         fileNode.externalPackageUsage.add(this._extractPackageName(specifier));
       }
 
       if (node.specifiers) {
         node.specifiers.forEach((spec) => {
-          const exportedName = spec.exported.name;
-          const localName = spec.local.name;
+          const exportedName = spec.exported.name || (spec.exported.type === "Identifier" ? spec.exported.name : spec.exported.value);
+          const localName = spec.local.name || (spec.local.type === "Identifier" ? spec.local.name : spec.local.value);
           fileNode.internalExports.set(exportedName, {
             type: "re-export",
             source: specifier,
             originalName: localName,
-            start: node.start,
-            end: node.end,
+            start: spec.start,
+            end: spec.end,
           });
-          // Register as importedSymbol so barrel-tracer can resolve origin file
           fileNode.importedSymbols.add(`${specifier}:${localName}`);
         });
       }
     } else if (node.declaration) {
-      // Direct export
+      // Direct declaration export: export const x = 1, export function f() {}
       const decl = node.declaration;
       if (decl.type === "VariableDeclaration") {
         decl.declarations.forEach((d) => {
-          if (d.id.type === "Identifier") {
-            fileNode.internalExports.set(d.id.name, { type: "variable", start: d.start, end: d.end });
-          } else if (d.id.type === "ObjectPattern") {
-            d.id.properties.forEach((p) => {
-              if (p.type === "Property" && p.value.type === "Identifier") {
-                fileNode.internalExports.set(p.value.name, { type: "variable", start: p.start, end: p.end });
-              }
+          this._extractNamesFromPattern(d.id, (name) => {
+            fileNode.internalExports.set(name, { 
+              type: "variable", 
+              start: d.start, 
+              end: d.end 
             });
-          } else if (d.id.type === "ArrayPattern") {
-            d.id.elements.forEach((e) => {
-              if (e && e.type === "Identifier") {
-                fileNode.internalExports.set(e.name, { type: "variable", start: e.start, end: e.end });
-              }
-            });
-          }
+          });
         });
       } else if (decl.id && decl.id.name) {
         let type = "unknown";
@@ -238,26 +223,47 @@ export class OxcAnalyzer {
         else if (decl.type === "TSTypeAliasDeclaration") type = "type";
         else if (decl.type === "TSModuleDeclaration") type = "namespace";
 
-        const exportInfo = { type, start: decl.start, end: decl.end };
-        fileNode.internalExports.set(decl.id.name, exportInfo);
-
-        if (decl.type === "TSEnumDeclaration") {
-          exportInfo.members = decl.members.map((m) => m.id.name || (m.id.type === "Identifier" ? m.id.name : ""));
-        } else if (decl.type === "TSInterfaceDeclaration" || decl.type === "ClassDeclaration") {
-          exportInfo.members = decl.body.body.filter((m) => m.key && m.key.name).map((m) => m.key.name);
-        }
+        fileNode.internalExports.set(decl.id.name, { 
+          type, 
+          start: decl.start, 
+          end: decl.end 
+        });
       }
     } else if (node.specifiers) {
+      // Export existing locals: export { x, y as z }
       node.specifiers.forEach((spec) => {
-        const exportedName = spec.exported.name;
-        const localName = spec.local.name;
+        const exportedName = spec.exported.name || (spec.exported.type === "Identifier" ? spec.exported.name : spec.exported.value);
+        const localName = spec.local.name || (spec.local.type === "Identifier" ? spec.local.name : spec.local.value);
         fileNode.internalExports.set(exportedName, {
           type: "export",
           originalName: localName,
-          start: node.start,
-          end: node.end,
+          start: spec.start,
+          end: spec.end,
         });
       });
+    }
+  }
+
+  _extractNamesFromPattern(node, callback) {
+    if (!node) return;
+    if (node.type === "Identifier") {
+      callback(node.name);
+    } else if (node.type === "ObjectPattern") {
+      node.properties.forEach(p => {
+        if (p.type === "Property") {
+          this._extractNamesFromPattern(p.value, callback);
+        } else if (p.type === "RestElement") {
+          this._extractNamesFromPattern(p.argument, callback);
+        }
+      });
+    } else if (node.type === "ArrayPattern") {
+      node.elements.forEach(e => {
+        if (e) this._extractNamesFromPattern(e, callback);
+      });
+    } else if (node.type === "AssignmentPattern") {
+      this._extractNamesFromPattern(node.left, callback);
+    } else if (node.type === "RestElement") {
+      this._extractNamesFromPattern(node.argument, callback);
     }
   }
 
@@ -269,11 +275,11 @@ export class OxcAnalyzer {
         const specifier = arg.value;
         fileNode.explicitImports.add(specifier);
         fileNode.dynamicImports.add(specifier);
+        fileNode.importedSymbols.add(`${specifier}:*`); // Dynamic import usually consumes the whole namespace
         if (!specifier.startsWith('.') && !specifier.startsWith('/')) {
           fileNode.externalPackageUsage.add(this._extractPackageName(specifier));
         }
       } else {
-        // Non-literal dynamic import: record as calculated
         if (fileNode.calculatedDynamicImports) {
           fileNode.calculatedDynamicImports.push({ kind: arg.type, start: arg.start });
         }
@@ -281,6 +287,7 @@ export class OxcAnalyzer {
     } else if (node.callee.type === "Identifier" && node.callee.name === "require" && node.arguments.length > 0 && node.arguments[0].type === "StringLiteral") {
       const specifier = node.arguments[0].value;
       fileNode.explicitImports.add(specifier);
+      fileNode.importedSymbols.add(`${specifier}:*`);
       if (!specifier.startsWith('.') && !specifier.startsWith('/')) {
         fileNode.externalPackageUsage.add(this._extractPackageName(specifier));
       }
@@ -291,6 +298,7 @@ export class OxcAnalyzer {
     const getElementName = (nameNode) => {
       if (nameNode.type === "JSXIdentifier") return nameNode.name;
       if (nameNode.type === "JSXMemberExpression") return `${getElementName(nameNode.object)}.${nameNode.property.name}`;
+      if (nameNode.type === "JSXNamespacedName") return `${nameNode.namespace.name}:${nameNode.name.name}`;
       return "unknown";
     };
 
@@ -311,19 +319,17 @@ export class OxcAnalyzer {
   handleDecorator(node, fileNode) {
     const getDecoratorName = (expr) => {
       if (expr.type === "Identifier") return expr.name;
-      if (expr.type === "CallExpression" && expr.callee.type === "Identifier") return expr.callee.name;
-      if (expr.type === "CallExpression" && expr.callee.type === "MemberExpression" && expr.callee.property.type === "Identifier") return expr.callee.property.name;
+      if (expr.type === "CallExpression") return getDecoratorName(expr.callee);
+      if (expr.type === "MemberExpression") {
+        const prop = expr.property.name || expr.property.value;
+        return prop || "unknown";
+      }
       return "unknown";
     };
 
     const decoratorName = getDecoratorName(node.expression);
-    fileNode.decorators.add(decoratorName);
-
-    // Optionally, extract decorator arguments
-    if (node.expression.type === "CallExpression") {
-      node.expression.arguments.forEach(arg => {
-        // Further analysis of arguments can be done here if needed
-      });
+    if (decoratorName !== "unknown") {
+      fileNode.decorators.add(decoratorName);
     }
   }
 

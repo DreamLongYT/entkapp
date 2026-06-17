@@ -28,6 +28,19 @@ It represents the process of stripping away the unnecessary layers of a codebase
 ## 📦 Installation
 
 ```bash
-npm install -D entkapp
+npm install -g entkapp
 # or
-pnpm add -D entkapp
+pnpm add -g entkapp
+```
+
+## Usage
+```bash
+npx entkapp
+# or
+entkapp
+# and then
+npx entkapp -r
+# or
+entkapp -r
+# It is recommended to run with --no-fix tag on your first run!
+```
