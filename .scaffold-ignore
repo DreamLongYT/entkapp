@@ -20,3 +20,5 @@ tslib
 
 # Secret Heuristic Exemptions (Explicit False Positive Control)
 exempt_token_pattern
+
+playgrounds/

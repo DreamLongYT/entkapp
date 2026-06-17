@@ -1,0 +1,31 @@
+{
+  "name": "nightmare-project",
+  "version": "1.0.0",
+  "description": "Absolute nightmare for static analysis engines",
+  "type": "module",
+  "main": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./utils": "./src/utils/index.ts",
+    "./core": "./src/core/index.ts",
+    "./services": "./src/services/index.ts",
+    "./plugins": "./src/plugins/index.ts",
+    "./dynamic": "./src/dynamic/index.ts"
+  },
+  "scripts": {
+    "build": "tsc --noEmit",
+    "knip": "knip",
+    "entkapp": "entkapp -r --no-fix"
+  },
+  "dependencies": {
+    "lodash": "^4.17.21",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3",
+    "knip": "^5.45.0",
+    "entkapp": "^4.3.0",
+    "@types/lodash": "^4.14.202",
+    "@types/node": "^20.11.0"
+  }
+}

@@ -30,7 +30,7 @@ This guide covers common issues you might encounter while using entkapp v4.0 and
 ## CLI Errors
 
 ### "Command not found: entkapp"
-- **Solution**: Ensure you have installed the package locally and are using `npx entkapp` or have added it to your `PATH`.
+- **Solution**: Ensure you have installed the package locally (by `npm install -g entkapp@latest`) or you are using `npx entkapp`.
 
 ### "Critical Operational Pipeline Failure"
 - **Cause**: Usually a permission issue, a corrupt cache, or an unhandled edge case in a plugin.

@@ -44,3 +44,7 @@ npx entkapp -r
 entkapp -r
 # It is recommended to run with --no-fix tag on your first run!
 ```
+
+---
+## 🛝Playgrounds
+Visit our ready-made Playgrounds at our [Documentation Website](https://dreamlongyt.github.io/entkapp/playgrounds/)

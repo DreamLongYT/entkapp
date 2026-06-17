@@ -1,0 +1,11 @@
+{
+  "name": "playground-intermediate",
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "zod": "^3.21.4"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

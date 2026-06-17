@@ -26,6 +26,7 @@ export default defineConfig({
     nav: [
       { text: 'Home', link: '/' },
       { text: 'Guide', link: '/guide' },
+      { text: 'Playgrounds', link: '/playgrounds'},
       { 
         text: 'API & SDK', 
         items: [
