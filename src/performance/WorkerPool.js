@@ -82,6 +82,9 @@ export class WorkerPool {
         if (result.jsxProps) result.jsxProps.forEach(p => node.jsxProps.add(p));
         if (result.decorators) result.decorators.forEach(d => node.decorators.add(d));
         if (result.isFrameworkContract) node.isFrameworkContract = true;
+        if (result.isEntry) node.isEntry = true;
+        if (result.isLibraryEntry) node.isLibraryEntry = true;
+        if (result.isFrameworkComponent) node.isFrameworkComponent = true;
       });
 
       return true;
@@ -96,7 +99,13 @@ export class WorkerPool {
   executeChunkInsideThread(fileChunkSubset) {
     return new Promise((resolve, reject) => {
       const workerInstance = new Worker(this.workerScriptPath, { type: 'module',
-        workerData: { files: fileChunkSubset, contextOptions: { verbose: this.context.verbose } }
+        workerData: { 
+          files: fileChunkSubset, 
+          contextOptions: { 
+            verbose: this.context.verbose,
+            cwd: this.context.cwd
+          } 
+        }
       });
 
       workerInstance.on('message', (payload) => resolve(payload));

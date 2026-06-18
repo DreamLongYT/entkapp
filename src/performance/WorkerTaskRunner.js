@@ -1,7 +1,7 @@
 import { parentPort, workerData } from 'worker_threads';
 import fs from 'fs/promises';
 import { ASTAnalyzer } from '../ast/ASTAnalyzer.js';
-import { OxcAnalyzer } from '../analyzers/OxcAnalyzer.js';
+import { OxcAnalyzer } from '../ast/OxcAnalyzer.js';
 
 /**
  * Worker Thread Execution Script
@@ -14,6 +14,7 @@ async function runTask() {
   // Create a minimal context for analyzers
   const mockContext = {
     verbose: contextOptions.verbose,
+    cwd: contextOptions.cwd || process.cwd(),
     projectGraph: new Map(),
     getOrCreateNode: (path) => ({
       filePath: path,
@@ -31,7 +32,10 @@ async function runTask() {
       jsxComponents: new Set(),
       jsxProps: new Set(),
       decorators: new Set(),
-      isFrameworkContract: false
+      isFrameworkContract: false,
+      isEntry: false,
+      isLibraryEntry: false,
+      isFrameworkComponent: false
     })
   };
 
@@ -71,7 +75,10 @@ async function runTask() {
         jsxComponents: Array.from(node.jsxComponents),
         jsxProps: Array.from(node.jsxProps),
         decorators: Array.from(node.decorators),
-        isFrameworkContract: node.isFrameworkContract
+        isFrameworkContract: node.isFrameworkContract,
+        isEntry: node.isEntry,
+        isLibraryEntry: node.isLibraryEntry,
+        isFrameworkComponent: node.isFrameworkComponent
       });
     } catch (err) {
       if (contextOptions.verbose) {

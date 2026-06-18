@@ -152,7 +152,14 @@ export class EngineContext {
       const isSuppressed = node.localSuppressedRules.has('*') || node.localSuppressedRules.has('unused-file');
       
       if (node.incomingEdges.size === 0 && !node.isEntry && !node.isLibraryEntry && !node.isFrameworkComponent && !isSuppressed) {
-        report.orphanedFiles.push(path.relative(this.cwd, filePath));
+        const relPath = path.relative(this.cwd, filePath);
+        report.orphanedFiles.push(relPath);
+        if (this.verbose) {
+          console.log(`[Orphan Auditor] File marked as orphan: ${relPath}`);
+          console.log(`  - Incoming Edges: ${node.incomingEdges.size}`);
+          console.log(`  - isEntry: ${node.isEntry}, isLibraryEntry: ${node.isLibraryEntry}, isFrameworkComponent: ${node.isFrameworkComponent}`);
+          console.log(`  - Suppressed: ${isSuppressed}`);
+        }
       }
 
       for (const [symbol, meta] of node.internalExports.entries()) {

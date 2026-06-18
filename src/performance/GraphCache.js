@@ -66,7 +66,9 @@ export class IncrementalCacheManager {
         securityThreats: node.securityThreats || [],
         localSuppressedRules: Array.from(node.localSuppressedRules),
         symbolSourceLocations: Object.fromEntries(node.symbolSourceLocations),
-        externalPackageUsage: Array.from(node.externalPackageUsage)
+        externalPackageUsage: Array.from(node.externalPackageUsage),
+        isEntry: node.isEntry,
+        isFrameworkComponent: node.isFrameworkComponent
       };
     }
 

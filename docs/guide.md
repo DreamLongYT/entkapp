@@ -1,16 +1,16 @@
-# Getting Started with entkapp v4.4.1
+# Getting Started with entkapp v4.6.0
 
 ## Overview
 
-entkapp v4.4.1 is a major update focused on solving the most critical issues currently facing the JavaScript/TypeScript ecosystem—many of which remain open in competing tools like Knip.
+entkapp v4.6.0 is a major update focused on solving the most critical issues currently facing the JavaScript/TypeScript ecosystem—many of which remain open in competing tools like Knip.
 
-## Why v4.4.1?
+## Why v4.6.0?
 
 This version isn't just a number; it's a statement. We've analyzed the most requested features and reported bugs from across the community and implemented robust solutions.
 
 ### 🚀 Key Improvements over Knip
 
-| Feature | entkapp v4.4.1 | Knip v6 Status |
+| Feature | entkapp v4.3.0 | Knip v6 Status |
 | :--- | :--- | :--- |
 | **Circular Dependency Tracking** | ✅ Native Support | 💡 Open Feature Request (#1734) |
 | **tsConfig Path Resolution** | ✅ Robust & v6-Ready | 🔄 Open Issue (#1794) |
@@ -21,6 +21,15 @@ This version isn't just a number; it's a statement. We've analyzed the most requ
 | **Smart TypeScript Whitelisting** | ✅ Context-aware | ❌ Not available |
 | **Windows Path Compatibility** | ✅ Robust | ⚠️ Known issues |
 | **OXC Native Parsing** | ✅ Highly optimized | ❌ Not available |
+| **JIT Optimization Analysis** | ✅ Integrated | ❌ Not available |
+| **SAST (ReDoS, Prototype Pollution)** | ✅ Integrated | ❌ Not available |
+| **Worker Safety Analysis** | ✅ Integrated | ❌ Not available |
+| **JSON/YAML Integrity (Schema)** | ✅ Integrated | ❌ Not available |
+| **Event-Driven Leak Tracking** | ✅ Integrated | ❌ Not available |
+| **Null/Undefined Dereference Tracking** | ✅ Integrated | ❌ Not available |
+| **Execution Graph Visualizer** | ✅ Integrated | ❌ Not available |
+| **Infinite Loop / Recursion Proofs** | ✅ Integrated | ❌ Not available |
+| **Configuration Sanitizer** | ✅ Integrated | ❌ Not available |
 
 ## New Features & Enhancements
 
@@ -61,6 +70,61 @@ We've solved the "Sibling Workspace" problem. entkapp correctly identifies when 
 ### 🔄 Improved Dynamic Importing / Exporting / Entry
 - More robust resolution of dynamic imports and exports, including handling of computed exports and complex barrel file structures.
 
+## ⚡ v4.5.0: The "JIT-Friendly" & SAST Update
+
+### 1. Engine-Level Optimizations
+- **Monomorphic Shape Enforcement**: Catch varying object shapes that trigger JIT de-optimization.
+- **Array Type Invalidation Tracker**: Detect expensive structural layout shifts in arrays.
+
+### 2. Global Native Topology Mapping
+- **Package.json Export Reachability**: Ensure exports are reachable from the public API.
+- **Strict Worker-Thread Safety**: Track non-serializable data passed to Worker threads.
+
+### 3. Structural Security Analysis (SAST)
+- **Prototype Pollution Sink-Detection**: Identify dynamic property assignments without proper filtering.
+- **ReDoS Scanner**: Detect evil nested quantifiers in regular expressions.
+
+## 📊 v4.5.0: The "Ultimate Vanilla" Update
+
+### 1. Traceable JSON/YAML Integrity Verification
+- **Schema Matching**: entkapp parses raw static JSON/YAML files and ensures they conform exactly to your TypeScript interfaces. Catch missing required fields during compile time!
+
+### 2. Event-Driven Loop Leak Trackers
+- **Event Listener Pruning**: Track the lifecycle of event handlers (`.on()`, `.addListener()`).
+- **Leak Detection**: If a listener has no matching `.off()` or `.removeListener()` pathway in the control flow graph, entkapp flags it as an Active Event Leak Risk.
+
+### 3. Single-Pass Binary Shaking (Cross-Language)
+- **FFI Export Tracing**: Inspect symbol definitions in native bindings (Bun.FFI, Wasm).
+- **Dead Native Code Detection**: Highlight unused native binary bindings that can be stripped from compilation targets.
+
+### 4. Architectural Sandbox Enforcement
+- **Dependency Sandboxing**: Enforce strict directory-level restrictions natively.
+- **Structural Wall Violations**: Prevent unauthorized pathways between modules (e.g., prohibiting `src/core` from importing `src/network`).
+
+### 5. Path-Sensitive Null / Undefined Dereference Tracking
+- **Nullability State Tracking**: entkapp tracks the nullability state of identifiers across execution splits.
+- **Guaranteed Runtime Exceptions**: If a property access occurs on a potentially null/undefined object before a conditional guard, entkapp flags a Guaranteed Runtime Dereference Exception.
+
+### 6. Structural AST Clone Detection
+- **Type-0 to Type-3 Clones**: entkapp detects duplicate logic structures using sliding window hashes of AST sub-trees, even if variable names are changed.
+- **Deduplication Suggestions**: Identify identical logic patterns across different files and suggest extracting them into shared utilities.
+
+### 7. Escape Analysis for Identifier Lifetimes
+- **Scope Minimization**: entkapp determines the exact strict boundaries of where a declared variable is visible.
+- **Visibility Optimization**: If a variable is only used within a small child block, entkapp suggests pushing the initialization down to maximize readability and structural integrity.
+
+### 8. Exact Execution Graph Visualizer
+- **Interactive Tree**: Use `entkapp --visualize` to generate a lightweight ASCII tree mapping out the codebase's true network topology.
+- **Audit Transparency**: See exactly why a file is considered alive or dead by tracing the edges back to the entry point.
+
+### 9. Infinite-Loop & Deep Recursion Static Proofs
+- **Termination Analysis**: Evaluate loop termination criteria using the Control Flow Graph.
+- **Execution Traps**: Identify `while(true)` loops or recursive functions without reachable termination paths before running the code.
+
+### 10. Configuration Sanitizer (Self-Cleaning)
+- **Dead Ignore Rules**: entkapp analyzes its own exception comments and configurations.
+- **Config Hygiene**: Identify and flag `entkapp-ignore` comments that are no longer necessary, keeping your project's configuration minimal and clean.
+
 ## Quick Start
 
 ### Installation
@@ -88,7 +152,7 @@ npx entkapp -r --verbose
 npx entkapp -r --verbose
 ```
 
-> **Note**: Always use the `-r` or `--run` flag to execute the analysis loop. v4.4.1 focuses on security and precision. Use `--verbose` for detailed debugging output, including OXC status and fallback information.
+> **Note**: Always use the `-r` or `--run` flag to execute the analysis loop. v4.3.0 focuses on security and precision. Use `--verbose` for detailed debugging output, including OXC status and fallback information.
 
 ## Community-Driven Development
 

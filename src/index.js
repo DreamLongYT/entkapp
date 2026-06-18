@@ -134,7 +134,7 @@ export class RefactoringEngine {
 
       // Pass 3: Process source file tokens using high-performance concurrent workers
       let parallelParseCompleted = false;
-      if (sourceCodeFilesList.length > 10) {
+      if (sourceCodeFilesList.length > 1) {
         parallelParseCompleted = await this.workerPool.parallelAnalyzeCodebase(sourceCodeFilesList, this);
       }
 
@@ -176,9 +176,12 @@ export class RefactoringEngine {
         await this.magicDetector.injectVirtualConsumerEdges(filePath, node, activeFrameworkEcosystems);
         
         // Fix: Explicitly protect entry points defined in local configuration
+        const slashify = (p) => path.resolve(this.context.cwd, p).replace(/\\/g, '/');
         if (this.context.entryPoints && this.context.entryPoints.some(ep => {
-          const absEp = path.resolve(this.context.cwd, ep);
-          return absEp === filePath || absEp === filePath.replace(/\.[^/.]+$/, "");
+          const absEp = slashify(ep);
+          const cleanAbsEp = absEp.replace(/\.[^/.]+$/, "");
+          const cleanFilePath = slashify(filePath).replace(/\.[^/.]+$/, "");
+          return absEp === slashify(filePath) || cleanAbsEp === cleanFilePath;
         })) {
           node.isLibraryEntry = true;
         }
@@ -220,7 +223,18 @@ export class RefactoringEngine {
 
       // Pass 4: Evaluate graph edges and link connections across the codebase mesh
       console.log(ansis.dim('🔗 Linking graph edges and checking structural usage paths...'));
+      if (this.context.verbose) {
+        console.log(`[Linker] Starting dependency graph linkage for ${this.context.projectGraph.size} nodes.`);
+      }
       await this.linkDependencyGraph();
+      if (this.context.verbose) {
+        const totalEdges = Array.from(this.context.projectGraph.values()).reduce((sum, node) => sum + node.outgoingEdges.size, 0);
+        console.log(`[Linker] Completed linkage. Total edges created: ${totalEdges}`);
+      }
+
+      if (this.context.options.visualize) {
+        await this._generateVisualization(this.context.projectGraph);
+      }
 
       // NEW: Circular Dependency Detection
       console.log(ansis.dim('🔄 Detecting circular dependencies...'));
@@ -243,37 +257,37 @@ export class RefactoringEngine {
         // In a real scenario, we'd need the actual AST object here.
         const ast = fileNode.ast || {}; // Assuming AST is stored in fileNode
         this.advancedAnalysis.buildCFG(filePath, ast);
-        this.advancedAnalysis.handleComputedExports(fileNode, ast);
-        const unreachableCode = this.advancedAnalysis.analyzeReachability(filePath);
-        if (unreachableCode.length > 0) {
-          console.log(ansis.yellow(`  ⚠️ Unreachable code detected in ${path.relative(this.context.cwd, filePath)}: ${unreachableCode.length} blocks`));
-        }
-        const taintFindings = this.advancedAnalysis.performTaintAnalysis(filePath, ast);
-        if (taintFindings.length > 0) {
-          console.log(ansis.red(`  🚨 Taint violations detected in ${path.relative(this.context.cwd, filePath)}: ${taintFindings.length} findings`));
-          taintFindings.forEach(f => console.log(ansis.dim(`    • ${f.type} at ${f.file}:${f.line} (Sink: ${f.sink})`)));
-          this.context.allSecretFindings.push(...taintFindings); // Add taint findings to overall secrets
-        }
+        // this.advancedAnalysis.handleComputedExports(fileNode, ast);
+        // const unreachableCode = this.advancedAnalysis.analyzeReachability(filePath);
+        // if (unreachableCode.length > 0) {
+        //   console.log(ansis.yellow(`  ⚠️ Unreachable code detected in ${path.relative(this.context.cwd, filePath)}: ${unreachableCode.length} blocks`));
+        // }
+        // const taintFindings = this.advancedAnalysis.performTaintAnalysis(filePath, ast);
+        // if (taintFindings.length > 0) {
+        //   console.log(ansis.red(`  🚨 Taint violations detected in ${path.relative(this.context.cwd, filePath)}: ${taintFindings.length} findings`));
+        //   taintFindings.forEach(f => console.log(ansis.dim(`    • ${f.type} at ${f.file}:${f.line} (Sink: ${f.sink})`)));
+        //   this.context.allSecretFindings.push(...taintFindings); // Add taint findings to overall secrets
+        // }
 
         // Detect unused members
-        const unusedMembers = this.advancedAnalysis.detectUnusedMembers(fileNode);
-        if (unusedMembers.length > 0) {
-          console.log(ansis.yellow(`  ⚠️ Unused members detected in ${path.relative(this.context.cwd, filePath)}:`));
-          unusedMembers.forEach(m => console.log(ansis.dim(`    • ${m.member}: ${m.message}`)));
-        }
+        // const unusedMembers = this.advancedAnalysis.detectUnusedMembers(fileNode);
+        // if (unusedMembers.length > 0) {
+        //   console.log(ansis.yellow(`  ⚠️ Unused members detected in ${path.relative(this.context.cwd, filePath)}:`));
+        //   unusedMembers.forEach(m => console.log(ansis.dim(`    • ${m.member}: ${m.message}`)));
+        // }
 
         // NEW: Type-Jail Analysis
-        const typeJailViolations = this.workspaceDiagnostic.analyzeTypeJail(fileNode);
-        if (typeJailViolations.length > 0) {
-          console.log(ansis.yellow(`  ⚠️ Type-Jail violations in ${path.relative(this.context.cwd, filePath)}:`));
-          typeJailViolations.forEach(v => console.log(ansis.dim(`    • ${v.message}`)));
-        }
+        // const typeJailViolations = this.workspaceDiagnostic.analyzeTypeJail(fileNode);
+        // if (typeJailViolations.length > 0) {
+        //   console.log(ansis.yellow(`  ⚠️ Type-Jail violations in ${path.relative(this.context.cwd, filePath)}:`));
+        //   typeJailViolations.forEach(v => console.log(ansis.dim(`    • ${v.message}`)));
+        // }
 
         // NEW: Ghost Code Detection
-        const ghostExports = this.advancedAnalysis.detectGhostCode(fileNode, this.context.projectGraph);
-        if (ghostExports.length > 0) {
-          console.log(ansis.yellow(`  👻 Ghost exports detected in ${path.relative(this.context.cwd, filePath)}: [${ghostExports.join(', ')}]`));
-        }
+        // const ghostExports = this.advancedAnalysis.detectGhostCode(fileNode, this.context.projectGraph);
+        // if (ghostExports.length > 0) {
+        //   console.log(ansis.yellow(`  👻 Ghost exports detected in ${path.relative(this.context.cwd, filePath)}: [${ghostExports.join(', ')}]`));
+        // }
       }
 
       // NEW: Workspace Diagnostic & Architecture Enforcement
@@ -578,6 +592,60 @@ export class RefactoringEngine {
       }
       analysisSummary.unlistedDependencies = this.context.unlistedDependencies || [];
       
+      // NEW: Advanced Program Analysis v4.5.0 (JIT, Topology, SAST)
+      const advancedResults = this.advancedAnalysis.runAll(this.context.projectGraph, this.workspaceGraph.packageManifests);
+      
+      if (this.context.options.verbose) {
+        if (advancedResults.jitWarnings.length > 0) {
+          console.log(ansis.bold.yellow(`\n⚡ JIT Optimization Warnings (${advancedResults.jitWarnings.length}):`));
+          advancedResults.jitWarnings.forEach(w => console.log(ansis.yellow(`  • [${w.type}] ${w.message} (${w.file}:${w.line})`)));
+        }
+        if (advancedResults.securityFindings.length > 0) {
+          console.log(ansis.bold.red(`\n🛡️  Security Vulnerabilities (${advancedResults.securityFindings.length}):`));
+          advancedResults.securityFindings.forEach(w => console.log(ansis.red(`  • [${w.type}] ${w.message} (${w.file}:${w.line})`)));
+        }
+        if (advancedResults.topologyWarnings.length > 0) {
+          console.log(ansis.bold.blue(`\n🌐 Topology & Reachability Warnings (${advancedResults.topologyWarnings.length}):`));
+          advancedResults.topologyWarnings.forEach(w => console.log(ansis.blue(`  • [${w.type}] ${w.message} (${w.file})`)));
+        }
+        if (advancedResults.integrityWarnings.length > 0) {
+          console.log(ansis.bold.cyan(`\n📊 Config Integrity Checks (${advancedResults.integrityWarnings.length}):`));
+          advancedResults.integrityWarnings.forEach(w => console.log(ansis.cyan(`  • [${w.type}] ${w.message} (${w.file})`)));
+        }
+        if (advancedResults.leakWarnings.length > 0) {
+          console.log(ansis.bold.magenta(`\n💧 Event Leak Risk Analysis (${advancedResults.leakWarnings.length}):`));
+          advancedResults.leakWarnings.forEach(w => console.log(ansis.magenta(`  • [${w.type}] ${w.message} (${w.file}:${w.line})`)));
+        }
+        if (advancedResults.binaryWarnings.length > 0) {
+          console.log(ansis.bold.white(`\n🏗️  Binary Shaking Audit (${advancedResults.binaryWarnings.length}):`));
+          advancedResults.binaryWarnings.forEach(w => console.log(ansis.white(`  • [${w.type}] ${w.message} (${w.file}:${w.line})`)));
+        }
+        if (advancedResults.sandboxViolations.length > 0) {
+          console.log(ansis.bold.bgRed.white(`\n🧱 Architectural Sandbox Violations (${advancedResults.sandboxViolations.length}):`));
+          advancedResults.sandboxViolations.forEach(w => console.log(ansis.red(`  • [${w.type}] ${w.message} (${w.file})`)));
+        }
+        if (advancedResults.dereferenceWarnings.length > 0) {
+          console.log(ansis.bold.bgBlack.red(`\n💥 Guaranteed Runtime Exceptions (${advancedResults.dereferenceWarnings.length}):`));
+          advancedResults.dereferenceWarnings.forEach(w => console.log(ansis.red(`  • [${w.type}] ${w.message} (${w.file}:${w.line})`)));
+        }
+        if (advancedResults.cloneFindings.length > 0) {
+          console.log(ansis.bold.bgCyan.black(`\n👯 Structural AST Clones Detected (${advancedResults.cloneFindings.length}):`));
+          advancedResults.cloneFindings.forEach(w => console.log(ansis.cyan(`  • [${w.type}] ${w.message} (${w.file}:${w.line})`)));
+        }
+        if (advancedResults.scopeWarnings.length > 0) {
+          console.log(ansis.bold.bgGreen.black(`\n🔭 Scope Minimization Suggestions (${advancedResults.scopeWarnings.length}):`));
+          advancedResults.scopeWarnings.forEach(w => console.log(ansis.green(`  • [${w.type}] ${w.message} (${w.file}:${w.line})`)));
+        }
+        if (advancedResults.loopWarnings.length > 0) {
+          console.log(ansis.bold.bgYellow.black(`\n🔄 Infinite Execution Proofs (${advancedResults.loopWarnings.length}):`));
+          advancedResults.loopWarnings.forEach(w => console.log(ansis.yellow(`  • [${w.type}] ${w.message} (${w.file}:${w.line})`)));
+        }
+        if (advancedResults.configWarnings.length > 0) {
+          console.log(ansis.bold.bgBlue.white(`\n🧼 Configuration Sanitizer (${advancedResults.configWarnings.length}):`));
+          advancedResults.configWarnings.forEach(w => console.log(ansis.blue(`  • [${w.type}] ${w.message} (${w.file}:${w.line})`)));
+        }
+      }
+
       const cycles = cyclesResult; // Use the already detected cycles
       
       const structuralModificationsStaged = 
@@ -683,6 +751,104 @@ export class RefactoringEngine {
     }
   }
 
+  async _generateVisualization(graph) {
+    console.log(ansis.bold.green('\n🌐 [VISUALIZER] Generating Interactive Execution Graph...'));
+    
+    const nodes = [];
+    const edges = [];
+    const fileToIndex = new Map();
+    let idCounter = 1;
+
+    for (const [file, node] of graph.entries()) {
+      const relPath = path.relative(this.context.cwd, file);
+      const id = idCounter++;
+      fileToIndex.set(file, id);
+      nodes.push({
+        id,
+        label: relPath,
+        color: node.isLibraryEntry ? '#ff7675' : '#74b9ff',
+        shape: node.isLibraryEntry ? 'diamond' : 'dot',
+        size: node.isLibraryEntry ? 25 : 15
+      });
+    }
+
+    for (const [file, node] of graph.entries()) {
+      const fromId = fileToIndex.get(file);
+      node.outgoingEdges.forEach(edgeFile => {
+        const toId = fileToIndex.get(edgeFile);
+        if (toId) {
+          edges.push({ from: fromId, to: toId, arrows: 'to' });
+        }
+      });
+    }
+
+    const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <title>entkapp Execution Graph</title>
+  <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+  <style type="text/css">
+    body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #2d3436; color: #dfe6e9; font-family: sans-serif; }
+    #network { width: 100%; height: 100%; }
+    #header { position: absolute; top: 10px; left: 10px; z-index: 10; pointer-events: none; }
+    h1 { margin: 0; font-size: 1.5rem; color: #fab1a0; }
+    .legend { margin-top: 5px; font-size: 0.9rem; }
+    .legend-item { display: inline-block; margin-right: 15px; }
+    .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; }
+  </style>
+</head>
+<body>
+  <div id="header">
+    <h1>entkapp Execution Graph</h1>
+    <div class="legend">
+      <div class="legend-item"><span class="dot" style="background-color: #ff7675; border-radius: 0; transform: rotate(45deg);"></span> Entry Point</div>
+      <div class="legend-item"><span class="dot" style="background-color: #74b9ff;"></span> Module</div>
+    </div>
+  </div>
+  <div id="network"></div>
+  <script type="text/javascript">
+    const nodes = new vis.DataSet(${JSON.stringify(nodes)});
+    const edges = new vis.DataSet(${JSON.stringify(edges)});
+    const container = document.getElementById('network');
+    const data = { nodes, edges };
+    const options = {
+      nodes: { font: { color: '#dfe6e9', size: 14 } },
+      edges: { color: { color: '#636e72', highlight: '#fab1a0' }, width: 2 },
+      physics: {
+        forceAtlas2Based: { gravitationalConstant: -50, centralGravity: 0.01, springLength: 100, springConstant: 0.08 },
+        maxVelocity: 50,
+        solver: 'forceAtlas2Based',
+        timestep: 0.35,
+        stabilization: { iterations: 150 }
+      }
+    };
+    new vis.Network(container, data, options);
+  </script>
+</body>
+</html>`;
+
+    const http = await import('http');
+    const server = http.createServer((req, res) => {
+      res.writeHead(200, { 'Content-Type': 'text/html' });
+      res.end(html);
+    });
+
+    const port = 3000;
+    server.listen(port, () => {
+      console.log(ansis.bold.cyan(`\n🚀 Web Viewer active at: http://localhost:${port}`));
+      console.log(ansis.yellow('Press Ctrl+C to terminate the session and continue...'));
+    });
+
+    return new Promise((resolve) => {
+      process.on('SIGINT', () => {
+        server.close();
+        console.log(ansis.bold.red('\n🛑 Web Viewer stopped.'));
+        resolve();
+      });
+    });
+  }
+
   async discoverSourceFiles(dir, fileList) {
     const entries = await fs.readdir(dir, { withFileTypes: true });
     for (const entry of entries) {
@@ -702,10 +868,16 @@ export class RefactoringEngine {
 
   async linkDependencyGraph() {
     for (const [filePath, node] of this.context.projectGraph.entries()) {
+      if (this.context.verbose && node.explicitImports.size > 0) {
+        console.log(`[Linker] Linking ${node.explicitImports.size} imports from ${path.relative(this.context.cwd, filePath)}`);
+      }
       // Pass A: Link all explicit imports (static + dynamic + re-export sources)
       for (const specifier of node.explicitImports) {
         const resolvedPath = this.resolver.resolveModulePath(filePath, specifier);
         if (resolvedPath && this.context.projectGraph.has(resolvedPath)) {
+          if (this.context.verbose) {
+            console.log(`  -> Resolved ${specifier} to ${path.relative(this.context.cwd, resolvedPath)}`);
+          }
           this.context.projectGraph.get(resolvedPath).incomingEdges.add(filePath);
           node.outgoingEdges.add(resolvedPath);
           
@@ -727,10 +899,20 @@ export class RefactoringEngine {
           }
         }
       }
+      // Auto-detect root index as entry point if no entry points are defined
+      const rootIndexFiles = ['src/index.ts', 'src/index.js', 'index.ts', 'index.js'];
+      const slashify = (p) => path.resolve(this.context.cwd, p).replace(/\\/g, '/');
+      for (const indexFile of rootIndexFiles) {
+        const absIndex = slashify(indexFile);
+        if (this.context.projectGraph.has(absIndex)) {
+          this.context.projectGraph.get(absIndex).isLibraryEntry = true;
+        }
+      }
 
       // Pass B: Link named-symbol imports through barrel/re-export chains
       for (const specToken of node.importedSymbols) {
-        const delimiterIndex = specToken.indexOf(':');
+        // Fix: Use lastIndexOf for Windows paths (C:/path:symbol)
+        const delimiterIndex = specToken.lastIndexOf(':');
         if (delimiterIndex === -1) continue;
         const specifier = specToken.slice(0, delimiterIndex);
         const symbol = specToken.slice(delimiterIndex + 1);
@@ -822,5 +1004,7 @@ export class RefactoringEngine {
     if (cachedRecord.localSuppressedRules) cachedRecord.localSuppressedRules.forEach(r => node.localSuppressedRules.add(r));
     if (cachedRecord.calculatedDynamicImports) node.calculatedDynamicImports = cachedRecord.calculatedDynamicImports;
     if (cachedRecord.isLibraryEntry !== undefined) node.isLibraryEntry = cachedRecord.isLibraryEntry;
+    if (cachedRecord.isEntry !== undefined) node.isEntry = cachedRecord.isEntry;
+    if (cachedRecord.isFrameworkComponent !== undefined) node.isFrameworkComponent = cachedRecord.isFrameworkComponent;
   }
 }

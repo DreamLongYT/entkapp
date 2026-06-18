@@ -1,3 +1,5 @@
+import path from 'path';
+
 export class OxcAnalyzer {
   constructor(context) {
     this.context = context;
@@ -8,8 +10,7 @@ export class OxcAnalyzer {
   async init() {
     if (this.isAvailable) return true;
     try {
-      const oxc = await import("oxc-parser");
-      this.oxc = oxc;
+      this.oxc = await import("oxc-parser");
       this.isAvailable = true;
       return true;
     } catch (e) {
@@ -36,42 +37,55 @@ export class OxcAnalyzer {
     }
 
     try {
-      // Fix: Ensure filePath is correctly handled for OXC (Windows path issue)
-      const normalizedPath = filePath.replace(/\\/g, '/');
+      // Fix: Remove BOM if present (confuses some Rust parsers)
+      const cleanContent = content.startsWith('\uFEFF') ? content.slice(1) : content;
       
-      // Try passing the path directly as the second argument if the object-based options fail
-      // Some versions of oxc-parser expect a string as the second argument for the filename
+      // Fix: Use absolute path with forward slashes for OXC (most stable for Rust on Windows)
+      const normalizedPath = filePath.replace(/\\/g, '/');
+      const normalizedContent = cleanContent.replace(/\/([gimuy]*)([nh]+)([gimuy]*)/g, (match, p1, p2, p3) => {
+        if (this.context.verbose) console.log(`[OXC] Normalizing regex flag: ${p2} at ${filePath}`);
+        return `/${p1}${p3}`;
+      });
       let result;
       try {
-        result = this.oxc.parseSync(content, {
-          sourceType: "module",
-          sourceFilename: normalizedPath,
-          lang: "typescript"
-        });
+        // ONLY USE FLAT SIGNATURE: parseSync(sourceText, sourceFilename)
+        // This avoids the "rust type String" conversion error seen with configuration objects.
+        result = this.oxc.parseSync(normalizedContent, normalizedPath);
       } catch (e) {
-        // Fallback for versions that expect the path as second argument
-        result = this.oxc.parseSync(content, normalizedPath);
+        // Silent fallback to TS Compiler if OXC fails
+        return false;
+      }
+
+      if (this.context.verbose) {
+        console.log(`[OXC] Parsed ${filePath} using flat signature`);
       }
 
       // Fix: Handle cases where OXC returns a JSON string instead of an object
       // Stabilize result through JSON round-trip to fix N-API conversion issues on Windows
-      let parsedResult;
+let parsedResult;
       try {
         parsedResult = typeof result === 'string' ? JSON.parse(result) : JSON.parse(JSON.stringify(result));
       } catch (err) {
-        if (typeof result === 'object') {
-          parsedResult = result; // Last resort
-        } else {
-          throw new Error("OXC returned an invalid format");
-        }
+        parsedResult = result;
+      }
+      // REPORT OXC ERRORS: If the parser found syntax errors, show them in verbose mode
+      if (this.context.verbose && parsedResult.errors && parsedResult.errors.length > 0) {
+        console.log(`[OXC] ❌ Parser reported ${parsedResult.errors.length} errors for ${normalizedPath}:`);
+        parsedResult.errors.forEach(err => console.log(`  - ${err.message || err}`));
       }
 
-      let ast;
+      let ast = (parsedResult && parsedResult.program) ? parsedResult : { program: parsedResult };
+      fileNode.ast = ast.program;
+      fileNode.jsxComponents = new Set();
+      fileNode.jsxProps = new Set();
+      fileNode.decorators = new Set();
       if (parsedResult && typeof parsedResult === 'object') {
         if (parsedResult.program) {
           ast = parsedResult;
         } else if (parsedResult.ast) {
           ast = { program: parsedResult.ast };
+        } else if (parsedResult.body || parsedResult.type === 'Program') {
+          ast = { program: parsedResult };
         } else {
           ast = { program: parsedResult };
         }
@@ -84,7 +98,44 @@ export class OxcAnalyzer {
       fileNode.jsxProps = new Set();
       fileNode.decorators = new Set();
 
+      if (this.context.verbose) {
+        console.log(`[OXC] Analyzing ${filePath}`);
+      }
       this.walkOxcAst(ast.program, fileNode, content);
+      
+      // 7. Success confirmation
+      if (this.context.verbose) {
+        console.log(`[OXC] Successfully parsed and analyzed ${filePath}`);
+      }
+      // Fallback: If OXC found 0 imports but the file has content that looks like it has imports, 
+      // return false to trigger the TS Compiler API fallback. This is a safety anchor.
+      if (fileNode.explicitImports.size === 0 && (content.includes('import') || content.includes('export')) && content.length > 50) {
+        if (this.context.verbose) {
+          console.log(`[OXC] ⚠️ Parser yielded 0 imports/exports for ${filePath}. Engaging TS Compiler fallback for accuracy.`);
+          
+          // DEEP DIAGNOSTICS: Inspect the first few nodes of the AST to see what OXC is actually producing
+          if (ast.program && ast.program.body && ast.program.body.length > 0) {
+            console.log(`[OXC-DEBUG] AST Program Body Length: ${ast.program.body.length}`);
+            const firstNodes = ast.program.body.slice(0, 3).map(n => ({
+              type: n.type,
+              hasSource: !!n.source,
+              hasDeclaration: !!n.declaration,
+              specifiersCount: n.specifiers ? n.specifiers.length : 0
+            }));
+            console.log(`[OXC-DEBUG] First 3 Nodes structure: ${JSON.stringify(firstNodes, null, 2)}`);
+          } else {
+            console.log(`[OXC-DEBUG] AST Program Body is EMPTY or UNDEFINED.`);
+          }
+        }
+        return false;
+      }
+
+      if (this.context.verbose) {
+        console.log(`[OXC] Found ${fileNode.explicitImports.size} imports in ${filePath}`);
+        if (fileNode.explicitImports.size > 0) {
+          console.log(`[OXC] Imports for ${filePath}: ${Array.from(fileNode.explicitImports).join(', ')}`);
+        }
+      }
       
       const lines = content.split('\n');
       const getLineCol = (pos) => {
@@ -154,6 +205,7 @@ export class OxcAnalyzer {
   }
 
   handleImportDeclaration(node, fileNode) {
+    if (!node.source || typeof node.source.value !== 'string') return;
     const specifier = node.source.value;
     fileNode.explicitImports.add(specifier);
 
@@ -164,8 +216,11 @@ export class OxcAnalyzer {
     if (node.specifiers) {
       node.specifiers.forEach((spec) => {
         if (spec.type === "ImportSpecifier") {
-          const importedName = spec.imported.name || (spec.imported.type === "Identifier" ? spec.imported.name : spec.imported.value);
-          fileNode.importedSymbols.add(`${specifier}:${importedName}`);
+          // In OXC, imported name can be in .imported.name or .imported.value
+          const importedName = spec.imported.name || spec.imported.value || (spec.imported.type === "Identifier" ? spec.imported.name : null);
+          if (importedName) {
+            fileNode.importedSymbols.add(`${specifier}:${importedName}`);
+          }
         } else if (spec.type === "ImportDefaultSpecifier") {
           fileNode.importedSymbols.add(`${specifier}:default`);
         } else if (spec.type === "ImportNamespaceSpecifier") {

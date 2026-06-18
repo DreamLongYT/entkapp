@@ -45,14 +45,13 @@ export class DependencyResolver {
     // we should try to resolve the .ts version first.
     let effectiveSpecifier = importSpecifier;
     const isTsFile = /\.(ts|tsx|mts|cts)$/.test(containingFile);
-    if (isTsFile && importSpecifier.endsWith('.js')) {
-        // Try replacing .js with .ts
+    if (importSpecifier.endsWith('.js')) {
         const tsSpecifier = importSpecifier.replace(/\.js$/, '.ts');
         try {
             const resolvedTs = this.nativeResolver(containingDir, tsSpecifier);
             if (this.isAbsoluteInternalPath(resolvedTs)) return resolvedTs;
         } catch (e) {
-            // Fall back to original specifier if .ts version doesn't exist
+            // Fall back to original specifier
         }
     }
     // -----------------------------------------
@@ -106,7 +105,7 @@ export class DependencyResolver {
         } catch {}
       }
       if (this.context.verbose) {
-        console.debug(`[Resolution Trace Skip] Specifier unresolvable: ${effectiveSpecifier} inside ${containingFile}`);
+        console.log(`[Resolution Trace Skip] Specifier unresolvable: ${effectiveSpecifier} inside ${containingFile}`);
       }
     }
 

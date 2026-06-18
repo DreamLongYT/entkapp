@@ -62,6 +62,11 @@ export class DeadCodeDetector {
           }
         }
 
+        // Additional check for library entries or index files
+        if (!isUsed && (node.isLibraryEntry || filePath.toLowerCase().includes('index'))) {
+          isUsed = true;
+        }
+
         if (!isUsed) {
           deadExports.push({ file: filePath, symbol: exportName, line: exportInfo.start });
         }
