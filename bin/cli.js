@@ -28,7 +28,7 @@ async function bootstrap() {
     program
       .name('entkapp')
       .description(ansis.cyan('Enterprise-Grade AST Syntax Refactoring & Self-Healing Engine'))
-      .version(packageJsonContent.version || '4.4.0');
+      .version(packageJsonContent.version || '4.4.1');
 
     program
       .option('-c, --cwd <path>', 'Specify the execution context root directory', process.cwd())
@@ -36,6 +36,7 @@ async function bootstrap() {
       .option('--fix', 'Enable atomic code updates, structural file pruning, and active type sanitization', false)
       .option('--tsconfig <filename>', 'Specify path to custom layout configurations', 'tsconfig.json')
       .option('--test-command <command>', 'Integrated continuous safety test validation script execution path', 'npm test')
+      .option('--no-fix', 'Deprecated flag, this is now default')
       .option('--workspace', 'Enable high-density workspace workspace/monorepo cluster mesh evaluation parsing', false)
       .option('--verbose', 'Toggle expanded trace telemetry for debug operational diagnostics', false)
       .option('-r, --run', 'Execute the primary operational pipeline loop', false)
@@ -44,7 +45,10 @@ async function bootstrap() {
 
     program.parse(process.argv);
     const options = program.opts();
-
+    if (args.includes('--no-fix')) {
+      console.warn("\n⚠️  [DEPRECATION] The --no-fix flag is deprecated. No-fix is now the default behavior.");
+      console.warn("👉 To apply structural changes, use the --fix flag instead.\n");
+    }
     const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
 
     // --- Onboarding Check (Skipped in Non-Interactive Mode) ---
@@ -65,7 +69,7 @@ async function bootstrap() {
         const answer = await rl.question(ansis.bold.yellow('❓ No "entkapp:run" script found in package.json. Install it? (y/n): '));
         if (answer.toLowerCase() === 'y') {
           pkgJson.scripts = pkgJson.scripts || {};
-          pkgJson.scripts['entkapp:run'] = 'npx entkapp --fix';
+          pkgJson.scripts['entkapp:run'] = 'npx entkapp';
           await fs.writeFile(pkgJsonPath, JSON.stringify(pkgJson, null, 2));
           console.log(ansis.green('✅ "entkapp:run" script added to package.json.'));
         }
@@ -89,7 +93,7 @@ async function bootstrap() {
             enabledPlugins: ["nextjs", "nuxt", "remix", "sveltekit", "astro"]
           };
           await fs.writeFile(path.join(configDirPath, 'config.json'), JSON.stringify(defaultConfig, null, 2));
-          console.log(ansis.green('✅ "/entkapp" folder? and default config created.'));
+          console.log(ansis.green('✅ "/entkapp" folder and default config created.'));
           configInstalled = true;
         }
       }
@@ -131,7 +135,7 @@ async function bootstrap() {
     }, timeoutMs);
     timeoutTimer.unref(); // Allow process to exit if work finishes
 
-    console.log(ansis.bold.green(`\n📦 entkapp v${packageJsonContent.version || '4.4.0'} Engine Activation`));
+    console.log(ansis.bold.green(`\n📦 entkapp v${packageJsonContent.version || '4.4.1'} Engine Activation`));
     console.log(ansis.dim('------------------------------------------------------------'));
     console.log(`${ansis.bold('Target Workspace Root :')} ${ansis.blue(targetCwd)}`);
     console.log(`${ansis.bold('Refactoring Mode     :')} ${options.fix ? ansis.yellow('Active Fixing & Self-Healing Enabled') : ansis.gray('Dry-Run Reporting Only')}`);

@@ -2,7 +2,7 @@
 layout: home
 
 hero:
-  name: entkapp v4.4.0
+  name: entkapp v4.4.1
   text: The Ultimate Enterprise Codebase Janitor
   tagline: Solving what Knip cannot. Circular-Aware & Self-Healing.
   image:

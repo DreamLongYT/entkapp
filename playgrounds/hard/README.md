@@ -15,10 +15,10 @@ Enterprise patterns, side effects, and deep trees.
 You can run the engines directly in the terminal (e.g., on StackBlitz). Here are the commands for the Zero-Config stress test:
 
 ### entkapp (Aggressive Refactoring Approach)
-Use the `@latest` tag to test the newest version. The `-r` (run) parameter starts the analysis, and `--no-fix` prevents direct file modifications (dry-run).
+Use the `@latest` tag to test the newest version. The `-r` (run) parameter starts the analysis.
 
 ```bash
-npx entkapp@latest -r --no-fix
+npx entkapp@latest -r
 ```
 
 ### knip (Precision Analysis Approach)
