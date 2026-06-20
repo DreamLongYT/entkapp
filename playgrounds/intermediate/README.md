@@ -4,9 +4,8 @@ Production-ready structure with types and barrels.
 ## Challenges:
 1. Detect `UnusedApp` in `src/app.ts`.
 2. Detect `UnusedConfig` and `UnusedType` in `src/types/index.ts`.
-3. Detect `Logger.error` as an unused member (harder for some engines).
-4. Detect `someHelper` in `src/utils/unused-util.ts` (re-exported via barrel).
-5. Identify `zod` as an unused dependency.
+3. Detect `someHelper` in `src/utils/unused-util.ts` (re-exported via barrel).
+4. Identify `zod` as an unused dependency.
 
 ### 📊 Ground Truth Summary
 - **0 Unused Files** (All files are correctly reachable from `app.ts` or `index.ts`)

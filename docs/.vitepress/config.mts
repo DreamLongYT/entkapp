@@ -41,7 +41,7 @@ export default defineConfig({
           { text: 'CSS-in-JS', link: '/css-in-js' },
           { text: 'Asset Tracking', link: '/asset-tracking' },
           { text: 'Monorepo Support', link: '/monorepo' },
-          { text: 'AI Self-Healing', link: '/ai-healing' },
+          { text: 'Automated Healing', link: '/automated-healing' },
           { text: 'Impact Analysis', link: '/impact-analysis' }
         ]
       },

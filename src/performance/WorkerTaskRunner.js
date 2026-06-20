@@ -64,7 +64,7 @@ async function runTask() {
           success = await oxcAnalyzer.parseFile(filePath, content, node);
         }
       } catch (oxcError) {
-        success = false; // Fehler abfangen, um den TS-Fallback zu erzwingen
+        success = false; // Catch error to force TS fallback
       }
       
       // UPGRADE: Improved fallback logic for CommonJS files in worker threads
@@ -78,8 +78,8 @@ async function runTask() {
       // 3. OXC found no dependencies but file has CommonJS keywords
       if (!success || (oxcFailedToFindDependencies && (hasImportExportKeywords || hasCommonJSKeywords))) {
         try {
-          // CRITICAL FIX: Scope-Reset für den TS-Parser im isolierten Thread-Kontext
-          // Verhindert, dass unvollständige Scope-Ketten der vorangegangenen Datei zu 'children of undefined' führen
+          // CRITICAL FIX: Scope reset for the TS parser in isolated thread context
+          // Prevents incomplete scope chains from the previous file from leading to 'children of undefined'
           astAnalyzer.currentScope = { symbols: new Map(), parent: null, children: [] };
           astAnalyzer.scopeStack = [astAnalyzer.currentScope];
           astAnalyzer.scopeCounter = 0;
@@ -87,14 +87,14 @@ async function runTask() {
           await astAnalyzer.parseFile(filePath, content, node);
         } catch (tsError) {
           if (contextOptions.verbose) {
-            console.error(`[Worker-Fallback-Error] TS-Parser versagte bei ${filePath}: ${tsError.message}`);
+            console.error(`[Worker-Fallback-Error] TS parser failed at ${filePath}: ${tsError.message}`);
           }
           results.push(null);
           continue;
         }
       }
 
-      // Sichere Serialisierung: Verhindert Abstürze, falls internalExports oder symbolSourceLocations keine Maps mehr sind
+      // Safe serialization: Prevents crashes if internalExports or symbolSourceLocations are no longer Maps
       const serializedExports = node.internalExports instanceof Map 
         ? Object.fromEntries(node.internalExports) 
         : {};
@@ -129,9 +129,9 @@ async function runTask() {
       });
     } catch (err) {
       if (contextOptions.verbose) {
-        console.error(`[Worker-Loop-Exception] Fehler bei Datei ${filePath}: ${err.message}`);
+        console.error(`[Worker-Loop-Exception] Error in file ${filePath}: ${err.message}`);
       }
-      results.push(null); // Modul überspringen, Thread am Leben erhalten
+      results.push(null); // Skip module, keep thread alive
     }
   }
 

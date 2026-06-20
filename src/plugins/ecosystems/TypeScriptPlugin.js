@@ -3,20 +3,24 @@ import fs from 'fs/promises';
 import { BasePlugin } from '../BasePlugin.js';
 
 /**
- * TypeScript Plugin for entkapp.
- * Handles tsconfig.json detection and TypeScript-specific entry points.
+ * TypeScript Plugin for entkapp v5.0.0.
+ * Handles tsconfig.json detection, TypeScript-specific entry points,
+ * and missing dependency detection.
  */
 export class TypeScriptPlugin extends BasePlugin {
     get name() {
         return 'typescript';
     }
-
     getConfigFiles() {
-        return ['tsconfig.json', 'tsconfig.base.json', 'tsconfig.eslint.json'];
+        return ['tsconfig.json', 'tsconfig.base.json', 'tsconfig.eslint.json', 'tsconfig.node.json', 'tsconfig.app.json'];
     }
-
+    getRequiredPackages() {
+        return [
+            { name: 'typescript', dev: true },
+            { name: '@types/node', dev: true, optional: true },
+        ];
+    }
     getRoutePatterns() {
-        // Common TypeScript entry points and declaration files
         return [
             /src\/index\.ts$/,
             /src\/main\.ts$/,
@@ -24,12 +28,9 @@ export class TypeScriptPlugin extends BasePlugin {
             /.*\.d\.ts$/
         ];
     }
-
     getRequiredSystemContracts() {
-        // TypeScript specific implicit exports or requirements
         return ['default'];
     }
-
     /**
      * Custom Getter for v3.2.0: Get the compiler version from the project.
      */
@@ -43,7 +44,6 @@ export class TypeScriptPlugin extends BasePlugin {
             return 'not installed';
         }
     }
-
     async isActive(baseDir) {
         for (const file of this.getConfigFiles()) {
             try {

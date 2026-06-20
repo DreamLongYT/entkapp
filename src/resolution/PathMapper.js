@@ -7,7 +7,7 @@ export class PathMapper {
   }
   
   async loadMappings() {
-    // Hier können später tsconfig-Pfade geladen werden
+    // Tsconfig paths can be loaded here later
   }
 
   /**
@@ -18,19 +18,19 @@ export class PathMapper {
   resolvePath(p) {
     if (!p || typeof p !== 'string') return p;
 
-    // FIX 1: Wenn der Import auf .js endet, übersetze ihn für die Suche auf .ts
+    // FIX 1: If the import ends with .js, translate it to .ts for the search
     if (p.endsWith('.js')) {
       const tsPath = p.slice(0, -3) + '.ts';
       if (fs.existsSync(tsPath)) return tsPath;
     }
 
-    // FIX 2: Wenn der Import auf .jsx endet, übersetze ihn für die Suche auf .tsx
+    // FIX 2: If the import ends with .jsx, translate it to .tsx for the search
     if (p.endsWith('.jsx')) {
       const tsxPath = p.slice(0, -4) + '.tsx';
       if (fs.existsSync(tsxPath)) return tsxPath;
     }
 
-    // FIX 3: Unterstützung für Verzeichnis-Imports (z.B. ./adapters -> ./adapters/index.ts)
+    // FIX 3: Support for directory imports (z.B. ./adapters -> ./adapters/index.ts)
     try {
       const stat = fs.statSync(p);
       if (stat.isDirectory()) {
@@ -41,7 +41,7 @@ export class PathMapper {
         }
       }
     } catch {
-      // Datei existiert nicht oder ist kein Verzeichnis, fahre mit Standard fort
+      // File does not exist or is not a directory, continue with default
     }
 
     return p; 

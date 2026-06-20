@@ -2,7 +2,7 @@
 
 ## Overview
 
-This guide covers common issues you might encounter while using entkapp v4.0 and provides solutions to resolve them.
+This guide covers common issues you might encounter while using entkapp v5.2.0 and provides solutions to resolve them.
 
 ## General Issues
 
@@ -42,26 +42,26 @@ This guide covers common issues you might encounter while using entkapp v4.0 and
 ## Plugin Issues
 
 ### "Plugin must implement name getter"
-- **Cause**: You are using a custom plugin designed for v3.0 that hasn't been updated for v4.0.
+- **Cause**: You are using a custom plugin designed for older versions that hasn't been updated.
 - **Solution**: Update your plugin class to include a `get name()` method.
 
-### Knip plugins not working
-- **Cause**: Knip compatibility mode is disabled or the Knip plugin is not installed.
-- **Solution**:
-  - Ensure `supportKnipPlugins: true` is in your `config.json`.
-  - Ensure the corresponding Knip plugin is installed in your `node_modules`.
-
-## AI Healing Issues
-
-### "AI proposing incorrect changes"
+### "Dependency resolution failed"
+- **Cause**: Complex tsConfig paths or missing workspace symlinks.
 - **Solution**: 
-  - Lower the `temperature` in your AI config.
-  - Provide more context by increasing the `contextWindow` setting.
-  - Use a more capable model like `gpt-4-turbo`.
+  - Verify your `tsconfig.json` paths.
+  - Ensure you have run `npm install` or `pnpm install` in your monorepo.
 
-### "Authentication failed"
-- **Cause**: Missing or invalid API key.
-- **Solution**: Set the appropriate environment variable (e.g., `OPENAI_API_KEY`).
+## Automated Healing Issues
+
+### "Healing proposing incorrect changes"
+- **Solution**: 
+  - Review the proposed changes in dry-run mode first.
+  - Ensure your test suite is comprehensive, as the healer relies on tests for verification.
+  - Use more specific `ignore` rules to protect sensitive code areas.
+
+### "Rollback failed"
+- **Cause**: Git state was modified during the healing process.
+- **Solution**: Ensure your working directory is clean before running with `--fix`.
 
 ## Monorepo Issues
 

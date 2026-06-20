@@ -30,8 +30,8 @@ Here you'll find various types of import cycles:
 ### 5. Summary (The Ground Truth)
 
 - **38 Unused / Orphaned Files** (Including `src/hooks`, `src/components`, and `src/legacy`)
-- **258+ Unused Exports** (Counting cascading dead code and unreferenced members)
-- **3 Unused Dependencies** (`zod`, `lodash`, and `knip`)
+- **132 Unused Exports**
+- **2 Unused Dependencies** (`lodash`, and `knip`)
 - **9 Circular Dependencies** (From simple cycles to deep chains)
 ---
 

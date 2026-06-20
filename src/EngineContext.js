@@ -189,7 +189,7 @@ export class EngineContext {
             });
 
             // --- PLUGIN-BASED ECOSYSTEM DETECTION ---
-            // Plugins will now handle their own erreichbarkeit and dependency validation.
+            // Plugins will now handle their own reachability and dependency validation.
             if (this.pluginRegistry) {
                 const activePlugins = await this.pluginRegistry.getActivePlugins(pkgDir);
                 for (const plugin of activePlugins) {

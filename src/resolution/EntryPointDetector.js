@@ -9,8 +9,8 @@ export class EntryPointDetector {
     }
 
     /**
-     * Ermittelt alle potenziellen Entry-Points eines Projekts.
-     * @returns {Set<string>} Set von absoluten Pfaden.
+     * Detects all potential entry points of a project.
+     * @returns {Set<string>} Set of absolute paths.
      */
     detect() {
         const entries = new Set();
@@ -18,7 +18,7 @@ export class EntryPointDetector {
         // 1. package.json Standards
         this._addFromPackageJson(entries);
 
-        // 2. Framework-spezifische Pfade
+        // 2. Framework-specific paths
         this._addFromFrameworks(entries);
 
         // 3. Fallbacks / Konventionen
@@ -99,7 +99,7 @@ export class EntryPointDetector {
     }
 
     _addIfExist(entries, relativePath) {
-        // Bereinige Pfad (entferne ./ etc)
+        // Clean path (remove ./ etc)
         const cleanPath = relativePath.replace(/^(\.\/|\/)/, '');
         const absolutePath = path.resolve(this.targetDir, cleanPath);
         

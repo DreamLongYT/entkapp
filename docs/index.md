@@ -2,9 +2,9 @@
 layout: home
 
 hero:
-  name: entkapp v5.1.0
-  text: The Ultimate Enterprise Codebase Janitor
-  tagline: Solving what Knip cannot. Circular-Aware & Self-Healing.
+  name: entkapp v5.2.0
+  text: The Ultimate Hybrid Engine
+  tagline: Rock-Solid v7 Core meets High-Speed v9 Innovations. Solving what Knip cannot.
   image:
     src: /logo.png
     alt: entkapp

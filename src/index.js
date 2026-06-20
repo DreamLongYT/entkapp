@@ -3,6 +3,7 @@ import { SecretScanner } from './ast/SecretScanner.js';
 import { AdvancedAnalysis } from './ast/AdvancedAnalysis.js';
 import { WorkspaceDiagnostic } from './resolution/WorkspaceDiagnostic.js';
 import { DeadCodeDetector } from './ast/DeadCodeDetector.js';
+import { CodeSmellAnalyzer } from './analyzers/CodeSmellAnalyzer.js';
 
 /**
  * ============================================================================
@@ -87,6 +88,7 @@ export class RefactoringEngine {
     this.advancedAnalysis = new AdvancedAnalysis(this.context);
     this.workspaceDiagnostic = new WorkspaceDiagnostic(this.context);
     this.deadCodeDetector = new DeadCodeDetector(this.context);
+    this.codeSmellAnalyzer = new CodeSmellAnalyzer(this.context);
   }
 
   /**
@@ -210,6 +212,9 @@ export class RefactoringEngine {
             success = await this.oxcAnalyzer.parseFile(filePath, fileContent, node);
           }
           
+          // --- DEEP STATIC ANALYSIS ---
+          this.codeSmellAnalyzer.analyze(node);
+          
           // UPGRADE: Improved fallback logic for CommonJS files
           const hasImportExportKeywords = fileContent.includes('import') || fileContent.includes('export');
           const hasCommonJSKeywords = fileContent.includes('require') || fileContent.includes('module.exports') || fileContent.includes('exports.');
@@ -260,7 +265,45 @@ export class RefactoringEngine {
         'nuxt': 'nuxt',
         'remix': '@remix-run/dev',
         'sveltekit': '@sveltejs/kit',
-        'astro': 'astro'
+        'astro': 'astro',
+        'express': 'express',
+        'fastify': 'fastify',
+        'nestjs': '@nestjs/core',
+        'prisma': '@prisma/client',
+        'hono': 'hono',
+        'koa': 'koa',
+        'strapi': '@strapi/strapi',
+        'adonisjs': '@adonisjs/core',
+        'trpc': '@trpc/server',
+        'typeorm': 'typeorm',
+        'sequelize': 'sequelize',
+        'mongoose': 'mongoose',
+        'drizzle': 'drizzle-orm',
+        'redux': 'redux',
+        'mobx': 'mobx',
+        'tanstack-query': '@tanstack/react-query',
+        'zustand': 'zustand',
+        'jotai': 'jotai',
+        'recoil': 'recoil',
+        'xstate': 'xstate',
+        'pinia': 'pinia',
+        'framer-motion': 'framer-motion',
+        'gsap': 'gsap',
+        'threejs': 'three',
+        'web3': 'web3',
+        'ethers': 'ethers',
+        'clerk': '@clerk/nextjs',
+        'supabase': '@supabase/supabase-js',
+        'firebase': 'firebase',
+        'graphql': 'graphql',
+        'socketio': 'socket.io',
+        'antd': 'antd',
+        'mui': '@mui/material',
+        'chakra': '@chakra-ui/react',
+        'mantine': '@mantine/core',
+        'preact': 'preact',
+        'swiper': 'swiper',
+        'quill': 'quill'
       };
 
       activeFrameworkEcosystems.forEach(ecosystem => {
@@ -286,7 +329,7 @@ export class RefactoringEngine {
         console.log(ansis.bold.red('  🚨 ALARM: Keine einzige Datei wurde als Entry Point markiert!'));
       }
 
-      // Markiere Workspace-Pakete als genutzt, um Fehlalarme im Manifest-Auditor zu blockieren
+      // Mark workspace packages as used to block false alarms in the manifest auditor
       if (this.context.isWorkspaceEnabled) {
         this.workspaceGraph.markWorkspacePackagesAsUsed();
       }
@@ -663,6 +706,9 @@ export class RefactoringEngine {
         }
       }
 
+      // Final diagnostics report
+      this.reportDiagnostics();
+
       await this.cacheManager.saveCacheManifest(this.context.projectGraph);
       if (rl) rl.close();
       console.log(ansis.bold.green('\n✨ Core optimization cycle completed smoothly. Codebase workspace is healthy.'));
@@ -721,6 +767,27 @@ export class RefactoringEngine {
         resolve();
       });
     });
+  }
+
+  reportDiagnostics() {
+    console.log(ansis.bold.cyan('\n🔍 Deep Static Analysis Report (Code Smells & Risks):'));
+    let totalIssues = 0;
+    for (const [filePath, node] of this.context.projectGraph.entries()) {
+      if (node.diagnostics && node.diagnostics.length > 0) {
+        const relPath = path.relative(this.context.cwd, filePath);
+        console.log(ansis.yellow(`\n📄 ${relPath}:`));
+        node.diagnostics.forEach(issue => {
+          totalIssues++;
+          console.log(ansis.red(`  [${issue.severity.toUpperCase()}] Line ${issue.line}: ${issue.message}`));
+          console.log(ansis.dim(`  📖 Learn more: ${issue.link}`));
+        });
+      }
+    }
+    if (totalIssues === 0) {
+      console.log(ansis.green('  ✅ No critical code smells or runtime risks detected.'));
+    } else {
+      console.log(ansis.bold.yellow(`\n⚠️  Found ${totalIssues} potential issues. Please review the links above.`));
+    }
   }
 
   async discoverSourceFiles(dir, fileList) {
@@ -878,7 +945,7 @@ export class RefactoringEngine {
 
       node.isEntry = finalIsEntry;
       if (finalIsEntry && this.context.options.verbose) {
-        console.log(`🎯 [ENTRY POINT CONFIRMED] Wurzel gesichert: ${path.relative(this.context.cwd, absPath)}`);
+        console.log(`🎯 [ENTRY POINT CONFIRMED] Root secured: ${path.relative(this.context.cwd, absPath)}`);
       }
     }
   }
