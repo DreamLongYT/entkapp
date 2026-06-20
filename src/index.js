@@ -498,40 +498,63 @@ export class RefactoringEngine {
         }
       }
 
+      // UPGRADE: Unlisted Dependency Audit (Unified Root & Workspace)
+      const auditManifests = [];
+      // 1. Collect Root Manifest
+      const rootPkgPath = path.join(this.context.cwd, 'package.json');
+      if (existsSync(rootPkgPath)) {
+        auditManifests.push({
+          rootDirectory: this.context.cwd,
+          manifestPath: rootPkgPath
+        });
+      }
+      // 2. Collect Workspace Manifests
       if (this.workspaceGraph && this.workspaceGraph.packageManifests) {
         for (const [_, metadata] of this.workspaceGraph.packageManifests.entries()) {
-          if (this.context.projectGraph) {
-            for (const [filePath, fileNode] of this.context.projectGraph.entries()) {
-              const cleanRelative = path.relative(metadata.rootDirectory, filePath).replace(/\\/g, '/');
-              
-              if (!cleanRelative.startsWith('..') && !cleanRelative.startsWith('/') && fileNode.explicitImports) {
-                try {
-                  const localManifest = JSON.parse(readFileSync(metadata.manifestPath, 'utf8'));
-                  const localDeps = new Set([
-                    ...Object.keys(localManifest.dependencies || {}),
-                    ...Object.keys(localManifest.devDependencies || {}),
-                    ...Object.keys(localManifest.peerDependencies || {})
-                  ]);
+          auditManifests.push(metadata);
+        }
+      }
 
-                  fileNode.explicitImports.forEach(specifier => {
-                    if (specifier.startsWith('.') || specifier.startsWith('/')) return;
-                    const basePkg = specifier.startsWith('@') ? specifier.split('/').slice(0, 2).join('/') : specifier.split('/')[0];
-                    
-                    if (!localDeps.has(basePkg)) {
-                      const alreadyFlagged = this.context.unlistedDependencies.some(u => u.package === basePkg && u.file === filePath);
-                      if (!alreadyFlagged) {
-                        this.context.unlistedDependencies.push({
-                          package: basePkg,
-                          file: path.relative(this.context.cwd, filePath),
-                          manifest: path.relative(this.context.cwd, metadata.manifestPath)
-                        });
-                      }
+      for (const metadata of auditManifests) {
+        if (this.context.projectGraph) {
+          for (const [filePath, fileNode] of this.context.projectGraph.entries()) {
+            const cleanRelative = path.relative(metadata.rootDirectory, filePath).replace(/\\/g, '/');
+            
+            // Check if file belongs to this manifest's directory scope
+            if (!cleanRelative.startsWith('..') && !cleanRelative.startsWith('/') && fileNode.explicitImports) {
+              try {
+                const localManifest = JSON.parse(readFileSync(metadata.manifestPath, 'utf8'));
+                const localDeps = new Set([
+                  ...Object.keys(localManifest.dependencies || {}),
+                  ...Object.keys(localManifest.devDependencies || {}),
+                  ...Object.keys(localManifest.peerDependencies || {}),
+                  ...Object.keys(localManifest.optionalDependencies || {})
+                ]);
+
+                fileNode.explicitImports.forEach(specifier => {
+                  if (specifier.startsWith('.') || specifier.startsWith('/')) return;
+                  
+                  // Extract base package name (handle scoped packages)
+                  const basePkg = specifier.startsWith('@') ? specifier.split('/').slice(0, 2).join('/') : specifier.split('/')[0];
+                  
+                  // Ignore Node.js built-ins
+                  const nodeBuiltins = ['assert', 'async_hooks', 'buffer', 'child_process', 'cluster', 'console', 'constants', 'crypto', 'dgram', 'dns', 'domain', 'events', 'fs', 'http', 'http2', 'https', 'inspector', 'module', 'net', 'os', 'path', 'perf_hooks', 'process', 'punycode', 'querystring', 'readline', 'repl', 'stream', 'string_decoder', 'timers', 'tls', 'trace_events', 'tty', 'url', 'util', 'v8', 'vm', 'worker_threads', 'zlib'];
+                  if (nodeBuiltins.includes(basePkg) || nodeBuiltins.includes(basePkg.replace('node:', ''))) return;
+
+                  if (!localDeps.has(basePkg)) {
+                    const alreadyFlagged = this.context.unlistedDependencies.some(u => u.package === basePkg && u.file === filePath);
+                    if (!alreadyFlagged) {
+                      this.context.unlistedDependencies.push({
+                        package: basePkg,
+                        file: path.relative(this.context.cwd, filePath),
+                        manifest: path.relative(this.context.cwd, metadata.manifestPath)
+                      });
                     }
-                  });
-                } catch (error) {
-                  if (this.context.options.verbose) {
-                    console.error(ansis.red(`      ❌ Manifest Parsing Exception: ${error.message}`));
                   }
+                });
+              } catch (error) {
+                if (this.context.options.verbose) {
+                  console.error(ansis.red(`      ❌ Manifest Parsing Exception: ${error.message}`));
                 }
               }
             }

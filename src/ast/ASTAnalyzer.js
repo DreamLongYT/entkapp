@@ -604,8 +604,14 @@ export class ASTAnalyzer {
       if (this.context.verbose) console.log(`[AST-DEBUG] Found require() call in ${fileNode.filePath}`);
       const arg = node.arguments[0];
       if (arg && ts.isStringLiteral(arg)) {
-        if (this.context.verbose) console.log(`[AST-DEBUG] Added import: ${arg.text}`);
-        fileNode.explicitImports.add(arg.text);
+        const specifier = arg.text;
+        if (this.context.verbose) console.log(`[AST-DEBUG] Added import: ${specifier}`);
+        fileNode.explicitImports.add(specifier);
+        
+        // UPGRADE: Also track package usage for unlisted dependency detection
+        if (!specifier.startsWith('.') && !specifier.startsWith('/')) {
+          fileNode.externalPackageUsage.add(this._extractPackageName(specifier));
+        }
       }
     }
   }
