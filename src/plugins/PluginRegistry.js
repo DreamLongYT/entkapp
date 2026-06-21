@@ -2,7 +2,7 @@ import { loadAdditionalPlugins } from "./ecosystems/PluginLoader.js";
 import path from 'path';
 import fs from 'fs/promises';
 import { pathToFileURL } from 'url';
-
+import { AllPluginClasses } from './ecosystems/UltimateBundle.js';
 /**
  * ============================================================================
  * Plugin Registry for entkapp v5.0.0
@@ -41,107 +41,12 @@ export class PluginRegistry {
         loadAdditionalPlugins(this);
 
         // Also load TypeScript and Next.js plugins (primary framework plugins)
-        const { ReactPlugin, VuePlugin, SveltePlugin, AngularPlugin, PreactPlugin, SolidPlugin, QwikPlugin, LitPlugin, NuxtPlugin, RemixPlugin, SvelteKitPlugin, AstroPlugin, VitepressPlugin, GatsbyPlugin, RedwoodPlugin, NextJsPlugin, TypeScriptPlugin, ExpressPlugin, FastifyPlugin, NestJsPlugin, HonoPlugin, KoaPlugin, ElysiaPlugin, GraphQLPlugin, ApolloPlugin, TRPCPlugin, DatabasePlugin, PrismaPlugin, DrizzlePlugin, MongoosePlugin, SupabasePlugin, FirebasePlugin, ClerkPlugin, ReduxPlugin, ZustandPlugin, JotaiPlugin, RecoilPlugin, MobXPlugin, PiniaPlugin, TanStackQueryPlugin, ReactRouterPlugin, TanStackRouterPlugin, VueRouterPlugin, AntdPlugin, MuiPlugin, ShadcnPlugin, RadixUIPlugin, ChakraUIPlugin, FramerMotionPlugin, GSAPPlugin, ZodPlugin, YupPlugin, ValibotPlugin, I18nextPlugin, VueI18nPlugin, SentryPlugin, OpenTelemetryPlugin, SocketIoPlugin, TailwindPlugin, PostcssPlugin, UnoCSSPlugin, StylelintPlugin, EslintPlugin, PrettierPlugin, BiomePlugin, OxlintPlugin, HuskyPlugin, LintStagedPlugin, CommitlintPlugin, ChangesetPlugin, BabelPlugin, SWCPlugin, VitePlugin, EsbuildPlugin, RollupPlugin, WebpackPlugin, ParcelPlugin, TurboPlugin, NxPlugin, JestPlugin, VitestPlugin, PlaywrightPlugin, CypressPlugin, StorybookPlugin, MswPlugin, GithubActionsPlugin, DockerPlugin, TerraformPlugin, EditorConfigPlugin, NvmPlugin, VoltaPlugin, DotenvPlugin, PnpmPlugin, YarnPlugin, BunPlugin, SwiperPlugin, QuillPlugin, EnvelopPlugin } = await import('./ecosystems/UltimateBundle.js');
-        this.register(new ReactPlugin(this.context));
-        this.register(new VuePlugin(this.context));
-        this.register(new SveltePlugin(this.context));
-        this.register(new AngularPlugin(this.context));
-        this.register(new PreactPlugin(this.context));
-        this.register(new SolidPlugin(this.context));
-        this.register(new QwikPlugin(this.context));
-        this.register(new LitPlugin(this.context));
-        this.register(new NuxtPlugin(this.context));
-        this.register(new RemixPlugin(this.context));
-        this.register(new SvelteKitPlugin(this.context));
-        this.register(new AstroPlugin(this.context));
-        this.register(new VitepressPlugin(this.context));
-        this.register(new GatsbyPlugin(this.context));
-        this.register(new RedwoodPlugin(this.context));
-        this.register(new NextJsPlugin(this.context));
-        this.register(new TypeScriptPlugin(this.context));
-        this.register(new ExpressPlugin(this.context));
-        this.register(new FastifyPlugin(this.context));
-        this.register(new NestJsPlugin(this.context));
-        this.register(new HonoPlugin(this.context));
-        this.register(new KoaPlugin(this.context));
-        this.register(new ElysiaPlugin(this.context));
-        this.register(new GraphQLPlugin(this.context));
-        this.register(new ApolloPlugin(this.context));
-        this.register(new TRPCPlugin(this.context));
-        this.register(new DatabasePlugin(this.context));
-        this.register(new PrismaPlugin(this.context));
-        this.register(new DrizzlePlugin(this.context));
-        this.register(new MongoosePlugin(this.context));
-        this.register(new SupabasePlugin(this.context));
-        this.register(new FirebasePlugin(this.context));
-        this.register(new ClerkPlugin(this.context));
-        this.register(new ReduxPlugin(this.context));
-        this.register(new ZustandPlugin(this.context));
-        this.register(new JotaiPlugin(this.context));
-        this.register(new RecoilPlugin(this.context));
-        this.register(new MobXPlugin(this.context));
-        this.register(new PiniaPlugin(this.context));
-        this.register(new TanStackQueryPlugin(this.context));
-        this.register(new ReactRouterPlugin(this.context));
-        this.register(new TanStackRouterPlugin(this.context));
-        this.register(new VueRouterPlugin(this.context));
-        this.register(new AntdPlugin(this.context));
-        this.register(new MuiPlugin(this.context));
-        this.register(new ShadcnPlugin(this.context));
-        this.register(new RadixUIPlugin(this.context));
-        this.register(new ChakraUIPlugin(this.context));
-        this.register(new FramerMotionPlugin(this.context));
-        this.register(new GSAPPlugin(this.context));
-        this.register(new ZodPlugin(this.context));
-        this.register(new YupPlugin(this.context));
-        this.register(new ValibotPlugin(this.context));
-        this.register(new I18nextPlugin(this.context));
-        this.register(new VueI18nPlugin(this.context));
-        this.register(new SentryPlugin(this.context));
-        this.register(new OpenTelemetryPlugin(this.context));
-        this.register(new SocketIoPlugin(this.context));
-        this.register(new TailwindPlugin(this.context));
-        this.register(new PostcssPlugin(this.context));
-        this.register(new UnoCSSPlugin(this.context));
-        this.register(new StylelintPlugin(this.context));
-        this.register(new EslintPlugin(this.context));
-        this.register(new PrettierPlugin(this.context));
-        this.register(new BiomePlugin(this.context));
-        this.register(new OxlintPlugin(this.context));
-        this.register(new HuskyPlugin(this.context));
-        this.register(new LintStagedPlugin(this.context));
-        this.register(new CommitlintPlugin(this.context));
-        this.register(new ChangesetPlugin(this.context));
-        this.register(new BabelPlugin(this.context));
-        this.register(new SWCPlugin(this.context));
-        this.register(new VitePlugin(this.context));
-        this.register(new EsbuildPlugin(this.context));
-        this.register(new RollupPlugin(this.context));
-        this.register(new WebpackPlugin(this.context));
-        this.register(new ParcelPlugin(this.context));
-        this.register(new TurboPlugin(this.context));
-        this.register(new NxPlugin(this.context));
-        this.register(new JestPlugin(this.context));
-        this.register(new VitestPlugin(this.context));
-        this.register(new PlaywrightPlugin(this.context));
-        this.register(new CypressPlugin(this.context));
-        this.register(new StorybookPlugin(this.context));
-        this.register(new MswPlugin(this.context));
-        this.register(new GithubActionsPlugin(this.context));
-        this.register(new DockerPlugin(this.context));
-        this.register(new TerraformPlugin(this.context));
-        this.register(new EditorConfigPlugin(this.context));
-        this.register(new NvmPlugin(this.context));
-        this.register(new VoltaPlugin(this.context));
-        this.register(new DotenvPlugin(this.context));
-        this.register(new PnpmPlugin(this.context));
-        this.register(new YarnPlugin(this.context));
-        this.register(new BunPlugin(this.context));
-        this.register(new SwiperPlugin(this.context));
-        this.register(new QuillPlugin(this.context));
-        this.register(new EnvelopPlugin(this.context));
-    }
+        
 
+        AllPluginClasses.forEach(PluginClass => {
+            this.register(new PluginClass(this.context));
+        });
+    }
     async loadCustomPlugins(projectRoot) {
         const pluginsDir = path.join(projectRoot, 'entkapp', 'plugins');
         try {
