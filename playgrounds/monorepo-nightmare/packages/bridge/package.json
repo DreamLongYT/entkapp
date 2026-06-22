@@ -1,0 +1,9 @@
+{
+  "name": "@nightmare/bridge",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "src/index.ts",
+  "dependencies": {
+    "@nightmare/core": "workspace:*"
+  }
+}

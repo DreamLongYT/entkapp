@@ -1,0 +1,10 @@
+{
+  "name": "@enterprise/services",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "src/index.ts",
+  "dependencies": {
+    "@enterprise/domain": "workspace:*",
+    "@enterprise/api": "workspace:*"
+  }
+}
