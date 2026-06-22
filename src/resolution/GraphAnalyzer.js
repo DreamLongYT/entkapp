@@ -10,6 +10,36 @@ export class GraphAnalyzer {
   constructor(context) {
     this.context = context;
     this.cwd = context.cwd;
+    // UPGRADE 5.4.3: Default Boundary Rules
+    this.boundaryRules = context.config?.boundaries || [
+      { from: 'packages/shared-*', to: 'apps/*', allow: false, message: 'Shared packages must not import from applications.' },
+      { from: '*', to: '**/internal/**', allow: false, message: 'Private internal utilities must not be imported externally.' }
+    ];
+  }
+
+  /**
+   * UPGRADE 5.4.3: Boundary Enforcement
+   * Checks if an import violates defined architectural boundaries.
+   */
+  checkBoundaries(fromPath, toPath) {
+    const relFrom = path.relative(this.cwd, fromPath).replace(/\\/g, '/');
+    const relTo = path.relative(this.cwd, toPath).replace(/\\/g, '/');
+
+    for (const rule of this.boundaryRules) {
+      const fromMatch = this._globMatch(relFrom, rule.from);
+      const toMatch = this._globMatch(relTo, rule.to);
+
+      if (fromMatch && toMatch && !rule.allow) {
+        return { violated: true, message: rule.message };
+      }
+    }
+    return { violated: false };
+  }
+
+  _globMatch(str, pattern) {
+    if (pattern === '*') return true;
+    const regex = new RegExp('^' + pattern.replace(/\*\*/g, '.*').replace(/\*/g, '[^/]*') + '$');
+    return regex.test(str);
   }
 
   /**
@@ -63,7 +93,41 @@ export class GraphAnalyzer {
       }
     }
 
-    return { deadFiles, zombieExports };
+    const unusedImports = [];
+    const boundaryViolations = [];
+
+    for (const [filePath, node] of graph.entries()) {
+      if (!reachable.has(filePath)) continue;
+
+      // UPGRADE 5.4.3: Check boundaries for every import
+      for (const impPath of node.explicitImports) {
+        if (graph.has(impPath)) {
+          const violation = this.checkBoundaries(filePath, impPath);
+          if (violation.violated) {
+            boundaryViolations.push({
+              file: path.relative(this.cwd, filePath).replace(/\\/g, '/'),
+              target: path.relative(this.cwd, impPath).replace(/\\/g, '/'),
+              message: violation.message
+            });
+          }
+        }
+      }
+      
+      if (node.localImportBindings) {
+        for (const [localName, meta] of node.localImportBindings.entries()) {
+          // Check if this local binding is used anywhere in the file
+          if (!node.instantiatedIdentifiers.has(localName)) {
+            unusedImports.push({
+              file: path.relative(this.cwd, filePath).replace(/\\/g, '/'),
+              specifier: meta.specifier,
+              symbol: meta.originalName === '*' ? 'Namespace' : meta.originalName
+            });
+          }
+        }
+      }
+    }
+
+    return { deadFiles, zombieExports, unusedImports, boundaryViolations };
   }
 
   _walk(filePath, reachable) {

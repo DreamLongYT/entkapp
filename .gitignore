@@ -11,3 +11,4 @@ build/
 !docs/.vitepress/theme/
 !docs/.vitepress/public/
 ignore/
+docs.*

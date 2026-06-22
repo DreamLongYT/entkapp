@@ -60,6 +60,33 @@ export class IncrementalCacheManager {
   }
 
   /**
+   * UPGRADE 5.4.3: Affected-Only Analysis
+   * Identifies which files need re-analysis based on Git changes or cache misses.
+   */
+  async getAffectedFiles(allFiles) {
+    const manifest = await this.loadCacheManifest();
+    const affected = [];
+    const unchanged = [];
+
+    for (const file of allFiles) {
+      const cached = manifest[file];
+      if (!cached) {
+        affected.push(file);
+        continue;
+      }
+
+      const currentHash = await this.computeHash(file);
+      if (currentHash !== cached.hash) {
+        affected.push(file);
+      } else {
+        unchanged.push({ path: file, data: cached });
+      }
+    }
+
+    return { affected, unchanged };
+  }
+
+  /**
    * Serializes the current active dependency graph, translating Maps and Sets into JSON schemas.
    * @param {Map<string, Object>} currentGraphState - In-memory structural project state map
    */

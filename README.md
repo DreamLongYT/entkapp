@@ -1,4 +1,4 @@
-# 🕸️ entkapp Ultimate v5.3.1
+# 🕸️ entkapp Ultimate v5.4.0
 
 > **The Ultimate Enterprise Codebase Janitor.** High-speed OXC integration, type-aware analysis, and automated structural healing. Fully standalone architectural orchestrator.
 
@@ -33,12 +33,6 @@ npm install -g entkapp
 Starts the interactive analysis:
 ```bash
 npx entkapp -r
-```
-
-### Headless Analysis Mode
-Ideal for CI/CD pipelines. Performs analysis without prompts and outputs JSON:
-```bash
-npx entkapp --analyze
 ```
 
 ### Auto-Fix Mode

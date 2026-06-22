@@ -265,7 +265,16 @@ export class ASTAnalyzer {
                 fileNode.explicitImports.add(specifier);
                 fileNode.importedSymbols.add(`${specifier}:*`);
                 if (!specifier.startsWith('.') && !specifier.startsWith('/')) {
-                  fileNode.externalPackageUsage.add(this._extractPackageName(specifier));
+                  // UPGRADE: Apply alias/workspace filtering before adding to externalPackageUsage
+                  const pkgNameReq = this._extractPackageName(specifier);
+                  let isInternalReq = false;
+                  if (this.context.pathMapper && typeof this.context.pathMapper.isTsconfigAlias === 'function') {
+                    if (this.context.pathMapper.isTsconfigAlias(specifier) || this.context.pathMapper.isTsconfigAlias(pkgNameReq)) isInternalReq = true;
+                  }
+                  if (!isInternalReq && this.context.workspaceGraph && typeof this.context.workspaceGraph.isLocalWorkspaceSpecifier === 'function') {
+                    if (this.context.workspaceGraph.isLocalWorkspaceSpecifier(specifier) || this.context.workspaceGraph.isLocalWorkspaceSpecifier(pkgNameReq)) isInternalReq = true;
+                  }
+                  if (!isInternalReq) fileNode.externalPackageUsage.add(pkgNameReq);
                 }
               } else if (arg && ts.isTemplateExpression(arg)) {
                 // Dynamic require with template literal
@@ -351,8 +360,40 @@ export class ASTAnalyzer {
       const specifier = node.moduleSpecifier.text;
       fileNode.explicitImports.add(specifier);
       
+      // UPGRADE 5.4.2: Distinguish between local aliases and workspace packages
       if (!specifier.startsWith('.') && !specifier.startsWith('/')) {
-        fileNode.externalPackageUsage.add(this._extractPackageName(specifier));
+        let isInternalAlias = false;
+        const pkgName = this._extractPackageName(specifier);
+
+        // UPGRADE: First check via isTsconfigAlias() — works even when the target file doesn't exist yet
+        if (this.context.pathMapper && typeof this.context.pathMapper.isTsconfigAlias === 'function') {
+          if (this.context.pathMapper.isTsconfigAlias(specifier) || this.context.pathMapper.isTsconfigAlias(pkgName)) {
+            isInternalAlias = true;
+          }
+        }
+
+        // UPGRADE: Check workspace packages (pnpm-workspace.yaml / package.json workspaces)
+        if (!isInternalAlias && this.context.workspaceGraph && typeof this.context.workspaceGraph.isLocalWorkspaceSpecifier === 'function') {
+          if (this.context.workspaceGraph.isLocalWorkspaceSpecifier(specifier) || this.context.workspaceGraph.isLocalWorkspaceSpecifier(pkgName)) {
+            isInternalAlias = true;
+          }
+        }
+
+        // Fallback: try resolvePath() — works when the target file exists on disk
+        if (!isInternalAlias && this.context.pathMapper && typeof this.context.pathMapper.resolvePath === 'function') {
+          const resolved = this.context.pathMapper.resolvePath(specifier);
+          if (resolved !== specifier && (resolved.startsWith('/') || resolved.includes(':'))) {
+            // Only mark as internal alias if it's NOT a registered workspace package
+            const isWorkspacePkg = this.context.workspaceGraph && this.context.workspaceGraph.isLocalWorkspaceSpecifier(pkgName);
+            if (!isWorkspacePkg) {
+              isInternalAlias = true;
+            }
+          }
+        }
+        
+        if (!isInternalAlias) {
+          fileNode.externalPackageUsage.add(pkgName);
+        }
       }
 
       if (this.context.workspaceGraph && typeof this.context.workspaceGraph.auditImportSpecifier === 'function') {
@@ -373,13 +414,28 @@ export class ASTAnalyzer {
           if (ts.isNamespaceImport(node.importClause.namedBindings)) {
             fileNode.importedSymbols.add(`${specifier}:*`);
             if (targetFile) this.context.importUsageRegistry.add(`${targetFile}:*`);
+            
+            // Track local name for unused import detection
+            if (!fileNode.localImportBindings) fileNode.localImportBindings = new Map();
+            fileNode.localImportBindings.set(node.importClause.namedBindings.name.text, { specifier, originalName: '*' });
           } else if (ts.isNamedImports(node.importClause.namedBindings)) {
             node.importClause.namedBindings.elements.forEach(element => {
               const importedName = element.propertyName ? element.propertyName.text : element.name.text;
+              const localName = element.name.text;
               fileNode.importedSymbols.add(`${specifier}:${importedName}`);
               if (targetFile) this.context.importUsageRegistry.add(`${targetFile}:${importedName}`);
+              
+              // Track local name for unused import detection
+              if (!fileNode.localImportBindings) fileNode.localImportBindings = new Map();
+              fileNode.localImportBindings.set(localName, { specifier, originalName: importedName });
             });
           }
+        }
+        
+        // Handle default import binding
+        if (node.importClause.name) {
+          if (!fileNode.localImportBindings) fileNode.localImportBindings = new Map();
+          fileNode.localImportBindings.set(node.importClause.name.text, { specifier, originalName: 'default' });
         }
       } else {
         // Side-Effect Import (import '...')
@@ -423,7 +479,22 @@ export class ASTAnalyzer {
     if (specifier) {
       fileNode.explicitImports.add(specifier);
       if (!specifier.startsWith('.') && !specifier.startsWith('/')) {
-        fileNode.externalPackageUsage.add(this._extractPackageName(specifier));
+        // UPGRADE: Apply the same alias/workspace filtering as handleImportDeclaration
+        const pkgNameExport = this._extractPackageName(specifier);
+        let isInternalAliasExport = false;
+        if (this.context.pathMapper && typeof this.context.pathMapper.isTsconfigAlias === 'function') {
+          if (this.context.pathMapper.isTsconfigAlias(specifier) || this.context.pathMapper.isTsconfigAlias(pkgNameExport)) {
+            isInternalAliasExport = true;
+          }
+        }
+        if (!isInternalAliasExport && this.context.workspaceGraph && typeof this.context.workspaceGraph.isLocalWorkspaceSpecifier === 'function') {
+          if (this.context.workspaceGraph.isLocalWorkspaceSpecifier(specifier) || this.context.workspaceGraph.isLocalWorkspaceSpecifier(pkgNameExport)) {
+            isInternalAliasExport = true;
+          }
+        }
+        if (!isInternalAliasExport) {
+          fileNode.externalPackageUsage.add(pkgNameExport);
+        }
       }
 
       if (!node.exportClause) {
@@ -587,7 +658,16 @@ export class ASTAnalyzer {
           fileNode.dynamicImports.add(specifier);
           fileNode.importedSymbols.add(`${specifier}:*`);
           if (!specifier.startsWith('.') && !specifier.startsWith('/')) {
-            fileNode.externalPackageUsage.add(this._extractPackageName(specifier));
+            // UPGRADE: Apply alias/workspace filtering before adding to externalPackageUsage
+            const pkgNameDyn = this._extractPackageName(specifier);
+            let isInternalDyn = false;
+            if (this.context.pathMapper && typeof this.context.pathMapper.isTsconfigAlias === 'function') {
+              if (this.context.pathMapper.isTsconfigAlias(specifier) || this.context.pathMapper.isTsconfigAlias(pkgNameDyn)) isInternalDyn = true;
+            }
+            if (!isInternalDyn && this.context.workspaceGraph && typeof this.context.workspaceGraph.isLocalWorkspaceSpecifier === 'function') {
+              if (this.context.workspaceGraph.isLocalWorkspaceSpecifier(specifier) || this.context.workspaceGraph.isLocalWorkspaceSpecifier(pkgNameDyn)) isInternalDyn = true;
+            }
+            if (!isInternalDyn) fileNode.externalPackageUsage.add(pkgNameDyn);
           }
         } else {
           // Non-literal dynamic import
@@ -608,9 +688,17 @@ export class ASTAnalyzer {
         if (this.context.verbose) console.log(`[AST-DEBUG] Added import: ${specifier}`);
         fileNode.explicitImports.add(specifier);
         
-        // UPGRADE: Also track package usage for unlisted dependency detection
+        // UPGRADE: Apply alias/workspace filtering before adding to externalPackageUsage
         if (!specifier.startsWith('.') && !specifier.startsWith('/')) {
-          fileNode.externalPackageUsage.add(this._extractPackageName(specifier));
+          const pkgNameCE = this._extractPackageName(specifier);
+          let isInternalCE = false;
+          if (this.context.pathMapper && typeof this.context.pathMapper.isTsconfigAlias === 'function') {
+            if (this.context.pathMapper.isTsconfigAlias(specifier) || this.context.pathMapper.isTsconfigAlias(pkgNameCE)) isInternalCE = true;
+          }
+          if (!isInternalCE && this.context.workspaceGraph && typeof this.context.workspaceGraph.isLocalWorkspaceSpecifier === 'function') {
+            if (this.context.workspaceGraph.isLocalWorkspaceSpecifier(specifier) || this.context.workspaceGraph.isLocalWorkspaceSpecifier(pkgNameCE)) isInternalCE = true;
+          }
+          if (!isInternalCE) fileNode.externalPackageUsage.add(pkgNameCE);
         }
       }
     }

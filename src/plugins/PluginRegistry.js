@@ -111,6 +111,31 @@ export class PluginRegistry {
         return this.plugins.get(name);
     }
 
+    /**
+     * Version 5.4.0: Collect entry points from all plugins for a given file.
+     * @param {string} content - The file content
+     * @param {string} filePath - The absolute path to the file
+     * @returns {Array<string>} List of detected entry points
+     */
+    detectEntryPointsFromContent(content, filePath) {
+        const entryPoints = [];
+        for (const plugin of this.plugins.values()) {
+            if (typeof plugin.detectEntryPoints === 'function') {
+                try {
+                    const detected = plugin.detectEntryPoints(content, filePath);
+                    if (Array.isArray(detected)) {
+                        entryPoints.push(...detected);
+                    }
+                } catch (e) {
+                    if (this.context?.verbose) {
+                        console.warn(`[PluginRegistry] Entry detection failed for plugin "${plugin.name}" on ${filePath}:`, e.message);
+                    }
+                }
+            }
+        }
+        return entryPoints;
+    }
+
     async getActivePlugins(baseDir) {
         const active = [];
         for (const plugin of this.plugins.values()) {
@@ -119,6 +144,25 @@ export class PluginRegistry {
             }
         }
         return active;
+    }
+
+    /**
+     * Version 5.3.0: Run content analysis on a node using all active plugins.
+     * @param {GraphNode} node - The node to analyze
+     * @param {string} filePath - The absolute path to the file
+     */
+    async runPluginAnalysis(node, filePath) {
+        for (const plugin of this.plugins.values()) {
+            if (typeof plugin.analyze === 'function') {
+                try {
+                    await plugin.analyze(node, filePath);
+                } catch (e) {
+                    if (this.context?.verbose) {
+                        console.warn(`[PluginRegistry] Analysis failed for plugin "${plugin.name}" on ${filePath}:`, e.message);
+                    }
+                }
+            }
+        }
     }
 
     /**

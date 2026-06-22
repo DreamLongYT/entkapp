@@ -109,7 +109,9 @@ export class TSConfigLoader {
         }
 
         const { paths, baseUrl } = parsedConfig.options;
-        const base = baseUrl ? path.resolve(this.targetDir, baseUrl) : this.targetDir;
+        // In ts.parseJsonConfigFileContent, baseUrl is already resolved to an absolute path if it was present
+        // If not, we fall back to targetDir
+        const base = baseUrl ? baseUrl : this.targetDir;
 
         return (source) => {
             // If no paths configured, still try baseUrl resolution

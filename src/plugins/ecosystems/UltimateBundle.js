@@ -8,6 +8,7 @@
 import path from 'path';
 import fs from 'fs/promises';
 import { BasePlugin } from '../BasePlugin.js';
+import { FrameworkConfigParser } from '../../resolution/FrameworkConfigParser.js';
 
 
 export class GraphQLPlugin extends BasePlugin {
@@ -211,6 +212,27 @@ export class NuxtPlugin extends BasePlugin {
     }
     return false;
   }
+  detectEntryPoints(content, filePath) {
+    if (this.getConfigFiles().some(f => filePath.endsWith(f))) {
+      const parser = new FrameworkConfigParser(this.context);
+      const { entries } = parser.parse(content, filePath);
+      return Array.from(entries);
+    }
+    return [];
+  }
+  async analyze(node, filePath) {
+    if (this.getConfigFiles().some(f => filePath.endsWith(f))) {
+      node.isEntry = true;
+      if (node.rawCode) {
+        const parser = new FrameworkConfigParser(this.context);
+        const { aliases, entries } = parser.parse(node.rawCode, filePath);
+        if (aliases.size > 0) node.frameworkAliases = aliases;
+        if (entries.size > 0) node.frameworkEntries = entries;
+        if (node.rawCode.includes('modules:')) node.hasNuxtModules = true;
+        if (node.rawCode.includes('components:')) node.hasNuxtComponentsConfig = true;
+      }
+    }
+  }
 }
 
 export class RemixPlugin extends BasePlugin {
@@ -233,6 +255,21 @@ export class RemixPlugin extends BasePlugin {
     }
     return false;
   }
+  detectEntryPoints(content, filePath) {
+    if (filePath.endsWith('remix.config.js') || filePath.includes('vite.config.')) {
+      const parser = new FrameworkConfigParser(this.context);
+      const { entries } = parser.parse(content, filePath);
+      return Array.from(entries);
+    }
+    return [];
+  }
+  async analyze(node, filePath) {
+    if (filePath.endsWith('remix.config.js')) {
+      node.isEntry = true;
+      if (node.rawCode?.includes('ignoredRouteFiles:')) node.hasRemixIgnoredRoutes = true;
+      if (node.rawCode?.includes('serverBuildPath:')) node.hasRemixServerBuildPath = true;
+    }
+  }
 }
 
 export class SvelteKitPlugin extends BasePlugin {
@@ -251,6 +288,29 @@ export class SvelteKitPlugin extends BasePlugin {
   async isActive(baseDir) {
     try { await fs.access(path.join(baseDir, 'svelte.config.js')); return true; } catch { return false; }
   }
+  detectEntryPoints(content, filePath) {
+    if (filePath.includes('svelte.config.')) {
+      const parser = new FrameworkConfigParser(this.context);
+      const { entries } = parser.parse(content, filePath);
+      return Array.from(entries);
+    }
+    return [];
+  }
+  async analyze(node, filePath) {
+    if (filePath.includes('svelte.config.')) {
+      node.isEntry = true;
+      if (node.rawCode) {
+        const parser = new FrameworkConfigParser(this.context);
+        const { aliases, entries } = parser.parse(node.rawCode, filePath);
+        if (aliases.size > 0) {
+          node.frameworkAliases = aliases;
+          node.hasSvelteAliases = true;
+        }
+        if (entries.size > 0) node.frameworkEntries = entries;
+        if (node.rawCode.includes('adapter:')) node.hasSvelteAdapter = true;
+      }
+    }
+  }
 }
 
 export class AstroPlugin extends BasePlugin {
@@ -265,12 +325,39 @@ export class AstroPlugin extends BasePlugin {
     }
     return false;
   }
+  detectEntryPoints(content, filePath) {
+    if (this.getConfigFiles().some(f => filePath.endsWith(f))) {
+      const parser = new FrameworkConfigParser(this.context);
+      const { entries } = parser.parse(content, filePath);
+      return Array.from(entries);
+    }
+    return [];
+  }
+  async analyze(node, filePath) {
+    if (this.getConfigFiles().some(f => filePath.endsWith(f))) {
+      node.isEntry = true;
+      if (node.rawCode) {
+        const parser = new FrameworkConfigParser(this.context);
+        const { aliases, entries } = parser.parse(node.rawCode, filePath);
+        if (aliases.size > 0) node.frameworkAliases = aliases;
+        if (entries.size > 0) node.frameworkEntries = entries;
+        if (node.rawCode.includes('integrations:')) node.hasAstroIntegrations = true;
+        if (node.rawCode.includes('output:')) node.hasAstroOutputConfig = true;
+      }
+    }
+  }
 }
 
 export class VitepressPlugin extends BasePlugin {
   get name() { return 'vitepress'; }
   getConfigFiles() { return ['package.json']; }
   getRequiredPackages() { return [{ name: 'vitepress', dev: true }]; }
+  
+  getRoutePatterns() {
+    // Protection: Every file inside a .vitepress folder is treated as an entry point
+    return [/\/\.vitepress\//];
+  }
+
   async isActive(baseDir) {
     try {
       const pkgJson = JSON.parse(await fs.readFile(path.join(baseDir, 'package.json'), 'utf8'));
@@ -281,6 +368,62 @@ export class VitepressPlugin extends BasePlugin {
       }
       return hasDep;
     } catch { return false; }
+  }
+
+  async runDependencyDiagnostics(baseDir) {
+    const diagnostics = await super.runDependencyDiagnostics(baseDir);
+    
+    let pkg = null;
+    try {
+      const raw = await fs.readFile(path.join(baseDir, 'package.json'), 'utf8');
+      pkg = JSON.parse(raw);
+    } catch { return diagnostics; }
+
+    const scripts = pkg.scripts || {};
+    const allDeps = { ...(pkg.dependencies || {}), ...(pkg.devDependencies || {}) };
+    const hasVitepressDep = 'vitepress' in allDeps;
+    
+    // Check if any script uses vitepress
+    const hasVitepressCommand = Object.values(scripts).some(s => s.includes('vitepress'));
+    
+    // Logic for .vitepress folder existence
+    let hasVitepressFolder = false;
+    const possibleDirs = ['.vitepress', 'docs/.vitepress', 'docs/docs/.vitepress'];
+    for (const d of possibleDirs) {
+      try {
+        await fs.access(path.join(baseDir, d));
+        hasVitepressFolder = true;
+        break;
+      } catch {}
+    }
+
+    // Scenario 1: build cmd/dependency exists but no folder -> unused dependency
+    if ((hasVitepressCommand || hasVitepressDep) && !hasVitepressFolder) {
+      diagnostics.push({
+        plugin: this.name,
+        severity: 'warning',
+        message: `Plugin "${this.name}": "vitepress" is defined in package.json or scripts, but no ".vitepress" folder was found. This might be an unused dependency.`
+      });
+    }
+
+    // Scenario 2: folder exists but no dependency -> missing dependency
+    if (hasVitepressFolder && !hasVitepressDep) {
+      diagnostics.push({
+        plugin: this.name,
+        severity: 'error',
+        message: `Plugin "${this.name}": ".vitepress" folder exists, but "vitepress" package is not installed in package.json.`
+      });
+    }
+
+    return diagnostics;
+  }
+
+  async analyze(node, filePath) {
+    // If it's a config file inside .vitepress, mark it
+    if (filePath.includes('/.vitepress/config.') || filePath.includes('/.vitepress/theme/')) {
+      node.isEntry = true;
+      node.isVitepressInternal = true;
+    }
   }
 }
 
@@ -320,6 +463,14 @@ export class NextJsPlugin extends BasePlugin {
       try { await fs.access(path.join(baseDir, file)); return true; } catch {}
     }
     return false;
+  }
+  async analyze(node, filePath) {
+    if (this.getConfigFiles().some(f => filePath.endsWith(f))) {
+      node.isEntry = true;
+      if (node.rawCode?.includes('rewrites')) node.hasNextRewrites = true;
+      if (node.rawCode?.includes('redirects')) node.hasNextRedirects = true;
+      if (node.rawCode?.includes('images:')) node.hasNextImageConfig = true;
+    }
   }
 }
 
@@ -443,6 +594,42 @@ export class VitePlugin extends BasePlugin {
     }
     return false;
   }
+  detectEntryPoints(content, filePath) {
+    if (filePath.includes('vite.config.')) {
+      const parser = new FrameworkConfigParser(this.context);
+      const { entries } = parser.parse(content, filePath);
+      return Array.from(entries);
+    }
+    return [];
+  }
+  async analyze(node, filePath) {
+    if (filePath.includes('vite.config.')) {
+      // Mark config as an entry so its own dependencies are tracked
+      node.isEntry = true;
+      
+      // UPGRADE: Use FrameworkConfigParser for deep structural extraction
+      if (node.rawCode) {
+        const parser = new FrameworkConfigParser(this.context);
+        const { aliases, entries } = parser.parse(node.rawCode, filePath);
+        
+        if (aliases.size > 0) {
+          node.frameworkAliases = aliases;
+          node.viteAliasesDetected = true;
+        }
+        
+        if (entries.size > 0) {
+          node.frameworkEntries = entries;
+          node.hasCustomViteInputs = true;
+        }
+
+        // Detect Plugins (Keep existing simple check)
+        const pluginsPattern = /plugins\s*:\s*\[([\s\S]*?)\]/g;
+        if (pluginsPattern.test(node.rawCode)) {
+          node.hasVitePlugins = true;
+        }
+      }
+    }
+  }
 }
 
 export class EsbuildPlugin extends BasePlugin {
@@ -478,6 +665,30 @@ export class WebpackPlugin extends BasePlugin {
       try { await fs.access(path.join(baseDir, f)); return true; } catch {}
     }
     return false;
+  }
+  detectEntryPoints(content, filePath) {
+    if (this.getConfigFiles().some(f => filePath.endsWith(f))) {
+      const parser = new FrameworkConfigParser(this.context);
+      const { entries } = parser.parse(content, filePath);
+      return Array.from(entries);
+    }
+    return [];
+  }
+  detectEntryPoints(content, filePath) {
+    if (this.getConfigFiles().some(f => filePath.endsWith(f))) {
+      const parser = new FrameworkConfigParser(this.context);
+      const { entries } = parser.parse(content, filePath);
+      return Array.from(entries);
+    }
+    return [];
+  }
+  async analyze(node, filePath) {
+    if (this.getConfigFiles().some(f => filePath.endsWith(f))) {
+      node.isEntry = true;
+      if (node.rawCode?.includes('entry:')) node.hasWebpackEntries = true;
+      if (node.rawCode?.includes('resolve:')) node.hasWebpackResolve = true;
+      if (node.rawCode?.includes('plugins:')) node.hasWebpackPlugins = true;
+    }
   }
 }
 
@@ -520,6 +731,14 @@ export class TailwindPlugin extends BasePlugin {
       try { await fs.access(path.join(baseDir, f)); return true; } catch {}
     }
     return false;
+  }
+  async analyze(node, filePath) {
+    if (this.getConfigFiles().some(f => filePath.endsWith(f))) {
+      node.isEntry = true;
+      if (node.rawCode?.includes('content:')) node.hasTailwindContent = true;
+      if (node.rawCode?.includes('theme:')) node.hasTailwindTheme = true;
+      if (node.rawCode?.includes('plugins:')) node.hasTailwindPlugins = true;
+    }
   }
 }
 
@@ -665,6 +884,13 @@ export class JestPlugin extends BasePlugin {
   async isActive(baseDir) {
     try { await fs.access(path.join(baseDir, 'jest.config.js')); return true; } catch { return false; }
   }
+  async analyze(node, filePath) {
+    if (filePath.endsWith('jest.config.js')) {
+      node.isEntry = true;
+      if (node.rawCode?.includes('testEnvironment:')) node.hasJestTestEnv = true;
+      if (node.rawCode?.includes('setupFiles:')) node.hasJestSetupFiles = true;
+    }
+  }
 }
 
 export class VitestPlugin extends BasePlugin {
@@ -676,6 +902,39 @@ export class VitestPlugin extends BasePlugin {
       try { await fs.access(path.join(baseDir, f)); return true; } catch {}
     }
     return false;
+  }
+  detectEntryPoints(content, filePath) {
+    if (this.getConfigFiles().some(f => filePath.endsWith(f))) {
+      const parser = new FrameworkConfigParser(this.context);
+      const { entries } = parser.parse(content, filePath);
+      return Array.from(entries);
+    }
+    return [];
+  }
+  detectEntryPoints(content, filePath) {
+    if (this.getConfigFiles().some(f => filePath.endsWith(f))) {
+      const parser = new FrameworkConfigParser(this.context);
+      const { entries } = parser.parse(content, filePath);
+      return Array.from(entries);
+    }
+    return [];
+  }
+  async analyze(node, filePath) {
+    if (this.getConfigFiles().some(f => filePath.endsWith(f))) {
+      node.isEntry = true;
+      if (node.rawCode) {
+        const parser = new FrameworkConfigParser(this.context);
+        const { aliases, entries } = parser.parse(node.rawCode, filePath);
+        if (aliases.size > 0) {
+          node.frameworkAliases = aliases;
+          node.hasWebpackAliases = true;
+        }
+        if (entries.size > 0) {
+          node.frameworkEntries = entries;
+          node.hasWebpackEntries = true;
+        }
+      }
+    }
   }
 }
 
