@@ -47,11 +47,10 @@ export class WorkerPool {
 
     try {
       const analyticalResultsSubsets = await Promise.all(threadTaskExecutionsList);
-      const flatResults = analyticalResultsSubsets.flat();
       
       // Merge thread structural subsets back into the primary context graph nodes
-      for (const result of flatResults) {
-        if (!result) continue;
+      analyticalResultsSubsets.flat().forEach(result => {
+        if (!result) return;
         // UPGRADE: Normalize filePath before merging to prevent duplicate nodes in the graph
         const normalizedPath = path.resolve(this.context.cwd, result.filePath).replace(/\\/g, '/');
         const node = masterEngineInstanceReference.context.getOrCreateNode(normalizedPath);
@@ -96,13 +95,7 @@ export class WorkerPool {
           if (!node.globImports) node.globImports = [];
           result.globImports.forEach(i => node.globImports.push(i));
         }
-
-        // UPGRADE 5.3.0: Run plugin-specific content analysis for worker-parsed files
-        if (result.rawCode) {
-          node.rawCode = result.rawCode;
-          await masterEngineInstanceReference.magicDetector.runPluginContentAnalysis(node, normalizedPath);
-        }
-      }
+      });
 
       return true;
     } catch (poolThreadFault) {
@@ -114,24 +107,13 @@ export class WorkerPool {
   }
 
   executeChunkInsideThread(fileChunkSubset) {
-    // UPGRADE: Serialize alias patterns and workspace package names so workers can filter false positives
-    const serializedAliasPatterns = (this.context.pathMapper && this.context.pathMapper._aliasPatterns)
-      ? this.context.pathMapper._aliasPatterns.map(p => p.regex.source)
-      : [];
-    const workspacePackageNames = (this.context.workspaceGraph && this.context.workspaceGraph.workspacePackages)
-      ? Array.from(this.context.workspaceGraph.workspacePackages.keys())
-      : [];
-
     return new Promise((resolve, reject) => {
       const workerInstance = new Worker(this.workerScriptPath, { type: 'module',
         workerData: { 
           files: fileChunkSubset, 
           contextOptions: { 
             verbose: this.context.verbose,
-            cwd: this.context.cwd,
-            // UPGRADE: Pass alias/workspace data so workers can filter false positives
-            aliasPatternSources: serializedAliasPatterns,
-            workspacePackageNames
+            cwd: this.context.cwd
           } 
         }
       });

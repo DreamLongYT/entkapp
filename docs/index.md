@@ -2,7 +2,7 @@
 layout: home
 
 hero:
-  name: entkapp v5.4.0
+  name: entkapp v5.5.0
   text: The Ultimate Hybrid Engine
   tagline: Solving what Knip cannot.
   image:

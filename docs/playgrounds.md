@@ -3,7 +3,7 @@
 Explore our curated collection of test projects designed to benchmark static analysis engines. From simple unused exports to complex circular dependency nightmares, these playgrounds help you understand the depth and precision of your tools.
 
 ## 🎯 Levels of Complexity
-### Normal Playground
+
 | Level | Badge | Playground Link | Focus |
 | :--- | :--- | :--- | :--- |
 | **Basic** | <Badge type="tip" text="Beginner" /> | [Launch Basic](https://stackblitz.com/github/DreamLongYT/entkapp/tree/main/playgrounds/basic?file=README.md) | Unused files & simple exports |
@@ -12,17 +12,10 @@ Explore our curated collection of test projects designed to benchmark static ana
 | **Hard** | <Badge type="danger" text="Enterprise" /> | [Launch Hard](https://stackblitz.com/github/DreamLongYT/entkapp/tree/main/playgrounds/hard?file=README.md) | Side-effects & deep trees |
 | **Nightmare** | <Badge type="danger" text="God Mode" /> | [Launch Nightmare](https://stackblitz.com/github/DreamLongYT/entkapp/tree/main/playgrounds/nightmare?file=README.md) | Circular chains & dynamic exports |
 
-### Monorepo
-| Level | Badge | Playground Link |
-| :--- | :--- | :--- |
-| **Basic** | <Badge type="tip" text="Beginner" /> | [Launch Basic](https://stackblitz.com/github/DreamLongYT/entkapp/tree/main/playgrounds/monorepo-basic?file=README.md)
-| **Normal** | <Badge type="info" text="Standard" /> | [Launch Normal](https://stackblitz.com/github/DreamLongYT/entkapp/tree/main/playgrounds/monorepo-normal?file=README.md)
-| **Intermediate** | <Badge type="warning" text="Advanced" /> | [Launch Intermediate](https://stackblitz.com/github/DreamLongYT/entkapp/tree/main/playgrounds/monorepo-intermediate?file=README.md)
-| **Hard** | <Badge type="danger" text="Enterprise" /> | [Launch Hard](https://stackblitz.com/github/DreamLongYT/entkapp/tree/main/playgrounds/monorepo-hard?file=README.md)
-| **Nightmare** | <Badge type="danger" text="God Mode" /> | [Launch Nightmare](https://stackblitz.com/github/DreamLongYT/entkapp/tree/main/playgrounds/monorepo-nightmare?file=README.md)
 ---
 
-## 📂 Playground Details (Normal)
+## 📂 Playground Details
+
 ### 🟢 Basic
 The entry point for every analysis tool. If an engine fails here, it's not ready for production.
 - **Challenges**: 1 unused file, 1 unused function, 1 unused dependency.
@@ -47,26 +40,6 @@ Enterprise-level complexity that trips up many "fast" scanners.
 The ultimate stress test. Designed to break engines or force them into infinite loops.
 - **Challenges**: Multi-file circular dependency chains, dynamic imports with computed keys, and 5-level deep re-export chains.
 - **Try it**: [Playground - Nightmare](https://stackblitz.com/github/DreamLongYT/entkapp/tree/main/playgrounds/nightmare?file=README.md)
-## 📂 Playground Details (Monorepo)
-### 🟢 Basic
-The entry point for every analysis tool. If an engine fails here, it's not ready for production.
-- **Try it**: [Playground - Basic](https://stackblitz.com/github/DreamLongYT/entkapp/tree/main/playgrounds/basic?file=README.md)
-
-### 🔵 Normal
-Simulates a typical small-scale project structure.
-- **Try it**: [Playground - Normal](https://stackblitz.com/github/DreamLongYT/entkapp/tree/main/playgrounds/normal?file=README.md)
-
-### 🟡 Intermediate
-A production-like environment where types and organizational patterns matter.
-- **Try it**: [Playground - Intermediate](https://stackblitz.com/github/DreamLongYT/entkapp/tree/main/playgrounds/intermediate?file=README.md)
-
-### 🔴 Hard
-Enterprise-level complexity that trips up many "fast" scanners.
-- **Try it**: [Playground - Hard](https://stackblitz.com/github/DreamLongYT/entkapp/tree/main/playgrounds/hard?file=README.md)
-
-### 💀 Nightmare
-The ultimate stress test. Designed to break engines or force them into infinite loops.
-- **Try it**: [Playground - Nightmare](https://stackblitz.com/github/DreamLongYT/entkapp/tree/main/playgrounds/nightmare?file=README.md)
 
 ---
 
@@ -79,7 +52,7 @@ The ultimate stress test. Designed to break engines or force them into infinite 
    ```
 3. **Run** your analysis tool (e.g., using the latest `entkapp`):
    ```bash
-   npx entkapp@latest -r
+   npx entkapp@latest -r --no-fix
    ```
 
 ::: warning CAUTION

@@ -5,7 +5,7 @@ import path from 'path';
  * Base class for all entkapp plugins.
  * Defines the contract for ecosystem detection, entry point mapping,
  * and missing dependency / devDependency detection.
- * Version 5.4.0: Added detectEntryPoints() for dynamic framework entry detection.
+ * Version 5.0.0: Added getMissingDependencies(), getOrphanedConfigs(), runDependencyDiagnostics().
  */
 export class BasePlugin {
     constructor(context) {
@@ -35,17 +35,6 @@ export class BasePlugin {
     }
 
     /**
-     * Version 5.4.0: Dynamically detect entry points from a file's content.
-     * Useful for parsing vite.config.ts, webpack.config.js, etc.
-     * @param {string} content - The file content
-     * @param {string} filePath - The absolute path to the file
-     * @returns {Array<string>} List of relative or absolute entry point paths
-     */
-    detectEntryPoints(content, filePath) {
-        return [];
-    }
-
-    /**
      * Returns symbols that are implicitly required/exported by the framework.
      */
     getRequiredSystemContracts() {
@@ -54,13 +43,25 @@ export class BasePlugin {
 
     /**
      * Returns the npm package names required for this plugin to work.
+     * Each entry is either a string or an object:
+     *   { name: string, dev?: boolean, optional?: boolean }
+     *   - dev: true  => expected in devDependencies
+     *   - dev: false => expected in dependencies
+     *   - optional   => only warn, not error
+     *
+     * Override in subclasses to enable automatic dependency checking.
+     * @returns {Array<string | {name: string, dev?: boolean, optional?: boolean}>}
      */
     getRequiredPackages() {
         return [];
     }
 
     /**
-     * Checks whether all required packages are present in package.json.
+     * Version 5.0.0: Checks whether all required packages are present in package.json.
+     * Returns an array of diagnostic objects describing missing or misplaced dependencies.
+     *
+     * @param {string} baseDir - The project root directory
+     * @returns {Promise<Array>}
      */
     async getMissingDependencies(baseDir) {
         const diagnostics = [];
@@ -146,7 +147,11 @@ export class BasePlugin {
     }
 
     /**
-     * Checks for config files that exist without the corresponding package.
+     * Version 5.0.0: Checks for config files that exist without the corresponding package.
+     * Detects "orphaned" configs – e.g. .prettierrc exists but prettier is not installed.
+     *
+     * @param {string} baseDir
+     * @returns {Promise<Array>}
      */
     async getOrphanedConfigs(baseDir) {
         const diagnostics = [];
@@ -190,7 +195,11 @@ export class BasePlugin {
     }
 
     /**
-     * Run all dependency diagnostics (missing + orphaned).
+     * Version 5.0.0: Run all dependency diagnostics (missing + orphaned).
+     * Convenience method combining getMissingDependencies and getOrphanedConfigs.
+     *
+     * @param {string} baseDir
+     * @returns {Promise<Array>}
      */
     async runDependencyDiagnostics(baseDir) {
         const [missing, orphaned] = await Promise.all([
@@ -201,7 +210,9 @@ export class BasePlugin {
     }
 
     /**
-     * Dynamic getter for custom plugin properties.
+     * Version 3.2.0: Dynamic getter for custom plugin properties.
+     * @param {string} key - The property key to retrieve
+     * @returns {any} The value of the custom property
      */
     get(key) {
         const methodName = `get${key.charAt(0).toUpperCase() + key.slice(1)}`;

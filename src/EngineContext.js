@@ -419,12 +419,6 @@ export class EngineContext {
     report.importedUnusedPackages = Array.from(this.importedUnusedPackages);
     report.unusedBinaries = Array.from(this.unusedBinaries);
 
-    // UPGRADE 5.4.3: Integrate enhanced results from GraphAnalyzer
-    const analyzer = new (await import('./resolution/GraphAnalyzer.js')).GraphAnalyzer(this);
-    const { unusedImports, boundaryViolations } = await analyzer.findDeadCode();
-    report.unusedImports = unusedImports;
-    report.boundaryViolations = boundaryViolations;
-
     return report;
   }
 }

@@ -113,80 +113,21 @@ export class RefactoringEngine {
       
       // Pass 1: Boot environment contexts and load alias configuration maps
       await this.oxcAnalyzer.init();
-      // UPGRADE: Wire pathMapper onto context so ASTAnalyzer alias-filtering works in all code paths
-      this.context.pathMapper = this.pathMapper;
       await this.pathMapper.loadMappings(this.context.tsconfigFilename);
       
       // Always attempt workspace mesh initialization
       console.log(ansis.dim('🌐 Probing for monorepo workspace configuration...'));
       await this.workspaceGraph.initializeWorkspaceMesh();
-      // UPGRADE: Always expose workspaceGraph on context (not only when workspace is enabled)
-      this.context.workspaceGraph = this.workspaceGraph;
-      
-      // UPGRADE: Scan all discovered framework configs across the workspace EARLY
-      const discoveredConfigs = await this.workspaceGraph.findFrameworkConfigs();
-      if (discoveredConfigs.length > 0) {
-        console.log(ansis.dim(`⚙️  Detected ${discoveredConfigs.length} framework configurations...`));
-        const { FrameworkConfigParser } = await import('./resolution/FrameworkConfigParser.js');
-        const parser = new FrameworkConfigParser(this.context);
-        
-        for (const configPath of discoveredConfigs) {
-          try {
-            const content = await fs.readFile(configPath, 'utf8');
-            
-            // 1. Core Parsing (Aliases)
-            const { aliases } = parser.parse(content, configPath);
-            for (const [key, target] of aliases.entries()) {
-              this.pathMapper.addAlias(key, target);
-            }
-            
-            // 2. Plugin-based Entry Detection
-            const detectedEntries = await this.magicDetector.detectEntryPointsFromPlugins(content, configPath);
-            for (const entry of detectedEntries) {
-              const absEntry = path.resolve(path.dirname(configPath), entry).replace(/\\/g, '/');
-              if (!this.context.entryPoints.includes(absEntry)) {
-                this.context.entryPoints.push(absEntry);
-              }
-            }
-            
-            // 3. Register config file itself as entry
-            if (!this.context.entryPoints.includes(configPath)) {
-              this.context.entryPoints.push(configPath);
-            }
-          } catch (e) {}
-        }
-      }
-
       if (this.context.isWorkspaceEnabled) {
         console.log(ansis.dim('🌐 Monorepo workspace detected – mapping package mesh layers...'));
-        
-        // NEW: Register all workspace package entry points
-        for (const [dir, manifest] of this.workspaceGraph.packageManifests.entries()) {
-          if (manifest.entryPoints && manifest.entryPoints.length > 0) {
-            for (const ep of manifest.entryPoints) {
-              if (!this.context.entryPoints.includes(ep)) {
-                this.context.entryPoints.push(ep);
-              }
-            }
-          }
-        }
-
+        // Expose workspaceGraph on context for WorkspaceDiagnostic and other components
+        this.context.workspaceGraph = this.workspaceGraph;
         // Reload PathMapper aliases now that workspace roots are known
         await this.pathMapper.loadMappings(this.context.tsconfigFilename);
         if (this.context.verbose) {
-          const wsSummary = this.workspaceGraph.getSummary();
-          console.log(`[Workspace] Found ${wsSummary.packages} workspace packages:`);
+          console.log(`[Workspace] Found ${this.workspaceGraph.packageManifests.size} workspace packages:`);
           for (const [dir, manifest] of this.workspaceGraph.packageManifests.entries()) {
             console.log(ansis.dim(`  • ${manifest.name || dir}`));
-          }
-          if (wsSummary.tsconfigsLoaded > 0) {
-            console.log(ansis.dim(`[Workspace] Loaded ${wsSummary.tsconfigsLoaded} tsconfig.json file(s) from workspace packages`));
-          }
-          if (wsSummary.configFilesLoaded > 0) {
-            console.log(ansis.dim(`[Workspace] Loaded ${wsSummary.configFilesLoaded} *.config.ts/js file(s) from workspace packages`));
-          }
-          if (wsSummary.monorepoConfigs && wsSummary.monorepoConfigs.length > 0) {
-            console.log(ansis.dim(`[Workspace] Detected global configs: ${wsSummary.monorepoConfigs.join(', ')}`));
           }
         }
       }
@@ -259,14 +200,6 @@ export class RefactoringEngine {
       for (const filePath of sourceCodeFilesList) {
         const absFilePath = slashifyInternal(filePath);
         const node = this.context.getOrCreateNode(absFilePath);
-
-        // Config data is now handled early in the workspace mesh initialization phase.
-        // We still mark the rawCode for plugin analysis.
-        if (absFilePath.includes('.config.')) {
-          try {
-            node.rawCode = await fs.readFile(absFilePath, 'utf8');
-          } catch (e) {}
-        }
         const currentHash = await this.cacheManager.computeHash(absFilePath);
         node.contentHash = currentHash;
 
@@ -294,7 +227,6 @@ export class RefactoringEngine {
         } else if (!parallelParseCompleted) {
           this.context.metrics.cacheMisses++;
           const fileContent = await fs.readFile(filePath, 'utf8');
-          node.rawCode = fileContent; // UPGRADE: Store raw code for plugin analysis
           
           let success = false;
           if (this.oxcAnalyzer.isAvailable) {
@@ -316,10 +248,6 @@ export class RefactoringEngine {
           if (!success || (oxcFailedToFindDependencies && (hasImportExportKeywords || hasCommonJSKeywords))) {
             await this.analyzer.parseFile(filePath, fileContent, node);
           }
-
-          // UPGRADE 5.3.0: Run plugin-specific content analysis
-          await this.magicDetector.runPluginContentAnalysis(node, absFilePath);
-
           // Secret scan on freshly parsed content
           const secretFindings = this.secretScanner.scanFileContent(filePath, fileContent);
           if (secretFindings.length > 0) {
@@ -634,17 +562,6 @@ export class RefactoringEngine {
                   const nodeBuiltins = ['assert', 'async_hooks', 'buffer', 'child_process', 'cluster', 'console', 'constants', 'crypto', 'dgram', 'dns', 'domain', 'events', 'fs', 'http', 'http2', 'https', 'inspector', 'module', 'net', 'os', 'path', 'perf_hooks', 'process', 'punycode', 'querystring', 'readline', 'repl', 'stream', 'string_decoder', 'timers', 'tls', 'trace_events', 'tty', 'url', 'util', 'v8', 'vm', 'worker_threads', 'zlib'];
                   if (nodeBuiltins.includes(basePkg) || nodeBuiltins.includes(basePkg.replace('node:', ''))) return;
 
-                  // UPGRADE: Skip tsconfig path aliases (e.g. @shared/*, @idk/*, ~/*)
-                  // Check full specifier AND basePkg against alias patterns
-                  if (this.pathMapper && typeof this.pathMapper.isTsconfigAlias === 'function') {
-                    if (this.pathMapper.isTsconfigAlias(specifier) || this.pathMapper.isTsconfigAlias(basePkg)) return;
-                  }
-
-                  // UPGRADE: Skip workspace packages detected via pnpm-workspace.yaml / package.json workspaces
-                  if (this.workspaceGraph && typeof this.workspaceGraph.isLocalWorkspaceSpecifier === 'function') {
-                    if (this.workspaceGraph.isLocalWorkspaceSpecifier(specifier) || this.workspaceGraph.isLocalWorkspaceSpecifier(basePkg)) return;
-                  }
-
                   if (!localDeps.has(basePkg)) {
                     const alreadyFlagged = this.context.unlistedDependencies.some(u => u.package === basePkg && u.file === filePath);
                     if (!alreadyFlagged) {
@@ -657,7 +574,7 @@ export class RefactoringEngine {
                   }
                 });
               } catch (error) {
-                if (this.context.options.verbose && error.code !== 'ENOENT') {
+                if (this.context.options.verbose) {
                   console.error(ansis.red(`      ❌ Manifest Parsing Exception: ${error.message}`));
                 }
               }

@@ -1,1 +1,10 @@
-{"name": "basic-monorepo", "private": true, "workspaces": ["packages/*"]}
+{
+  "name": "basic-monorepo",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "entkapp:run": "npx entkapp --fix"
+  }
+}
