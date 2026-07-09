@@ -64,6 +64,24 @@ export class RefactoringEngine {
     this.resolver = new DependencyResolver(this.context, this.pathMapper, this.workspaceGraph);
     this.circularDetector = new CircularDetector(this.context);
     
+    // FIX (Bug 2): Initialize packageJson and EntryPointDetector, mirroring the .mjs twin.
+    // Without this, src/index.ts is never registered as an entry point in the JS build,
+    // causing all files to be treated as unreachable and suppressing the dependency audit.
+    try {
+      const pkgPath = path.join(this.context.cwd, 'package.json');
+      if (existsSync(pkgPath)) {
+        this.context.packageJson = JSON.parse(readFileSync(pkgPath, 'utf8'));
+      }
+    } catch (e) {}
+
+    import('./resolution/EntryPointDetector.js').then(({ EntryPointDetector }) => {
+      this.entryPointDetector = new EntryPointDetector(
+        this.context.cwd,
+        this.context.packageJson,
+        this.context.metrics
+      );
+    }).catch(() => {});
+
     // Lazy import DependencyProfiler
     import('./resolution/DependencyProfiler.js').then(({ DependencyProfiler }) => {
       this.dependencyProfiler = new DependencyProfiler(this.context);
@@ -347,16 +365,33 @@ export class RefactoringEngine {
         }
       }
       if (entryCount === 0) {
-        console.log(ansis.bold.yellow('  🚨 ALARM: Keine einzige Datei wurde als Entry Point markiert! Greife auf Fallbacks zurück...'));
-        const fallbackFiles = ['index.js', 'index.mjs', 'src/index.js', 'src/index.mjs', 'main.js', 'src/main.js'];
-        for (const fallback of fallbackFiles) {
-          const absFallback = path.resolve(this.context.cwd, fallback).replace(/\\/g, '/');
-          if (this.context.projectGraph.has(absFallback)) {
-            const node = this.context.projectGraph.get(absFallback);
-            node.isEntry = true;
-            console.log(ansis.green(`  • 💎 FALLBACK ENTRY: ${fallback}`));
-            entryCount++;
-            break;
+        console.log(ansis.bold.yellow('  🚨 ALARM: Keine einzige Datei wurde als Entry Point markiert! Starte Deep Detection...'));
+
+        // FIX (Bug 2): Use EntryPointDetector first (mirrors .mjs twin behavior).
+        // This ensures src/index.ts and other convention-based roots are found reliably.
+        if (this.entryPointDetector) {
+          const detected = this.entryPointDetector.detect();
+          detected.forEach(absPath => {
+            const cleanPath = absPath.replace(/\\/g, '/');
+            if (this.context.projectGraph.has(cleanPath)) {
+              this.context.projectGraph.get(cleanPath).isEntry = true;
+              console.log(ansis.green(`  • 💎 DETECTED ENTRY: ${path.relative(this.context.cwd, cleanPath)}`));
+              entryCount++;
+            }
+          });
+        }
+
+        if (entryCount === 0) {
+          const fallbackFiles = ['index.js', 'index.mjs', 'src/index.js', 'src/index.mjs', 'src/index.ts', 'src/index.tsx', 'main.js', 'src/main.js', 'src/main.ts'];
+          for (const fallback of fallbackFiles) {
+            const absFallback = path.resolve(this.context.cwd, fallback).replace(/\\/g, '/');
+            if (this.context.projectGraph.has(absFallback)) {
+              const node = this.context.projectGraph.get(absFallback);
+              node.isEntry = true;
+              console.log(ansis.green(`  • 💎 FALLBACK ENTRY: ${fallback}`));
+              entryCount++;
+              break;
+            }
           }
         }
       }
@@ -547,10 +582,22 @@ export class RefactoringEngine {
         }
       }
 
+      // FIX: Robust path normalization helper for cross-platform path comparison.
+      // Mirrors the normalizePath() logic in OxcAnalyzer.js to handle Windows
+      // drive-letter case differences and mixed slash types before path.relative().
+      const normalizeForAudit = (p) => {
+        if (!p) return '';
+        let n = path.resolve(p).replace(/\\/g, '/');
+        if (/^[a-z]:\//.test(n)) n = n.charAt(0).toUpperCase() + n.slice(1);
+        return n.replace(/\/+/g, '/').replace(/\/$/, '');
+      };
+
       for (const metadata of auditManifests) {
         if (this.context.projectGraph) {
+          const normRoot = normalizeForAudit(metadata.rootDirectory);
           for (const [filePath, fileNode] of this.context.projectGraph.entries()) {
-            const cleanRelative = path.relative(metadata.rootDirectory, filePath).replace(/\\/g, '/');
+            const normFilePath = normalizeForAudit(filePath);
+            const cleanRelative = path.relative(normRoot, normFilePath).replace(/\\/g, '/');
             
             // Check if file belongs to this manifest's directory scope
             if (!cleanRelative.startsWith('..') && !cleanRelative.startsWith('/') && fileNode.explicitImports) {
