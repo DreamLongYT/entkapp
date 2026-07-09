@@ -132,7 +132,7 @@ async function bootstrap() {
     }, timeoutMs);
     timeoutTimer.unref(); // Allow process to exit if work finishes
 
-    console.log(ansis.bold.green(`\n📦 entkapp v${packageJsonContent.version || '5.7.1'} Engine Activation`));
+    console.log(ansis.bold.green(`\n📦 entkapp v${packageJsonContent.version || '5.7.2'} Engine Activation`));
     console.log(ansis.dim('------------------------------------------------------------'));
     console.log(`${ansis.bold('Target Workspace Root :')} ${ansis.blue(targetCwd)}`);
     console.log(`${ansis.bold('Refactoring Mode     :')} ${options.fix ? ansis.yellow('Active Fixing & Self-Healing Enabled') : ansis.gray('Dry-Run Reporting Only')}`);

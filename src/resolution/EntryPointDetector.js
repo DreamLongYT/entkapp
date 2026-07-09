@@ -100,24 +100,15 @@ export class EntryPointDetector {
 
     _addIfExist(entries, relativePath) {
         // Clean path (remove ./ etc)
-        const cleanPath = relativePath.replace(/^(\.\//|\/)/, '');
+        const cleanPath = relativePath.replace(/^(\.\/|\/)/, '');
         const absolutePath = path.resolve(this.targetDir, cleanPath);
-
-        // FIX (Bug 2): Normalize the resolved path the same way the project graph
-        // keys are normalized (forward slashes, uppercase Windows drive letter)
-        // so that Set lookups in EngineContext succeed on all platforms.
-        const normalizePath = (p) => {
-            let n = p.replace(/\\/g, '/');
-            if (/^[a-z]:\//.test(n)) n = n.charAt(0).toUpperCase() + n.slice(1);
-            return n.replace(/\/+/g, '/');
-        };
-
+        
         // Prüfe verschiedene Erweiterungen falls keine angegeben
         const extensions = ['', '.js', '.ts', '.jsx', '.tsx', '.mjs', '.cjs'];
         for (const ext of extensions) {
             const p = absolutePath + ext;
             if (fs.existsSync(p) && fs.statSync(p).isFile()) {
-                entries.add(normalizePath(p));
+                entries.add(p);
                 return;
             }
         }

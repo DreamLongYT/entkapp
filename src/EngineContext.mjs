@@ -218,38 +218,6 @@ export class EngineContext {
         } catch (e) {}
     }
 
-    // FIX (Bug 2): Fallback Entry-Point Seeding for standard TypeScript/JavaScript projects.
-    if (reachableFiles.size === 0 && this.projectGraph.size > 0) {
-      const conventionEntries = [
-        'src/index.ts', 'src/index.tsx', 'src/index.js', 'src/index.jsx',
-        'src/main.ts', 'src/main.js',
-        'index.ts', 'index.tsx', 'index.js',
-        'src/app.ts', 'src/app.js'
-      ];
-      const normalizeCwd = (p) => {
-        let n = path.resolve(this.cwd, p).replace(/\\/g, '/');
-        if (/^[a-z]:\//.test(n)) n = n.charAt(0).toUpperCase() + n.slice(1);
-        return n;
-      };
-      for (const rel of conventionEntries) {
-        const abs = normalizeCwd(rel);
-        if (this.projectGraph.has(abs) && !reachableFiles.has(abs)) {
-          reachableFiles.add(abs);
-          queue.push(abs);
-          this.projectGraph.get(abs).isEntry = true;
-          if (this.verbose) console.log(`[Reachability] Fallback entry point seeded: ${rel}`);
-        }
-      }
-      if (reachableFiles.size === 0) {
-        for (const [fp, node] of this.projectGraph.entries()) {
-          if (node.incomingEdges.size === 0) {
-            reachableFiles.add(fp);
-            queue.push(fp);
-          }
-        }
-      }
-    }
-
     // 2. BFS Traversal
     while (queue.length > 0) {
       const currentPath = queue.shift();
@@ -398,24 +366,10 @@ export class EngineContext {
 
     // --- DEPENDENCY ANALYSIS ---
     const usedByReachableFiles = new Set();
-
-    const extractBasePkg = (specifier) => {
-      if (!specifier || specifier.startsWith('.') || specifier.startsWith('/')) return null;
-      const s = specifier.startsWith('node:') ? specifier.slice(5) : specifier;
-      return s.startsWith('@') ? s.split('/').slice(0, 2).join('/') : s.split('/')[0];
-    };
-
     reachableFiles.forEach(filePath => {
       const node = this.projectGraph.get(filePath);
       if (node) {
         node.externalPackageUsage.forEach(pkg => usedByReachableFiles.add(pkg));
-
-        if (node.explicitImports) {
-          node.explicitImports.forEach(specifier => {
-            const pkg = extractBasePkg(specifier);
-            if (pkg) usedByReachableFiles.add(pkg);
-          });
-        }
         
         // Conservative check for dynamic imports in reachable files
         if (node.calculatedDynamicImports) {
@@ -447,18 +401,11 @@ export class EngineContext {
         }
         
         // UPGRADE: Be more aggressive in detecting unused dependencies.
+        // Check both externalPackageUsage and rawStringReferences.
         const isUsed = usedByReachableFiles.has(dep) || 
                        Array.from(reachableFiles).some(f => {
                          const node = this.projectGraph.get(f);
-                         if (!node) return false;
-                         if (node.externalPackageUsage.has(dep) || node.rawStringReferences.has(dep)) return true;
-                         if (node.explicitImports) {
-                           for (const specifier of node.explicitImports) {
-                             const base = extractBasePkg(specifier);
-                             if (base === dep) return true;
-                           }
-                         }
-                         return false;
+                         return node && (node.externalPackageUsage.has(dep) || node.rawStringReferences.has(dep));
                        });
 
         if (!isUsed) {

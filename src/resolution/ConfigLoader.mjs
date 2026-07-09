@@ -4,7 +4,6 @@ import path from 'path';
 /**
  * ConfigLoader
  * Loads and merges entkapp configuration from multiple sources:
- * - entkapp.json (root config)
  * - entkapp/config.json (project config)
  * - entkapp.config.js / entkapp.config.mjs (JS config)
  * - package.json "entkapp" key
@@ -31,15 +30,17 @@ export class ConfigLoader {
     const jsonConfigPath = path.join(this.cwd, 'entkapp', 'config.json');
     try {
       const raw = await fs.readFile(jsonConfigPath, 'utf8');
+      // Strip comments from JSON (JSONC support)
       const stripped = raw.replace(/\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '');
       const parsed = JSON.parse(stripped);
       config = this._merge(config, parsed);
     } catch (e) {}
 
-    // 3. Try entkapp.config.js / entkapp.config.mjs
-    for (const configFile of ['entkapp.config.mjs', 'entkapp.config.js', 'entkapp.config.cjs']) {
+    // 2. Try entkapp.config.js / entkapp.config.mjs
+    for (const configFile of ['entkapp.config.mjs', 'entkapp.config.mjs', 'entkapp.config.cjs']) {
       let jsConfigPath = path.join(this.cwd, configFile);
       try {
+        // FIX: Windows compatibility for dynamic imports
         if (process.platform === 'win32') {
           jsConfigPath = 'file://' + jsConfigPath.replace(/\\/g, '/');
         }
@@ -52,7 +53,7 @@ export class ConfigLoader {
       } catch (e) {}
     }
 
-    // 4. Try package.json "entkapp" key
+    // 3. Try package.json "entkapp" key
     const pkgPath = path.join(this.cwd, 'package.json');
     try {
       const pkg = JSON.parse(await fs.readFile(pkgPath, 'utf8'));
@@ -61,7 +62,7 @@ export class ConfigLoader {
       }
     } catch (e) {}
 
-    // 5. Apply CLI overrides
+    // 4. Apply CLI overrides
     config = this._merge(config, overrides);
 
     return config;

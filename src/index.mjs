@@ -411,10 +411,15 @@ export class RefactoringEngine {
         this.workspaceGraph.markWorkspacePackagesAsUsed();
       }
       
-      // REMOVED: Redundant and early population of importedUnusedPackages.
-      // This was causing false positives because it ran BEFORE the dependency graph 
-      // linkage and reachability analysis. EngineContext.generateSummaryReport() 
-      // is the correct place for this logic.
+      // Force detection of unused packages (already handled by engine, but ensuring visibility)
+      for (const [manifest, deps] of this.context.manifestDependencies.entries()) {
+        const allDeps = [...(deps.dependencies || []), ...(deps.devDependencies || [])];
+        for (const dep of allDeps) {
+          if (!this.context.usedExternalPackages.has(dep)) {
+            this.context.importedUnusedPackages.set(dep, manifest);
+          }
+        }
+      }
 
       // Pass 4: Berechne Graph-Kanten und verknüpfe Import-Verbindungen
       console.log(ansis.dim('🔗 Linking graph edges and checking structural usage paths...'));
@@ -597,20 +602,10 @@ export class RefactoringEngine {
         }
       }
 
-      // FIX: Robust path normalization helper for cross-platform path comparison.
-      const normalizeForAudit = (p) => {
-        if (!p) return '';
-        let n = path.resolve(p).replace(/\\/g, '/');
-        if (/^[a-z]:\//.test(n)) n = n.charAt(0).toUpperCase() + n.slice(1);
-        return n.replace(/\/+/g, '/').replace(/\/$/, '');
-      };
-
       for (const metadata of auditManifests) {
         if (this.context.projectGraph) {
-          const normRoot = normalizeForAudit(metadata.rootDirectory);
           for (const [filePath, fileNode] of this.context.projectGraph.entries()) {
-            const normFilePath = normalizeForAudit(filePath);
-            const cleanRelative = path.relative(normRoot, normFilePath).replace(/\\/g, '/');
+            const cleanRelative = path.relative(metadata.rootDirectory, filePath).replace(/\\/g, '/');
             
             // Check if file belongs to this manifest's directory scope
             if (!cleanRelative.startsWith('..') && !cleanRelative.startsWith('/') && fileNode.explicitImports) {
@@ -938,13 +933,10 @@ export class RefactoringEngine {
     
     if (this.context.importedUnusedPackages.size > 0) {
       console.log(ansis.bold.red('\n📋 UNUSED DEPENDENCIES DETECTED:'));
-      // FIX: importedUnusedPackages is a Map<PackageName, ManifestPath>.
-      // We must iterate over the keys (package names) instead of the values (manifest paths).
-      for (const pkgName of this.context.importedUnusedPackages.keys()) {
-        if (!pkgName.startsWith('node:')) {
-          console.log(ansis.red(`  • ${pkgName}`));
-        }
-      }
+      this.context.importedUnusedPackages.forEach(p => {
+        // Skip built-in node modules
+        if (!p.startsWith('node:')) console.log(ansis.red(`  • ${p}`));
+      });
     }
 
     if (summary.orphanedFiles.length > 0) {
@@ -1146,10 +1138,9 @@ export class RefactoringEngine {
         optionalDependencies: Object.keys(data.optionalDependencies || {})
       };
       this.context.manifestDependencies.set(packageJsonPath, depsObj);
-      // FIX: Do NOT pre-populate importedUnusedPackages with ALL dependencies here.
-      // This causes false-positive "unused" reports if the analysis phase fails to
-      // correctly mark them as used. EngineContext.generateSummaryReport() is 
-      // responsible for identifying unused packages and populating this Map.
+      for (const d of [...depsObj.dependencies, ...depsObj.devDependencies]) {
+        this.context.importedUnusedPackages.set(d, packageJsonPath);
+      }
       
       // Also register workspace manifests if not already done
       if (this.context.isWorkspaceEnabled && this.workspaceGraph) {

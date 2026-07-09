@@ -2,7 +2,7 @@
 
 /**
  * ============================================================================
- * 🏁 entkapp CLI Entry Point
+ * 🏁 loui CLI Entry Point
  * ============================================================================
  * Handles option compilation, environment orchestration, option validation,
  * and initiates the primary operational pipeline loop.
@@ -28,7 +28,7 @@ async function bootstrap() {
     program
       .name('entkapp')
       .description(ansis.cyan('The Ultimate Enterprise Codebase Janitor with OXC integration, type-aware analysis, and automated structural healing.'))
-      .version(packageJsonContent.version || '5.7.1');
+      .version(packageJsonContent.version || '5.6.0');
 
     program
       .option('-c, --cwd <path>', 'Specify the execution context root directory', process.cwd())
@@ -48,6 +48,8 @@ async function bootstrap() {
 
     const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
 
+    // --- Onboarding Check (Skipped in Non-Interactive Mode) ---
+    // FIX: Ensure options.cwd is always a string, never undefined
     const targetCwd = path.resolve(options.cwd || process.cwd());
     const pkgJsonPath = path.join(targetCwd, 'package.json');
     const configDirPath = path.join(targetCwd, 'entkapp');
@@ -59,6 +61,7 @@ async function bootstrap() {
 
     let configInstalled = false;
     if (!options.yes && !options.run) {
+      // 1. Ask to install script
       if (pkgJson && !pkgJson.scripts?.['entkapp:run']) {
         const answer = await rl.question(ansis.bold.yellow('❓ No "entkapp:run" script found in package.json. Install it? (y/n): '));
         if (answer.toLowerCase() === 'y') {
@@ -69,6 +72,7 @@ async function bootstrap() {
         }
       }
 
+      // 2. Ask to install config folder
       try {
         await fs.access(configDirPath);
         configInstalled = true;
@@ -81,11 +85,12 @@ async function bootstrap() {
             interface: "CLI",
             useBuiltinPlugins: true,
             useCustomPlugins: true,
+
             options: { verbose: false, fastMode: true, selfHealing: true },
             enabledPlugins: ["nextjs", "nuxt", "remix", "sveltekit", "astro"]
           };
           await fs.writeFile(path.join(configDirPath, 'config.json'), JSON.stringify(defaultConfig, null, 2));
-          console.log(ansis.green('✅ "/entkapp" folder and default config created.'));
+          console.log(ansis.green('✅ "/entkapp" folder? and default config created.'));
           configInstalled = true;
         }
       }
@@ -99,6 +104,7 @@ async function bootstrap() {
 
     rl.close();
 
+    // Load local config if available
     let localConfig = {};
     try {
       const { ConfigLoader } = await import('../src/resolution/ConfigLoader.mjs');
@@ -106,24 +112,27 @@ async function bootstrap() {
       localConfig = await loader.loadConfig();
     } catch (e) {}
 
+    // Merge options with local config
     const finalInterface = localConfig.interface || 'CLI';
     if (finalInterface === 'GUI') {
       console.log(ansis.bold.magenta('🎨 GUI Mode Detected. Starting Web Interface...'));
       return;
     }
 
+    // Only proceed to execution if -r/--run is provided
     if (!options.run) {
       return;
     }
 
+    // --- Timeout Handling ---
     const timeoutMs = parseInt(options.timeout);
     const timeoutTimer = setTimeout(() => {
       console.error(ansis.bold.red(`\n🚨 Execution Timeout: The process exceeded the limit of ${timeoutMs}ms.`));
       process.exit(1);
     }, timeoutMs);
-    timeoutTimer.unref();
+    timeoutTimer.unref(); // Allow process to exit if work finishes
 
-    console.log(ansis.bold.green(`\n📦 entkapp v${packageJsonContent.version || '5.7.1'} Engine Activation`));
+    console.log(ansis.bold.green(`\n📦 entkapp v${packageJsonContent.version || '5.7.2'} Engine Activation`));
     console.log(ansis.dim('------------------------------------------------------------'));
     console.log(`${ansis.bold('Target Workspace Root :')} ${ansis.blue(targetCwd)}`);
     console.log(`${ansis.bold('Refactoring Mode     :')} ${options.fix ? ansis.yellow('Active Fixing & Self-Healing Enabled') : ansis.gray('Dry-Run Reporting Only')}`);
@@ -144,6 +153,7 @@ async function bootstrap() {
       exclude: localConfig.exclude || [],
       ignoreDependencies: localConfig.ignoreDependencies || [],
       options: localConfig.options || {},
+      rules: localConfig.rules || {},
       debug: options.debug,
       visualize: options.visualize,
     });
