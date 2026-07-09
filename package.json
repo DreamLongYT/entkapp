@@ -1,17 +1,17 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "name": "entkapp",
-  "version": "5.5.0",
+  "version": "5.6.0",
   "description": "The Ultimate Enterprise Codebase Janitor. High-speed OXC integration, type-aware analysis, and automated structural healing. Fully standalone architectural orchestrator.",
   "type": "module",
   "main": "index.js",
   "bin": {
-    "entkapp": "./bin/cli.js"
+    "entkapp": "./bin/cli.mjs"
   },
   "scripts": {
-    "start": "node bin/cli.js",
+    "start": "node bin/cli.mjs",
     "entkapp:run": "npx entkapp --fix",
-    "test": "echo \"Error: no test specified\" && exit 0",
+    "test": "node test.js",
     "test:stability": "npm run test",
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs && cp docs/sitemap.xml docs/.vitepress/dist/ && cp docs/robots.txt docs/.vitepress/dist && cp logo.png docs/.vitepress/dist",
@@ -82,7 +82,8 @@
     "enhanced-resolve": "^5.24.0",
     "execa": "^8.0.1",
     "oxc-parser": "^0.135.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "glob": "^10.3.10"
   },
   "devDependencies": {
     "@types/node": "^25.9.3",

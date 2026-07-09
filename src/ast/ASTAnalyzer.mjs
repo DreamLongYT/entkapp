@@ -10,7 +10,7 @@ export class ASTAnalyzer {
 
   getScriptKind(filePath) {
     if (filePath.endsWith('.tsx') || filePath.endsWith('.jsx')) return ts.ScriptKind.TSX;
-    if (filePath.endsWith('.js') || filePath.endsWith('.mjs') || filePath.endsWith('.cjs')) return ts.ScriptKind.JS;
+    if (filePath.endsWith('.mjs') || filePath.endsWith('.mjs') || filePath.endsWith('.cjs')) return ts.ScriptKind.JS;
     return ts.ScriptKind.TS;
   }
 
@@ -416,7 +416,7 @@ export class ASTAnalyzer {
     }
     if (spec.startsWith('.')) {
       let resolved = path.resolve(path.dirname(sourceFilePath), spec);
-      const extensions = ['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs'];
+      const extensions = ['.ts', '.tsx', '.mjs', '.jsx', '.mjs', '.cjs'];
       if (!path.extname(resolved)) {
         for (const ext of extensions) {
           if (fs.existsSync(resolved + ext)) return resolved + ext;

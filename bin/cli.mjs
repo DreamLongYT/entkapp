@@ -107,7 +107,7 @@ async function bootstrap() {
     // Load local config if available
     let localConfig = {};
     try {
-      const { ConfigLoader } = await import('../src/resolution/ConfigLoader.js');
+      const { ConfigLoader } = await import('../src/resolution/ConfigLoader.mjs');
       const loader = new ConfigLoader(targetCwd);
       localConfig = await loader.loadConfig();
     } catch (e) {}
@@ -139,7 +139,7 @@ async function bootstrap() {
     console.log(`${ansis.bold('Validation Sandbox   :')} ${ansis.magenta(options.testCommand)}`);
     console.log(ansis.dim('------------------------------------------------------------\n'));
 
-    const { RefactoringEngine } = await import('../src/index.js');
+    const { RefactoringEngine } = await import('../src/index.mjs');
 
     const engine = new RefactoringEngine({
       cwd: targetCwd,

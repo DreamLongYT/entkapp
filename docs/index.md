@@ -2,7 +2,7 @@
 layout: home
 
 hero:
-  name: entkapp v5.5.0
+  name: entkapp v5.6.0
   text: The Ultimate Hybrid Engine
   tagline: Solving what Knip cannot.
   image:
@@ -31,31 +31,53 @@ features:
     details: Detect hardcoded secrets, API keys, and sensitive data automatically during analysis.
 ---
 
-## Why entkapp?
+# entkapp v5.6.0 - Die ultimative Codebase-Wartung
 
-In large-scale enterprise projects, codebases naturally accumulate "cruft" – unused files, orphaned exports, and redundant dependencies. This "dead code" increases bundle sizes, slows down build times, and makes the codebase harder to maintain.
+`entkapp` ist ein hochleistungsfähiges, framework-agnostisches Tool zur Analyse und Optimierung von JavaScript- und TypeScript-Codebasen. Es wurde entwickelt, um ungenutzten Code, zirkuläre Abhängigkeiten und hartkodierte Geheimnisse zu identifizieren und zu beheben, wodurch die Codequalität, Wartbarkeit und Sicherheit erheblich verbessert werden.
 
-**entkapp** is not just another analysis tool . It's a proactive **Janitor** for your code. It doesn't just tell you what's wrong; it provides the tools to fix it automatically and safely.
+## 🚀 Kernfunktionen
 
-### Key Benefits
+- **Umfassende Dead-Code-Erkennung:** Identifiziert ungenutzte Dateien, Exporte und Abhängigkeiten.
+- **Zirkuläre Abhängigkeitsanalyse:** Erkennt und visualisiert zirkuläre Abhängigkeiten, die zu Laufzeitproblemen führen können.
+- **Geheimnis-Scanning:** Scannt die Codebasis nach hartkodierten Geheimnissen und sensiblen Informationen.
+- **Framework-Agnostisch:** Funktioniert nahtlos mit verschiedenen JavaScript-Frameworks und -Bibliotheken, ohne spezielle Konfigurationen.
+- **Monorepo-Unterstützung:** Optimiert für die Analyse komplexer Monorepo-Strukturen.
+- **Windows-Kompatibilität:** Volle Unterstützung und Stabilität auf Windows-, macOS- und Linux-Systemen.
+- **ESM/CJS Hybrid-Support:** Kompatibel mit modernen ESM-Modulen und älteren CommonJS-Umgebungen.
+- **Hohe Performance:** Nutzt native Rust-basierte Parser (OXC) und Worker-Threads für blitzschnelle Analysen.
 
-| Benefit | Description |
-| :--- | :--- |
-| **Reduced Bloat** | Automatically prune unused files and dependencies to keep your project lean. |
-| **Faster Builds** | Less code means faster compilation, testing, and deployment cycles. |
-| **Better Quality** | Enforce architectural boundaries and maintain a clean, navigable codebase. |
-| **Safety First** | Built-in Git sandboxing and intelligent repair ensure that refactoring never breaks your app. |
+## ✨ Warum entkapp?
 
-## Quick Comparison
+In modernen JavaScript-Projekten, insbesondere in großen Monorepos, kann sich ungenutzter Code ansammeln, was zu größeren Bundle-Größen, längeren Build-Zeiten und einer erhöhten Komplexität führt. `entkapp` bietet eine überlegene Lösung im Vergleich zu anderen Tools wie Knip, indem es eine tiefere, heuristische Analyse durchführt, die nicht auf statische Konfigurationen angewiesen ist. Es erkennt dynamische Imports, Side-Effects und Bootstrap-Muster, um eine präzisere und zuverlässigere Code-Optimierung zu gewährleisten.
 
-| Feature | entkapp | Knip.dev |
-| :--- | :---: | :---: |
-| Dead Code Detection | ✅ | ✅ |
-| Auto-Fix / Refactoring | ✅ | ⚠️ |
-| Self-Healing | ✅ | ❌ |
-| Secrets Detection | ✅ | ❌ |
-| Knip Plugin Support | ❌ (Deprecated since v5.1.0+) | N/A |
-| Headless API | ✅ | ✅ |
+## 🛠️ Installation
+
+Um `entkapp` in Ihrem Projekt zu verwenden, navigieren Sie zu Ihrem Projektstammverzeichnis und führen Sie den folgenden Befehl aus:
+
+```bash
+npm install entkapp
+# oder
+yarn add entkapp
+# oder
+pnpm add entkapp
+```
+
+## 💡 Erste Schritte
+
+Nach der Installation können Sie `entkapp` direkt über die Kommandozeile ausführen. Navigieren Sie in Ihr Projektverzeichnis und starten Sie die Analyse:
+
+```bash
+npx entkapp -r
+```
+
+Dies führt eine Dry-Run-Analyse durch und zeigt einen Bericht über potenzielle Optimierungen an. Für automatische Korrekturen verwenden Sie die `--fix`-Option:
+
+```bash
+npx entkapp -r --fix
+```
+
+Weitere Informationen zu den Befehlen und Optionen finden Sie in der [Nutzungsanleitung](./usage.md).
+
 ---
 
 ## Community & Support
