@@ -2,7 +2,7 @@
 layout: home
 
 hero:
-  name: entkapp v5.6.1
+  name: entkapp v5.7.0
   text: The Ultimate Hybrid Engine
   tagline: Solving what Knip cannot.
   image:
@@ -31,7 +31,7 @@ features:
     details: Detect hardcoded secrets, API keys, and sensitive data automatically during analysis.
 ---
 
-# entkapp v5.6.1 – Ultimate Codebase Maintenance
+# entkapp v5.7.0 – Ultimate Codebase Maintenance
 
 `entkapp` is a high-performance, framework-agnostic tool for analyzing and optimizing JavaScript and TypeScript codebases. It is designed to identify and resolve unused code, circular dependencies, and hard-coded secrets, thereby significantly improving code quality, maintainability, and security.
 

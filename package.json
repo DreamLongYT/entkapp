@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "name": "entkapp",
-  "version": "5.6.1",
+  "version": "5.7.0",
   "description": "The Ultimate Enterprise Codebase Janitor. High-speed OXC integration, type-aware analysis, and automated structural healing. Fully standalone architectural orchestrator.",
   "type": "module",
   "main": "index.js",
