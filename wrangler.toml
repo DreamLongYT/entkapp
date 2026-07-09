@@ -1,0 +1,6 @@
+name = "entkapp"
+pages_build_output_dir = "docs/.vitepress/dist"
+
+[vars]
+NODE_VERSION = "22.16.0"
+PNPM_VERSION = "10.11.1"

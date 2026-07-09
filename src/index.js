@@ -347,7 +347,18 @@ export class RefactoringEngine {
         }
       }
       if (entryCount === 0) {
-        console.log(ansis.bold.red('  🚨 ALARM: Keine einzige Datei wurde als Entry Point markiert!'));
+        console.log(ansis.bold.yellow('  🚨 ALARM: Keine einzige Datei wurde als Entry Point markiert! Greife auf Fallbacks zurück...'));
+        const fallbackFiles = ['index.js', 'index.mjs', 'src/index.js', 'src/index.mjs', 'main.js', 'src/main.js'];
+        for (const fallback of fallbackFiles) {
+          const absFallback = path.resolve(this.context.cwd, fallback).replace(/\\/g, '/');
+          if (this.context.projectGraph.has(absFallback)) {
+            const node = this.context.projectGraph.get(absFallback);
+            node.isEntry = true;
+            console.log(ansis.green(`  • 💎 FALLBACK ENTRY: ${fallback}`));
+            entryCount++;
+            break;
+          }
+        }
       }
 
       // Mark workspace packages as used to block false alarms in the manifest auditor
@@ -741,6 +752,31 @@ export class RefactoringEngine {
                   const nextText = await this.sourceRewriter.stripNamedExportSignature(absPath, unusedExport.symbol, meta);
                   await this.txManager.stageWrite(absPath, nextText);
                   await this.typeIntegrity.synchronizeDeclarationFile(absPath, unusedExport.symbol);
+                }
+              }
+
+              // --- FIXED: Added dependency removal logic ---
+              for (const dep of (analysisSummary.unusedDependencies || [])) {
+                try {
+                  const absPath = path.resolve(this.context.cwd, dep.manifest);
+                  const pkgContent = await fs.readFile(absPath, 'utf8');
+                  const pkg = JSON.parse(pkgContent);
+                  
+                  let removed = false;
+                  if (pkg.dependencies && pkg.dependencies[dep.package]) {
+                    delete pkg.dependencies[dep.package];
+                    removed = true;
+                  } else if (pkg.devDependencies && pkg.devDependencies[dep.package]) {
+                    delete pkg.devDependencies[dep.package];
+                    removed = true;
+                  }
+
+                  if (removed) {
+                    console.log(ansis.red(`📦 Removing unused dependency [${dep.package}] from ${dep.manifest}`));
+                    await this.txManager.stageWrite(absPath, JSON.stringify(pkg, null, 2) + '\n');
+                  }
+                } catch (e) {
+                  console.error(ansis.red(`❌ Failed to remove dependency ${dep.package}: ${e.message}`));
                 }
               }
             });

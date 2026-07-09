@@ -126,6 +126,10 @@ export class EngineContext {
   getOrCreateNode(filePath) {
     if (!this.projectGraph.has(filePath)) {
       this.projectGraph.set(filePath, new GraphNode(filePath));
+      // NEW: Automatically track package.json files in manifestDependencies
+      if (filePath.endsWith('package.json')) {
+        this.manifestDependencies.set(filePath, new Set());
+      }
     }
     return this.projectGraph.get(filePath);
   }

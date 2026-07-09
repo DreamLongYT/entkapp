@@ -14,6 +14,7 @@
 
 import EventEmitter from 'events';
 import path from 'path';
+import fs from 'fs/promises';
 import { RefactoringEngine } from '../index.js';
 
 export class HeadlessAPI extends EventEmitter {
@@ -303,9 +304,30 @@ export class HeadlessAPI extends EventEmitter {
         for (const dep of depsToRemove) {
           try {
             const absPath = path.resolve(this.engine.context.cwd, dep.manifest);
-            // TODO: Implement package.json dependency removal
-            refactoringResults.dependenciesRemoved.push(dep);
-            this.emit('refactoring:dependency-removed', dep);
+            
+            const pkgContent = await fs.readFile(absPath, 'utf8');
+            const pkg = JSON.parse(pkgContent);
+            
+            let removed = false;
+            if (pkg.dependencies && pkg.dependencies[dep.package]) {
+              delete pkg.dependencies[dep.package];
+              removed = true;
+            } else if (pkg.devDependencies && pkg.devDependencies[dep.package]) {
+              delete pkg.devDependencies[dep.package];
+              removed = true;
+            } else if (pkg.peerDependencies && pkg.peerDependencies[dep.package]) {
+              delete pkg.peerDependencies[dep.package];
+              removed = true;
+            } else if (pkg.optionalDependencies && pkg.optionalDependencies[dep.package]) {
+              delete pkg.optionalDependencies[dep.package];
+              removed = true;
+            }
+
+            if (removed) {
+              await this.engine.txManager.stageWrite(absPath, JSON.stringify(pkg, null, 2) + '\n');
+              refactoringResults.dependenciesRemoved.push(dep);
+              this.emit('refactoring:dependency-removed', dep);
+            }
           } catch (error) {
             refactoringResults.errors.push({
               type: 'dependency-removal',
