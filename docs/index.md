@@ -2,7 +2,7 @@
 layout: home
 
 hero:
-  name: entkapp v5.6.0
+  name: entkapp v5.6.1
   text: The Ultimate Hybrid Engine
   tagline: Solving what Knip cannot.
   image:
@@ -31,52 +31,52 @@ features:
     details: Detect hardcoded secrets, API keys, and sensitive data automatically during analysis.
 ---
 
-# entkapp v5.6.0 - Die ultimative Codebase-Wartung
+# entkapp v5.6.1 – Ultimate Codebase Maintenance
 
-`entkapp` ist ein hochleistungsfähiges, framework-agnostisches Tool zur Analyse und Optimierung von JavaScript- und TypeScript-Codebasen. Es wurde entwickelt, um ungenutzten Code, zirkuläre Abhängigkeiten und hartkodierte Geheimnisse zu identifizieren und zu beheben, wodurch die Codequalität, Wartbarkeit und Sicherheit erheblich verbessert werden.
+`entkapp` is a high-performance, framework-agnostic tool for analyzing and optimizing JavaScript and TypeScript codebases. It is designed to identify and resolve unused code, circular dependencies, and hard-coded secrets, thereby significantly improving code quality, maintainability, and security.
 
-## 🚀 Kernfunktionen
+## 🚀 Key Features
 
-- **Umfassende Dead-Code-Erkennung:** Identifiziert ungenutzte Dateien, Exporte und Abhängigkeiten.
-- **Zirkuläre Abhängigkeitsanalyse:** Erkennt und visualisiert zirkuläre Abhängigkeiten, die zu Laufzeitproblemen führen können.
-- **Geheimnis-Scanning:** Scannt die Codebasis nach hartkodierten Geheimnissen und sensiblen Informationen.
-- **Framework-Agnostisch:** Funktioniert nahtlos mit verschiedenen JavaScript-Frameworks und -Bibliotheken, ohne spezielle Konfigurationen.
-- **Monorepo-Unterstützung:** Optimiert für die Analyse komplexer Monorepo-Strukturen.
-- **Windows-Kompatibilität:** Volle Unterstützung und Stabilität auf Windows-, macOS- und Linux-Systemen.
-- **ESM/CJS Hybrid-Support:** Kompatibel mit modernen ESM-Modulen und älteren CommonJS-Umgebungen.
-- **Hohe Performance:** Nutzt native Rust-basierte Parser (OXC) und Worker-Threads für blitzschnelle Analysen.
+- **Comprehensive Dead Code Detection:** Identifies unused files, exports, and dependencies.
+- **Circular Dependency Analysis:** Detects and visualizes circular dependencies that can lead to runtime issues.
+- **Secret Scanning:** Scans the codebase for hard-coded secrets and sensitive information.
+- **Framework-Agnostic:** Works seamlessly with various JavaScript frameworks and libraries without requiring special configurations.
+- **Monorepo Support:** Optimized for analyzing complex monorepo structures.
+- **Windows Compatibility:** Full support and stability on Windows, macOS, and Linux systems.
+- **ESM/CJS Hybrid Support:** Compatible with modern ESM modules and legacy CommonJS environments.
+- **High Performance:** Leverages native Rust-based parsers (OXC) and worker threads for lightning-fast analysis.
 
-## ✨ Warum entkapp?
+## ✨ Why entkapp?
 
-In modernen JavaScript-Projekten, insbesondere in großen Monorepos, kann sich ungenutzter Code ansammeln, was zu größeren Bundle-Größen, längeren Build-Zeiten und einer erhöhten Komplexität führt. `entkapp` bietet eine überlegene Lösung im Vergleich zu anderen Tools wie Knip, indem es eine tiefere, heuristische Analyse durchführt, die nicht auf statische Konfigurationen angewiesen ist. Es erkennt dynamische Imports, Side-Effects und Bootstrap-Muster, um eine präzisere und zuverlässigere Code-Optimierung zu gewährleisten.
+In modern JavaScript projects—especially large monorepos—unused code can accumulate, leading to larger bundle sizes, longer build times, and increased complexity. `entkapp` offers a superior solution compared to other tools like Knip by performing a deeper, heuristic analysis that does not rely on static configurations. It detects dynamic imports, side effects, and bootstrap patterns to ensure more precise and reliable code optimization.
 
 ## 🛠️ Installation
 
-Um `entkapp` in Ihrem Projekt zu verwenden, navigieren Sie zu Ihrem Projektstammverzeichnis und führen Sie den folgenden Befehl aus:
+To use `entkapp` in your project, navigate to your project root directory and run the following command:
 
 ```bash
 npm install entkapp
-# oder
+# or
 yarn add entkapp
-# oder
+# or
 pnpm add entkapp
 ```
 
-## 💡 Erste Schritte
+## 💡 Getting Started
 
-Nach der Installation können Sie `entkapp` direkt über die Kommandozeile ausführen. Navigieren Sie in Ihr Projektverzeichnis und starten Sie die Analyse:
+After installation, you can run `entkapp` directly from the command line. Navigate to your project directory and start the analysis:
 
 ```bash
 npx entkapp -r
 ```
 
-Dies führt eine Dry-Run-Analyse durch und zeigt einen Bericht über potenzielle Optimierungen an. Für automatische Korrekturen verwenden Sie die `--fix`-Option:
+This performs a dry-run analysis and displays a report on potential optimizations. To apply automatic fixes, use the `--fix` option:
 
 ```bash
 npx entkapp -r --fix
 ```
 
-Weitere Informationen zu den Befehlen und Optionen finden Sie in der [Nutzungsanleitung](./usage.md).
+For more information on commands and options, please refer to the [usage guide](./usage.md).
 
 ---
 

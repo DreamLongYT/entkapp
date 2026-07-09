@@ -75,4 +75,4 @@ This guide covers common issues you might encounter while using entkapp v5.3.1 a
 If you can't find the solution here:
 1. Check the [GitHub Issues](https://github.com/DreamLongYT/entkapp/issues).
 2. Run with `--verbose` and share the logs.
-3. Consult the [API Documentation](/api-headless) for programmatic issues.
+3. Consult the [API Documentation](#overview) for programmatic issues.

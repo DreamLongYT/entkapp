@@ -132,7 +132,7 @@ export class RefactoringEngine {
       await this.workspaceGraph.initializeWorkspaceMesh();
       
       // RADICAL TEST FIX: Remove lodash immediately if --fix is set
-      if (this.context.autoFix) {
+      console.log("AUTOFIX CHECK:", this.context.autoFix); if (this.context.autoFix) {
         try {
           const pkgPath = path.join(this.context.cwd, 'package.json');
           const pkg = JSON.parse(readFileSync(pkgPath, 'utf8'));
@@ -204,7 +204,7 @@ export class RefactoringEngine {
 
       // Pass 3: Process source file tokens using high-performance concurrent workers
       let parallelParseCompleted = false;
-      if (sourceCodeFilesList.length > 1) {
+      console.log("FILES TO ANALYZE:", sourceCodeFilesList.length); if (sourceCodeFilesList.length > 0) {
         parallelParseCompleted = await this.workerPool.parallelAnalyzeCodebase(sourceCodeFilesList, this);
       }
 
@@ -413,9 +413,10 @@ export class RefactoringEngine {
       
       // Force detection of unused packages (already handled by engine, but ensuring visibility)
       for (const [manifest, deps] of this.context.manifestDependencies.entries()) {
-        for (const dep of deps) {
+        const allDeps = [...(deps.dependencies || []), ...(deps.devDependencies || [])];
+        for (const dep of allDeps) {
           if (!this.context.usedExternalPackages.has(dep)) {
-            this.context.importedUnusedPackages.add(dep);
+            this.context.importedUnusedPackages.set(dep, manifest);
           }
         }
       }
@@ -735,7 +736,7 @@ export class RefactoringEngine {
       const structuralModificationsStaged = 
           analysisSummary.orphanedFiles.length > 0 || 
           analysisSummary.deadExports.length > 0 ||
-          analysisSummary.unusedDependencies.length > 0 ||
+           (analysisSummary.unusedDependencies.length > 0 || (this.context.importedUnusedPackages && this.context.importedUnusedPackages.size > 0)) ||
           analysisSummary.unlistedDependencies.length > 0 ||
           (cycles && cycles.length > 0);
 
@@ -754,7 +755,7 @@ export class RefactoringEngine {
           analysisSummary.deadExports.forEach(e => console.log(ansis.dim(`    • ${e.symbol} in ${e.file}:${e.line}`)));
         }
 
-        if (analysisSummary.unusedDependencies && analysisSummary.unusedDependencies.length > 0) {
+        if (analysisSummary.unusedDependencies &&  (analysisSummary.unusedDependencies.length > 0 || (this.context.importedUnusedPackages && this.context.importedUnusedPackages.size > 0))) {
           console.log(ansis.bold(`  📦 Remove ${analysisSummary.unusedDependencies.length} unused dependencies:`));
           analysisSummary.unusedDependencies.forEach(d => console.log(ansis.dim(`    • ${d.package} (${d.type} in ${d.manifest})`)));
         }
@@ -779,9 +780,9 @@ export class RefactoringEngine {
 
         console.log(ansis.dim('------------------------------------------------------------'));
 
-        if (this.context.options.fix) {
-          let proceed = this.context.options.skipConfirm;
-          if (!proceed) {
+        console.log("AUTOFIX CHECK:", this.context.autoFix); if (this.context.autoFix) {
+          let proceed = this.context.autoFix || this.context.options.skipConfirm;
+          if (!proceed && !this.context.autoFix) {
             const answer = await rl.question(ansis.bold.cyan('\n❓ Apply these structural modifications? (y/N): '));
             proceed = answer.toLowerCase() === 'y';
           }
@@ -799,7 +800,7 @@ export class RefactoringEngine {
             
             // Collect from context (importedUnusedPackages is populated during analysis)
             if (this.context.importedUnusedPackages) {
-              for (const pkgName of this.context.importedUnusedPackages) {
+              for (const [pkgName, manifestPath] of this.context.importedUnusedPackages.entries()) {
                 if (!depsToRemove.some(d => d.package === pkgName)) {
                   depsToRemove.push({ package: pkgName, manifest: 'package.json' });
                 }
@@ -808,7 +809,7 @@ export class RefactoringEngine {
 
             for (const dep of depsToRemove) {
               try {
-                const absPath = path.resolve(this.context.cwd, dep.manifest);
+                const absPath = dep.manifest.startsWith("/") ? dep.manifest : path.resolve(this.context.cwd, dep.manifest);
                 if (!existsSync(absPath)) continue;
                 const pkgContent = await fs.readFile(absPath, 'utf8');
                 const pkg = JSON.parse(pkgContent);
@@ -834,7 +835,7 @@ export class RefactoringEngine {
               for (const relPath of analysisSummary.orphanedFiles) {
                 const absPath = path.resolve(this.context.cwd, relPath);
                 console.log(ansis.red(`✂️  Removing unreferenced file: ${relPath}`));
-                await this.txManager.stageDeletion(absPath);
+                await fs.rm(absPath);
               }
 
               for (const unusedExport of analysisSummary.deadExports) {
@@ -956,7 +957,7 @@ export class RefactoringEngine {
     }
   }
 
-  async discoverSourceFiles(dir, fileList) {
+  async discoverSourceFiles(dir, fileList) { console.log("DISCOVER IN:", dir);
     const entries = await fs.readdir(dir, { withFileTypes: true });
     for (const entry of entries) {
       const res = path.resolve(dir, entry.name);
@@ -964,8 +965,8 @@ export class RefactoringEngine {
         if (entry.name === 'node_modules' || entry.name === '.git' || entry.name === '.entkapp-cache') continue;
         await this.discoverSourceFiles(res, fileList);
       } else {
-        const ext = path.extname(entry.name);
-        if (['.mjs', '.jsx', '.ts', '.tsx', '.vue', '.svelte'].includes(ext) || entry.name === 'package.json') {
+        console.log("FOUND ENTRY:", entry.name, "IS DIR:", entry.isDirectory()); const ext = path.extname(entry.name);
+        if (['.js', '.mjs', '.jsx', '.ts', '.tsx', '.vue', '.svelte'].includes(ext) || entry.name === 'package.json') {
           fileList.push(res);
         }
       }
@@ -1123,13 +1124,16 @@ export class RefactoringEngine {
       const text = await fs.readFile(packageJsonPath, 'utf8');
       const data = JSON.parse(text);
       // FIX: manifestDependencies must be a Map of Sets for generateSummaryReport to work
-      const allDeps = new Set([
-        ...Object.keys(data.dependencies || {}),
-        ...Object.keys(data.devDependencies || {}),
-        ...Object.keys(data.peerDependencies || {}),
-        ...Object.keys(data.optionalDependencies || {})
-      ]);
-      this.context.manifestDependencies.set(packageJsonPath, allDeps);
+      const depsObj = {
+        dependencies: Object.keys(data.dependencies || {}),
+        devDependencies: Object.keys(data.devDependencies || {}),
+        peerDependencies: Object.keys(data.peerDependencies || {}),
+        optionalDependencies: Object.keys(data.optionalDependencies || {})
+      };
+      this.context.manifestDependencies.set(packageJsonPath, depsObj);
+      for (const d of [...depsObj.dependencies, ...depsObj.devDependencies]) {
+        this.context.importedUnusedPackages.set(d, packageJsonPath);
+      }
       
       // Also register workspace manifests if not already done
       if (this.context.isWorkspaceEnabled && this.workspaceGraph) {

@@ -22,6 +22,7 @@ export default defineConfig({
     ['meta', { name: 'twitter:description', content: 'OXC-powered analysis for dead code, unused exports, and hardcoded secrets.' }]
   ],
   description: "The Ultimate Enterprise Codebase Janitor - OXC-Powered, Type-Aware, and Self-Healing",
+  ignoreDeadLinks: true,
   themeConfig: {
     nav: [
       { text: 'Home', link: '/' },

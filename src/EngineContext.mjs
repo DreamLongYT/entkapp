@@ -112,7 +112,7 @@ export class EngineContext {
     this.projectGraph = new Map(); // Path -> GraphNode
     this.usedExternalPackages = new Set();
     this.unimportedUsedPackages = new Set();
-    this.importedUnusedPackages = new Set();
+    this.importedUnusedPackages = new Map();
     this.unusedBinaries = new Set();
     this.manifestDependencies = new Map();
     
@@ -414,13 +414,13 @@ export class EngineContext {
             type: deps.dependencies.includes(dep) ? 'dependency' : 'devDependency',
             manifest: path.relative(this.cwd, manifestPath)
           });
-          this.importedUnusedPackages.add(dep);
+          this.importedUnusedPackages.set(dep, manifestPath);
         }
       }
     }
     
     report.unimportedUsedPackages = Array.from(this.unimportedUsedPackages);
-    report.importedUnusedPackages = Array.from(this.importedUnusedPackages);
+    report.importedUnusedPackages = Array.from(this.importedUnusedPackages.keys());
     report.unusedBinaries = Array.from(this.unusedBinaries);
 
     return report;

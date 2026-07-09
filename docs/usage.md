@@ -1,64 +1,64 @@
-# Nutzungsanleitung
+# Usage Guide
 
-`entkapp` bietet eine leistungsstarke Kommandozeilen-Schnittstelle (CLI) zur Analyse und Optimierung Ihrer Codebasis. Hier finden Sie eine detaillierte Übersicht über die verfügbaren Befehle und Optionen.
+`entkapp` provides a powerful command-line interface (CLI) for analyzing and optimizing your codebase. Here is a detailed overview of the available commands and options.
 
-## 🚀 Grundlegende Befehle
+## 🚀 Basic Commands
 
-### `npx entkapp -r` (Dry-Run)
+### `npx entkapp -r` (Dry Run)
 
-Führt eine Analyse Ihrer Codebasis durch und generiert einen Bericht über potenzielle Optimierungen, ohne Änderungen an Ihren Dateien vorzunehmen. Dies ist der empfohlene erste Schritt, um die Auswirkungen von `entkapp` zu verstehen.
+Analyzes your codebase and generates a report on potential optimizations without making any changes to your files. This is the recommended first step to understand the impact of `entkapp`.
 
 ```bash
 npx entkapp -r
 ```
 
-### `npx entkapp -r --fix` (Automatisches Fixen)
+### `npx entkapp -r --fix` (Automatic Fixes)
 
-Führt eine Analyse durch und wendet alle identifizierten Optimierungen automatisch an. Dies umfasst das Entfernen von ungenutzten Dateien, Exporten und Abhängigkeiten. Es wird dringend empfohlen, vor der Ausführung dieser Option ein Backup Ihres Projekts zu erstellen oder Git zu verwenden.
+Analyzes the codebase and automatically applies all identified optimizations. This includes removing unused files, exports, and dependencies. It is strongly recommended to back up your project or use Git before running this option.
 
 ```bash
 npx entkapp -r --fix
 ```
 
-## ⚙️ Optionen
+## ⚙️ Options
 
-Die folgenden Optionen können mit den grundlegenden Befehlen kombiniert werden:
+The following options can be combined with the basic commands:
 
-| Option | Beschreibung | Standardwert |
+| Option | Description | Default Value |
 | :----- | :----------- | :----------- |
-| `-c, --cwd <path>` | Gibt das Stammverzeichnis des auszuführenden Projekts an. | Aktuelles Arbeitsverzeichnis |
-| `-d, --debug` | Aktiviert detaillierte Debug-Ausgaben für die Entwicklung und Fehlerbehebung. | `false` |
-| `--fix` | Aktiviert den Modus für automatische Code-Updates und strukturelle Änderungen. | `false` |
-| `--tsconfig <filename>` | Gibt den Pfad zu einer benutzerdefinierten `tsconfig.json` an. | `tsconfig.json` |
-| `--test-command <command>` | Definiert den Befehl zum Ausführen von Tests zur Validierung nach Änderungen. | `npm test` |
-| `--workspace` | Aktiviert die Analyse für Monorepo-Workspaces. | `false` |
-| `--verbose` | Aktiviert erweiterte Telemetrie-Ausgaben für detaillierte Diagnosen. | `false` |
-| `--visualize` | Generiert eine interaktive Visualisierung des Ausführungsdiagramms. | `false` |
-| `-y, --yes` | Überspringt Bestätigungsaufforderungen und führt geplante Änderungen automatisch aus. | `false` |
-| `--timeout <ms>` | Setzt ein Timeout für die Ausführung in Millisekunden. | `30000` (30 Sekunden) |
+| `-c, --cwd <path>` | Specifies the root directory of the project to be processed. | Current working directory |
+| `-d, --debug` | Enables detailed debug output for development and troubleshooting. | `false` |
+| `--fix` | Enables automatic code updates and structural changes. | `false` |
+| `--tsconfig <filename>` | Specifies the path to a custom `tsconfig.json`. | `tsconfig.json` |
+| `--test-command <command>` | Defines the command used to run tests for validation after changes. | `npm test` |
+| `--workspace` | Enables analysis for monorepo workspaces. | `false` |
+| `--verbose` | Enables extended telemetry output for detailed diagnostics. | `false` |
+| `--visualize` | Generates an interactive visualization of the execution graph. | `false` |
+| `-y, --yes` | Skips confirmation prompts and automatically executes planned changes. | `false` |
+| `--timeout <ms>` | Sets an execution timeout in milliseconds. | `30000` (30 seconds) |
 
-## 💡 Beispiele
+## 💡 Examples
 
-### Monorepo analysieren
+### Analyze a monorepo
 
 ```bash
-npx entkapp -r --workspace --cwd ./mein-monorepo
+npx entkapp -r --workspace --cwd ./my-monorepo
 ```
 
-### Detaillierte Debug-Ausgabe mit Fix-Modus
+### Detailed debug output with fix mode
 
 ```bash
 npx entkapp -r --fix --debug --verbose
 ```
 
-### Benutzerdefinierte Testbefehle
+### Custom test commands
 
 ```bash
 npx entkapp -r --fix --test-command "yarn test --ci"
 ```
 
-## ⚠️ Wichtige Hinweise
+## ⚠️ Important Notes
 
-- **Backups:** Führen Sie immer ein Backup Ihrer Codebasis durch, bevor Sie `entkapp` mit der `--fix`-Option ausführen.
-- **Git-Integration:** `entkapp` ist so konzipiert, dass es gut mit Git zusammenarbeitet. Änderungen können leicht rückgängig gemacht werden.
-- **Performance:** Bei sehr großen Projekten kann die erste Analyse einige Zeit in Anspruch nehmen. Nachfolgende Analysen profitieren von Caching-Mechanismen.
+- **Backups:** Always back up your codebase before running `entkapp` with the `--fix` option.
+- **Git Integration:** `entkapp` is designed to work well with Git. Changes can easily be reverted.
+- **Performance:** For very large projects, the initial analysis may take some time. Subsequent analyses benefit from caching mechanisms.

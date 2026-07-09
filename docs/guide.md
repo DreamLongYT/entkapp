@@ -1,16 +1,16 @@
-# Getting Started with entkapp v5.6.0
+# Getting Started with entkapp v5.6.1
 
 ## Overview
 
-entkapp v5.6.0 is the **Ultimate Hybrid Edition**, merging the rock-solid stability of Version 7 with the high-performance innovations of Version 9. It is specifically engineered to handle massive enterprise codebases where precision and speed are non-negotiable.
+entkapp v5.6.1 is the **Ultimate Hybrid Edition**, merging the rock-solid stability of Version 7 with the high-performance innovations of Version 9. It is specifically engineered to handle massive enterprise codebases where precision and speed are non-negotiable.
 
-## Why v5.6.0 (The Hybrid Edition)?
+## Why v5.6.1 (The Hybrid Edition)?
 
 This version addresses the "unstable feature-creep" of previous iterations by restoring the proven core logic from v7 while keeping the cutting-edge plugin architecture and OXC performance from v9.
 
 ### 🚀 Key Improvements & Comparisons
 
-| Feature | entkapp v5.6.0 | Knip v6 Status |
+| Feature | entkapp v5.6.1 | Knip v6 Status |
 | :--- | :--- | :--- |
 | **Engine Stability** | ✅ v7 Core (Rock Solid) | ⚠️ Iterative |
 | **Circular Dependency Tracking** | ✅ Native Support (Tarjan-Algorithm) | 💡 Open Feature Request (#1734) |
@@ -35,7 +35,7 @@ This version addresses the "unstable feature-creep" of previous iterations by re
 
 ### 🔄 Circular Dependency Tracking
 Detect circular dependencies in your codebase before they cause runtime issues or memory leaks. Unlike other tools, we provide a full trace of the cycle directly in the optimization plan.
-[Read more about Circular Detection](/impact-analysis)
+[Read more about Circular Detection](#circular-dependency-tracking)
 
 ### 🗺️ Robust tsConfig Path Mapping
 Our new `PathMapper` handles complex `baseUrl` and `paths` configurations with precision, ensuring that aliased imports are always resolved correctly, even in multi-package monorepos.
@@ -158,4 +158,4 @@ npx entkapp -r --verbose
 
 We listen to the issues that matter. By addressing long-standing pain points like circular dependency tracking and robust path resolution, we ensure that your developer experience is smooth and productive.
 
-[View the Full Reference](/reference)
+[View the Full Reference](#quick-start)
